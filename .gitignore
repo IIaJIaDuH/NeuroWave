@@ -1,0 +1,38 @@
+# Build and IDE
+build/
+cmake-build-*/
+.cache/
+.idea/
+.vscode/
+*.o
+*.so
+*.a
+*.log
+
+# Python tooling (optional sidecars)
+__pycache__/
+.venv/
+*.pyc
+
+# Secrets and local accounts
+.env
+.env.*
+!.env.example
+*token*
+*.key
+*.pem
+cookies*
+auth.json
+credentials.json
+secrets.json
+config.local.*
+*.sqlite
+*.sqlite3
+*.db
+
+# Audio/private data
+cache/
+recordings/
+generated/
+downloads/
+profiles/
