@@ -32,4 +32,33 @@ jobs:
         # чтобы тесты не зависели от keyring окружения.
         env:
           NEUROWAVE_KEYRING: "off"
-        run: python -m pytest -q
+        run: python -m pytest -q -m "not integration"
+
+  # Слой mpv проверяется настоящим mpv, а не двойником: звук уходит в
+  # --ao=null, поэтому звуковая карта не нужна.
+  integration:
+    name: mpv integration (Python 3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Установить mpv
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends mpv
+          mpv --version | head -1
+
+      - name: Установить зависимости
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev,local,mpris]'
+
+      - name: Тесты с настоящим mpv
+        env:
+          NEUROWAVE_KEYRING: "off"
+        run: python -m pytest -q -m integration
