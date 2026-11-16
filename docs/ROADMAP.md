@@ -23,6 +23,15 @@
 
 Детали реализации и ограничения: [IMPLEMENTATION.md](IMPLEMENTATION.md).
 
+## Провайдеры музыки
+- [x] Контракт возможностей (`Capability`), реестр и entry points для сторонних провайдеров.
+- [x] Отдельный токен на провайдера, команда `providers`, выбор `--provider`.
+- [ ] Квалифицированные ID `provider:track_id` в треках, истории, кеше и снимке очереди — гейт из [ADR-0004](decisions/0004-multi-provider.md).
+- [ ] Локальные файлы / MPD (без аккаунта и DRM).
+- [ ] SoundCloud — единственный крупный сервис с официальным потоком; без офлайн-кеша.
+- [ ] Spotify только как «пульт» (каталог + Spotify Connect), если будет доступ к Web API.
+- [ ] VK, Deezer, TIDAL, Apple Music, YouTube Music — только при появлении официальной потоковой поддержки.
+
 ## Sprint 2 — Sound
 - [ ] Pure Hi-Fi bypass и Enhanced DSP.
 - [ ] EQ, preamp и anti-clipping limiter.

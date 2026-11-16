@@ -22,10 +22,19 @@ from .config import ConfigStore, Paths, Settings
 from .domain import AccountInfo, Track
 from .errors import AuthError, NeuroWaveError, PlayerError
 from .player import PlayerService
+from .providers import (
+    ProviderContext,
+    ProviderNotImplemented,
+    all_specs,
+    create,
+    discover,
+    get_spec,
+    planned,
+    plugin_errors,
+)
 from .queue import Queue
 from .state import PlayerStatus
 from .storage import Database, MediaCache, TokenStore
-from .yandex import YandexMusicAdapter
 
 DEFAULT_SEARCH_LIMIT = 20
 
@@ -37,7 +46,8 @@ class Context:
     db: Database
     cache: MediaCache
     tokens: TokenStore
-    adapter: YandexMusicAdapter
+    adapter: Any
+    provider: str = "yandex"
 
 
 # --- разбор аргументов -------------------------------------------------
@@ -56,6 +66,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--backend",
         choices=["mpv", "null"],
         help="аудиовыход; null — без звука (тесты/диагностика)",
+    )
+    parser.add_argument(
+        "--provider",
+        metavar="ID",
+        help="музыкальный провайдер (по умолчанию из настроек: yandex)",
     )
     parser.add_argument("--json", action="store_true", help="машиночитаемый вывод")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -102,6 +117,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("status", help="состояние конфигурации и локальных данных")
     sub.add_parser("doctor", help="диагностика окружения (без токенов)")
+    sub.add_parser("providers", help="провайдеры музыки: что подключено и что умеет")
     return parser
 
 
@@ -145,6 +161,8 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
         return _cmd_doctor(args)
     if args.command == "cache":
         return _cmd_cache(args)
+    if args.command == "providers":
+        return _cmd_providers(args)
     ctx = _context(args)
     try:
         handlers = {
@@ -168,6 +186,10 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
 
 
 # --- контекст ----------------------------------------------------------
+def _resolve_provider_id(args: argparse.Namespace, settings: Settings) -> str:
+    return getattr(args, "provider", None) or settings.provider or "yandex"
+
+
 def _context(args: argparse.Namespace) -> Context:
     paths = Paths.resolve().ensure()
     settings = ConfigStore(paths).load()
@@ -178,9 +200,12 @@ def _context(args: argparse.Namespace) -> Context:
         ttl_seconds=settings.cache_ttl_seconds,
     )
     cache.evict_expired()
-    tokens = TokenStore(paths)
+    provider_id = _resolve_provider_id(args, settings)
+    discover()
+    spec = get_spec(provider_id)
+    tokens = TokenStore(paths, provider=provider_id)
     token = tokens.load()
-    adapter = YandexMusicAdapter(token=token)
+    adapter = create(spec, ProviderContext(token=token, paths=paths, settings=settings))
     return Context(
         paths=paths,
         settings=settings,
@@ -188,6 +213,7 @@ def _context(args: argparse.Namespace) -> Context:
         cache=cache,
         tokens=tokens,
         adapter=adapter,
+        provider=provider_id,
     )
 
 
@@ -199,8 +225,9 @@ def _build_backend(args: argparse.Namespace, settings: Settings):
 
 
 def _require_token(ctx: Context) -> None:
-    if not ctx.adapter.token:
-        raise AuthError("Требуется вход. Выполните: neurowave login")
+    if not getattr(ctx.adapter, "token", None):
+        title = get_spec(ctx.provider).info.title
+        raise AuthError(f"Требуется вход в {title}. Выполните: neurowave login")
 
 
 def _console_listener(event: str, payload: dict[str, Any]) -> None:
@@ -221,18 +248,28 @@ def _console_listener(event: str, payload: dict[str, Any]) -> None:
 
 # --- команды: аккаунт --------------------------------------------------
 def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
-    adapter = YandexMusicAdapter()
+    spec = get_spec(ctx.provider)
+    if spec.login is None:
+        raise ProviderNotImplemented(
+            f"Вход для «{spec.info.title}» пока не поддержан: провайдеру нужен "
+            "API-токен, а не интерактивный вход."
+        )
 
     def on_code(url: str, code: str) -> None:
         print("Откройте страницу подтверждения:", url)
         print("Введите код:", code)
         print("Ожидаю подтверждения…", flush=True)
 
-    token = adapter.device_login(on_code)
+    token = spec.login(
+        ProviderContext(token=None, paths=ctx.paths, settings=ctx.settings), on_code
+    )
     ctx.tokens.save(token)
-    print(f"Вход выполнен. Токен сохранён: {ctx.tokens.backend}.")
+    print(f"Вход выполнен ({spec.info.title}). Токен сохранён: {ctx.tokens.backend}.")
+    ctx.adapter = create(
+        spec, ProviderContext(token=token, paths=ctx.paths, settings=ctx.settings)
+    )
     try:
-        account = adapter.account()
+        account = ctx.adapter.account()
     except NeuroWaveError as exc:
         print(f"Аккаунт пока недоступен: {exc}")
         return 0
@@ -242,7 +279,10 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_logout(args: argparse.Namespace, ctx: Context) -> int:
     ctx.tokens.delete()
-    print("Токен удалён. Персональные данные больше не запрашиваются.")
+    if ctx.provider == "yandex":
+        print("Токен удалён. Персональные данные больше не запрашиваются.")
+    else:
+        print(f"Токен провайдера «{ctx.provider}» удалён.")
     return 0
 
 
@@ -558,6 +598,87 @@ def _handle_key(player: PlayerService, key: str) -> bool:
     return True
 
 
+# --- команды: провайдеры ----------------------------------------------
+def _cmd_providers(args: argparse.Namespace) -> int:
+    paths = Paths.resolve().ensure()
+    settings = ConfigStore(paths).load()
+    current = _resolve_provider_id(args, settings)
+    discover()
+
+    rows = []
+    for spec in all_specs():
+        info = spec.info
+        rows.append(
+            {
+                "id": info.id,
+                "title": info.title,
+                "summary": info.summary,
+                "capabilities": [capability.value for capability in info.capabilities],
+                "capabilities_text": info.capabilities_text,
+                "auth": info.auth.value,
+                "plays_in_mpv": info.plays_in_mpv,
+                "notes": info.notes,
+                "token_present": TokenStore(paths, provider=info.id).present(),
+                "current": info.id == current,
+            }
+        )
+    unavailable = [
+        {
+            "id": info.id,
+            "title": info.title,
+            "summary": info.summary,
+            "capabilities_text": info.capabilities_text,
+            "notes": info.notes,
+        }
+        for info in planned()
+    ]
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "current": current,
+                    "connected": rows,
+                    "not_connected": unavailable,
+                    "plugin_errors": plugin_errors(),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+        )
+        return 0
+
+    print("Провайдеры:")
+    for row in rows:
+        mark = "*" if row["current"] else " "
+        state = "токен есть" if row["token_present"] else "нужен вход"
+        playback = "поток в mpv" if row["plays_in_mpv"] else "без прямого потока"
+        print(f"{mark} {row['id']:<10} {row['title']} — {state}, {playback}")
+        if row["summary"]:
+            print(f"    {row['summary']}")
+        print(f"    возможности: {row['capabilities_text']}")
+        if row["notes"]:
+            print(f"    ограничения: {row['notes']}")
+
+    if unavailable:
+        print("\nИзвестны, но не подключены:")
+        for row in unavailable:
+            print(f"  {row['id']:<14} {row['title']}")
+            if row["summary"]:
+                print(f"    {row['summary']}")
+            if row["notes"]:
+                print(f"    ограничения: {row['notes']}")
+
+    errors = plugin_errors()
+    if errors:
+        print("\nОшибки сторонних провайдеров:")
+        for error in errors:
+            print(f"  ! {error}")
+
+    print(f"\nТекущий: {current}. Сменить: neurowave --provider ID …")
+    return 0
+
+
 # --- команды: кеш и диагностика ---------------------------------------
 def _cmd_cache(args: argparse.Namespace) -> int:
     paths = Paths.resolve().ensure()
@@ -617,7 +738,15 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     except OSError as exc:
         checks.append(("Каталоги XDG", False, str(exc)))
 
-    token_present = TokenStore(paths).present()
+    provider_id = _resolve_provider_id(args, ConfigStore(paths).load())
+    try:
+        provider_title = get_spec(provider_id).info.title
+        provider_ok, provider_note = True, f"{provider_id} — {provider_title}"
+    except NeuroWaveError as exc:
+        provider_ok, provider_note = False, str(exc)
+    checks.append(("Провайдер", provider_ok, provider_note))
+
+    token_present = TokenStore(paths, provider=provider_id).present()
     checks.append(("Токен", True, "сохранён" if token_present else "нет — нужен neurowave login"))
 
     network_ok, network_note = _probe_network()

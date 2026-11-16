@@ -72,6 +72,7 @@ class Settings:
     repeat: str = RepeatMode.OFF.value
     shuffle: bool = False
     audio_backend: str = "mpv"
+    provider: str = "yandex"
     reduced_motion: bool = False
     language: str = "ru"
     ai_enabled: bool = False

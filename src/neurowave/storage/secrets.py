@@ -13,13 +13,30 @@ from pathlib import Path
 from ..config import Paths
 
 KEYRING_SERVICE = "neurowave"
-KEYRING_USER = "yandex-oauth"
+DEFAULT_PROVIDER = "yandex"
+KEYRING_USER = f"{DEFAULT_PROVIDER}-oauth"  # обратная совместимость
 
 
 class TokenStore:
-    def __init__(self, paths: Paths):
-        self._file: Path = paths.token_file
+    """Токен одного провайдера. У каждого провайдера своё место хранения.
+
+    Яндекс использует исторические имена (``yandex-oauth`` и файл ``token``),
+    чтобы уже выполненные входы не терялись; остальные — ``<provider>-oauth``
+    и ``token.<provider>``.
+    """
+
+    def __init__(self, paths: Paths, provider: str = DEFAULT_PROVIDER):
+        self._provider = provider
+        self._user = f"{provider}-oauth"
+        if provider == DEFAULT_PROVIDER:
+            self._file: Path = paths.token_file
+        else:
+            self._file = paths.data_dir / f"token.{provider}"
         self._keyring = self._import_keyring()
+
+    @property
+    def provider(self) -> str:
+        return self._provider
 
     @staticmethod
     def _import_keyring():
@@ -45,7 +62,7 @@ class TokenStore:
             raise ValueError("empty token")
         if self._keyring is not None:
             try:
-                self._keyring.set_password(KEYRING_SERVICE, KEYRING_USER, token)
+                self._keyring.set_password(KEYRING_SERVICE, self._user, token)
                 self._remove_file()
                 return
             except Exception:
@@ -55,7 +72,7 @@ class TokenStore:
     def load(self) -> str | None:
         if self._keyring is not None:
             try:
-                token = self._keyring.get_password(KEYRING_SERVICE, KEYRING_USER)
+                token = self._keyring.get_password(KEYRING_SERVICE, self._user)
                 if token:
                     return token.strip()
             except Exception:
@@ -65,7 +82,7 @@ class TokenStore:
     def delete(self) -> None:
         if self._keyring is not None:
             try:
-                self._keyring.delete_password(KEYRING_SERVICE, KEYRING_USER)
+                self._keyring.delete_password(KEYRING_SERVICE, self._user)
             except Exception:
                 pass
         self._remove_file()
