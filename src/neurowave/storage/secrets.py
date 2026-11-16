@@ -1,20 +1,44 @@
 """Хранение OAuth-токена.
 
 Приоритет — системный Secret Service через ``keyring``. Если keyring
-недоступен, токен сохраняется в файл с правами 0600 и приложение явно
-сообщает об этом. Токен никогда не попадает в логи или отчёты.
+недоступен или отключён (``NEUROWAVE_KEYRING=off``), токен сохраняется в файл
+с правами 0600 и приложение явно сообщает об этом. Токен никогда не попадает
+в логи или отчёты.
+
+Изолированный профиль (``NEUROWAVE_HOME`` / ``--home``) получает
+собственное имя записи в keyring: иначе песочницы, тесты и разные профили
+делили бы один токен и могли его перезаписать.
 """
 
 from __future__ import annotations
 
+import hashlib
 import os
 from pathlib import Path
+from typing import Mapping
 
 from ..config import Paths
 
 KEYRING_SERVICE = "neurowave"
 DEFAULT_PROVIDER = "yandex"
 KEYRING_USER = f"{DEFAULT_PROVIDER}-oauth"  # обратная совместимость
+
+# Значения, которыми можно принудительно увести токены в файл.
+DISABLED_VALUES = frozenset({"0", "off", "false", "no", "file", "none"})
+
+
+def keyring_disabled(env: Mapping[str, str] | None = None) -> bool:
+    """Отключён ли keyring через окружение (CI, тесты, нет Secret Service)."""
+    env = os.environ if env is None else env
+    return str(env.get("NEUROWAVE_KEYRING", "")).strip().lower() in DISABLED_VALUES
+
+
+def profile_digest(config_dir: Path) -> str | None:
+    """Короткий отпечаток изолированного профиля или ``None`` для основного."""
+    if not os.environ.get("NEUROWAVE_HOME"):
+        return None
+    raw = str(Path(config_dir).expanduser()).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()[:12]
 
 
 class TokenStore:
@@ -27,12 +51,19 @@ class TokenStore:
 
     def __init__(self, paths: Paths, provider: str = DEFAULT_PROVIDER):
         self._provider = provider
-        self._user = f"{provider}-oauth"
+        self._user = self._keyring_user(paths, provider)
         if provider == DEFAULT_PROVIDER:
             self._file: Path = paths.token_file
         else:
             self._file = paths.data_dir / f"token.{provider}"
         self._keyring = self._import_keyring()
+
+    @staticmethod
+    def _keyring_user(paths: Paths, provider: str) -> str:
+        """Имя записи в keyring: основное — историческое, профили — с отпечатком."""
+        base = f"{provider}-oauth"
+        digest = profile_digest(paths.config_dir)
+        return f"{base}@{digest}" if digest else base
 
     @property
     def provider(self) -> str:
@@ -40,6 +71,8 @@ class TokenStore:
 
     @staticmethod
     def _import_keyring():
+        if keyring_disabled():
+            return None
         try:
             import keyring  # type: ignore
 
