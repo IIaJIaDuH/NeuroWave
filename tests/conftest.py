@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import shutil
+from pathlib import Path
+
 import pytest
 
 from neurowave.audio import NullBackend
@@ -102,3 +105,12 @@ def player(adapter: FakeAdapter, backend: NullBackend) -> PlayerService:
     )
     yield service
     service.close()
+
+
+@pytest.fixture
+def fake_mpv(tmp_path: Path) -> Path:
+    """Исполняемый двойник mpv (JSON IPC) рядом с тестом."""
+    binary = tmp_path / "mpv"
+    shutil.copy(Path(__file__).with_name("fake_mpv.py"), binary)
+    binary.chmod(0o755)
+    return binary

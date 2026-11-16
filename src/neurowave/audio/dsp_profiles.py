@@ -53,6 +53,8 @@ class DspMode(str, Enum):
 
     @classmethod
     def parse(cls, value: Any) -> "DspMode":
+        if isinstance(value, cls):
+            return value
         try:
             return cls(str(value).lower())
         except ValueError as exc:

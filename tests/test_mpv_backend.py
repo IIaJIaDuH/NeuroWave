@@ -8,7 +8,6 @@
 
 from __future__ import annotations
 
-import shutil
 import threading
 import time
 from pathlib import Path
@@ -17,15 +16,6 @@ import pytest
 
 from neurowave.audio.mpv import COMMAND_TIMEOUT, MpvBackend
 from neurowave.errors import PlayerError
-
-
-@pytest.fixture
-def fake_mpv(tmp_path: Path) -> Path:
-    """Исполняемый двойник mpv рядом с тестом."""
-    binary = tmp_path / "mpv"
-    shutil.copy(Path(__file__).with_name("fake_mpv.py"), binary)
-    binary.chmod(0o755)
-    return binary
 
 
 def _backend(fake_mpv: Path, tmp_path: Path, plan: str, on_end=None) -> MpvBackend:
@@ -171,7 +161,8 @@ def test_audio_filter_reports_actual_graph(fake_mpv, tmp_path) -> None:
         assert backend.audio_filter() is None
         graph = "lavfi=[equalizer=f=1000:t=q:w=1:g=3]"
         backend.set_audio_filter(graph)
-        assert backend.audio_filter() == graph
+        # Настоящий mpv отдаёт граф без обёртки lavfi=[…], двойник повторяет это.
+        assert backend.audio_filter() == "equalizer=f=1000:t=q:w=1:g=3"
     finally:
         backend.shutdown()
 
