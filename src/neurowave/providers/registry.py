@@ -21,6 +21,7 @@ from ..errors import NeuroWaveError
 from .base import ProviderContext, ProviderInfo, ProviderSpec
 from .local import LOCAL_SPEC
 from .soundcloud import SOUNDCLOUD_SPEC
+from .spotify import SPOTIFY_SPEC
 from .yandex import YANDEX_SPEC
 
 ENTRY_POINT_GROUP = "neurowave.providers"
@@ -139,3 +140,4 @@ class ProviderNotImplemented(NeuroWaveError):
 register(YANDEX_SPEC)
 register(LOCAL_SPEC)
 register(SOUNDCLOUD_SPEC)
+register(SPOTIFY_SPEC)

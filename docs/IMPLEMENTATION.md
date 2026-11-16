@@ -79,11 +79,17 @@ neurowave wave              # «Моя волна», управление из �
 | `neurowave like ID` / `unlike ID` | лайк и снятие лайка |
 | `neurowave cache info\|clear\|evict` | состояние и очистка кеша |
 | `neurowave providers` | провайдеры: что подключено, что умеет, что не подключено и почему |
+| `neurowave devices` | устройства Spotify Connect (`*` — активное) |
+| `neurowave connect "имя"` | перенести воспроизведение на устройство Spotify |
+| `neurowave remote play\|pause\|next\|previous` | управление чужим плеером (`--uri` для play) |
 | `neurowave --json status` | конфигурация, провайдер, кеш, недавняя история |
 | `neurowave --provider local play "запрос"` | воспроизведение файлов из локальной папки |
 | `neurowave --provider local wave` | случайная выборка из локальной библиотеки |
 
 `--json` — общий флаг и ставится до подкоманды (`neurowave --json status`, не `neurowave status --json`).
+Команды `devices`/`connect`/`remote` требуют возможности
+`DELEGATED_PLAYBACK`: у Яндекса и локальных файлов они отвечают «не
+поддерживает», а не молчат.
 
 В интерактивном режиме: `q` — выход, `n` — следующий, `p` — пауза,
 `+`/`-` — громкость, `s` — состояние и качество источника.
@@ -99,6 +105,7 @@ neurowave wave              # «Моя волна», управление из �
 | `yandex` | `CATALOG`, `LIBRARY`, `PLAYLISTS`, `PERSONAL_RADIO`, `DIRECT_STREAM` | OAuth Device Flow | да |
 | `local` | `CATALOG`, `DIRECT_STREAM`, `SHUFFLE_LIBRARY` | не требуется | нет |
 | `soundcloud` | `CATALOG`, `DIRECT_STREAM` | API-ключ (`login --token`) | нет |
+| `spotify` | `CATALOG`, `DELEGATED_PLAYBACK` | OAuth access token (`login --token`) | нет |
 
 ```bash
 neurowave providers                    # что подключено и что умеет
@@ -107,6 +114,9 @@ neurowave --provider yandex wave       # провайдер на сессию
 neurowave --provider local wave        # случайная выборка, не персональный поток
 neurowave --provider soundcloud login --token <client_id>   # ключ приложения
 neurowave --provider soundcloud play "запрос"               # поток playable-треков в mpv
+neurowave --provider spotify devices                       # устройства Spotify Connect
+neurowave --provider spotify connect "Kitchen"             # перенести воспроизведение
+neurowave --provider spotify remote play "запрос"          # играть на устройстве Spotify
 ```
 
 Выбор провайдера хранится в `config.json` (`provider`, по умолчанию `yandex`).
@@ -155,6 +165,28 @@ Access token отправляется заголовком `Authorization: OAuth
 отключены (`cache_allowed=False`) — постоянное хранение запрещено условиями.
 Атрибуция обязательна: исполнитель берётся из `user.username`, страница трека
 лежит в `Track.url` и печатается в `search` и при воспроизведении.
+
+### Spotify — только «пульт»
+
+`SpotifyAdapter` умеет ровно две вещи: каталог (`CATALOG`) и управление чужим
+устройством (`DELEGATED_PLAYBACK`). `stream_url` в адаптере нет намеренно —
+Web API не выдаёт ссылку на поток, поэтому `mpv` не участвует, а `neurowave
+play` для Spotify отвечает «не поддерживает: поток в mpv» ещё до проверки
+входа.
+
+```bash
+neurowave --provider spotify login --token <access token>
+neurowave --provider spotify devices
+neurowave --provider spotify connect "Living Room"
+neurowave --provider spotify remote play "запрос"     # или --uri spotify:track:…
+neurowave --provider spotify remote pause|next|previous
+```
+
+Токен проверяется запросом `/me` при входе; `403` переводится в понятное
+требование Premium, `404` — в «нет активного устройства». `me` показывает`
+подписку Premium, если сервис вернул `product=premium`. Кеша нет
+(`cache_allowed=False`): хранить нечего, звук остаётся в Spotify. Сеть
+изолирована в `spotify/client.py`, транспорт подменяется в тестах.
 
 Сторонние провайдеры подключаются без правки ядра — entry points группы
 `neurowave.providers`, возвращающие `ProviderSpec`:
@@ -230,8 +262,9 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 Не реализовано и не заявлено работающим:
 
 - полноценный Qt-интерфейс, темы, мини-плеер, визуализация;
-- адаптеры Spotify/VK/Deezer/TIDAL и др. — только реестр и контракт
-  возможностей (Яндекс, локальные файлы и SoundCloud уже реализованы);
+- адаптеры VK/Deezer/TIDAL/YouTube Music и др. — только реестр и контракт
+  возможностей (Яндекс, локальные файлы, SoundCloud и Spotify-пульт уже
+  реализованы);
 - Qt-интерфейс как основной экран, глобальные горячие клавиши, автозапуск;
 - Pure/Enhanced DSP, эквалайзер, лимитер, пресеты устройств, FFT;
 - тексты песен, подкасты, Ynison;
@@ -240,7 +273,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 192 unit-теста ядра, интеграций и провайдеров,
+Проверено в этом окружении: 214 unit-тестов ядра, интеграций и провайдеров,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
 импорт и сборка пакета, работа MPRIS на отдельном сессионном шине
@@ -253,7 +286,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 192 теста: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
+python -m pytest        # 214 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -261,7 +294,8 @@ python -m pytest        # 192 теста: очередь, состояния, п
 Миграция SQLite проверяется на настоящей базе схемы v1, локальный провайдер —
 на временной папке с файлами (без `mutagen` работает резервный путь метаданных),
 SoundCloud — на фейковом транспорте: поиск, отбрасывание превью, отказы
-`401/403/429/5xx`, адрес CDN и отключённый кеш.
+`401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
+тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика
 тестируется на заглушке, а `tests/test_integrations_optional.py` отдельными
 процессами проверяет, что импорт не тянет `dbus-next`/`PySide6` и что
@@ -277,9 +311,9 @@ SoundCloud — на фейковом транспорте: поиск, отбр�
    же процессе, мост `PlayerBridge`; критерий пересмотра — замер PSS на Mint.
 3. MPRIS + трей: реализованы (`neurowave wave --mpris`, `neurowave tray`),
    ядро не менялось; осталось проверить на живом рабочем столе Mint.
-4. Провайдеры: гейт из ADR-0004 закрыт, локальные файлы и SoundCloud
-   подключены; следующий — Spotify только как «пульт» (каталог + Connect), если
-   будет доступ к Web API.
+4. Провайдеры: гейт из ADR-0004 закрыт, подключены локальные файлы, SoundCloud
+   и Spotify-пульт; следующее — smoke на целевой машине и решение по VK/Deezer/
+   TIDAL (только при официальной потоковой поддержке).
 5. Sound Lab: Pure/Enhanced поверх `mpv`-фильтров, отдельные пресеты для
    Bluetooth и HDMI.
 6. Только после этого — ИИ-диджей как отдельный процесс с валидируемыми

@@ -12,26 +12,6 @@ from .base import AuthKind, Capability, ProviderInfo
 
 PLANNED: tuple[ProviderInfo, ...] = (
     ProviderInfo(
-        id="spotify",
-        title="Spotify",
-        capabilities=frozenset(
-            {
-                Capability.CATALOG,
-                Capability.LIBRARY,
-                Capability.PLAYLISTS,
-                Capability.DELEGATED_PLAYBACK,
-            }
-        ),
-        auth=AuthKind.OAUTH_BROWSER,
-        implemented=False,
-        summary="Только каталог и управление своим устройством Spotify Connect",
-        notes=(
-            "Официального способа отдать поток стороннему плееру нет: Web Playback "
-            "SDK работает в браузере и не выдаёт ссылку. Стриминг вне сервиса "
-            "запрещён условиями, поэтому режим возможен только как «пульт»."
-        ),
-    ),
-    ProviderInfo(
         id="deezer",
         title="Deezer",
         capabilities=frozenset(

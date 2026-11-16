@@ -13,7 +13,7 @@ import shutil
 import socket
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import Any, Sequence
 
 from . import __version__
@@ -40,7 +40,11 @@ from .state import PlayerStatus
 from .storage import Database, MediaCache, TokenStore
 
 DEFAULT_SEARCH_LIMIT = 20
-API_HOSTS = {"yandex": "api.music.yandex.net", "soundcloud": "api.soundcloud.com"}
+API_HOSTS = {
+    "yandex": "api.music.yandex.net",
+    "soundcloud": "api.soundcloud.com",
+    "spotify": "api.spotify.com",
+}
 
 
 @dataclass
@@ -104,6 +108,15 @@ def build_parser() -> argparse.ArgumentParser:
     play.add_argument("--id", dest="track_id", help="ID трека")
     play.add_argument("--limit", type=int, default=DEFAULT_SEARCH_LIMIT)
     _add_playback_options(play)
+
+    sub.add_parser("devices", help="устройства Spotify Connect (режим «пульт»)")
+    connect = sub.add_parser("connect", help="перенести воспроизведение на устройство")
+    connect.add_argument("device", help="id или имя устройства")
+    remote = sub.add_parser("remote", help="управление чужим плеером (Spotify Connect)")
+    remote.add_argument("action", choices=["play", "pause", "next", "previous"])
+    remote.add_argument("query", nargs="?", help="запрос для play")
+    remote.add_argument("--uri", help="spotify:track:… вместо поиска")
+    remote.add_argument("--limit", type=int, default=5)
 
     library = sub.add_parser("library", help="понравившиеся треки")
     library.add_argument("--limit", type=int, default=50)
@@ -192,6 +205,9 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
             "play": _cmd_play,
             "playlist": _cmd_playlist,
             "tray": _cmd_tray,
+            "devices": _cmd_devices,
+            "connect": _cmd_connect,
+            "remote": _cmd_remote,
         }
         return handlers[args.command](args, ctx)
     finally:
@@ -455,6 +471,90 @@ def _cmd_library(args: argparse.Namespace, ctx: Context) -> int:
     return 0
 
 
+def _cmd_devices(args: argparse.Namespace, ctx: Context) -> int:
+    """Список устройств Spotify Connect: без них режим «пульт» бесполезен."""
+    _require_capability(ctx, Capability.DELEGATED_PLAYBACK)
+    _require_token(ctx)
+    devices = ctx.adapter.devices()
+    if args.json:
+        print(json.dumps([asdict(device) for device in devices], ensure_ascii=False))
+        return 0
+    if not devices:
+        print(
+            "Устройства Spotify Connect не найдены: откройте Spotify на телефоне "
+            "или компьютере и войдите в тот же аккаунт."
+        )
+        return 1
+    for device in devices:
+        mark = "*" if device.is_active else " "
+        volume = f" · {device.volume_percent}%" if device.volume_percent is not None else ""
+        print(f"{mark} {device.name} — {device.type}{volume}  id={device.id}")
+    return 0
+
+
+def _cmd_connect(args: argparse.Namespace, ctx: Context) -> int:
+    _require_capability(ctx, Capability.DELEGATED_PLAYBACK)
+    _require_token(ctx)
+    target = (args.device or "").strip()
+    devices = ctx.adapter.devices()
+    match = _match_device(devices, target)
+    if match is None:
+        names = ", ".join(device.name for device in devices) or "ни одного"
+        raise PlayerError(f"Устройство «{target}» не найдено. Доступны: {names}.")
+    ctx.adapter.transfer(match.id)
+    print(f"Воспроизведение перенесено на «{match.name}».")
+    return 0
+
+
+def _match_device(devices: list, target: str):
+    """id точный, затем имя точно, затем имя по подстроке — без догадок."""
+    if not target:
+        return None
+    for device in devices:
+        if device.id == target:
+            return device
+    needle = target.casefold()
+    for device in devices:
+        if device.name.casefold() == needle:
+            return device
+    for device in devices:
+        if needle in device.name.casefold():
+            return device
+    return None
+
+
+def _cmd_remote(args: argparse.Namespace, ctx: Context) -> int:
+    """Управление устройством сервиса: звук идёт мимо нашего `mpv`."""
+    _require_capability(ctx, Capability.DELEGATED_PLAYBACK)
+    _require_token(ctx)
+    action = args.action
+    if action == "play":
+        uri = (args.uri or "").strip()
+        if uri:
+            ctx.adapter.remote_play(uri=uri)
+            print(f"Отправлено в Spotify: {uri}")
+            return 0
+        if not args.query:
+            raise PlayerError("Для remote play укажите запрос или --uri")
+        results = ctx.adapter.search(args.query, limit=args.limit)
+        if not results.tracks:
+            raise PlayerError(f"По запросу «{args.query}» треки не найдены")
+        track = results.tracks[0]
+        ctx.adapter.remote_play(track_ids=[track.id])
+        print(f"Играет на устройстве Spotify: {track.label}")
+        return 0
+    if action == "pause":
+        ctx.adapter.remote_pause()
+        print("Пауза отправлена в Spotify.")
+    elif action == "next":
+        ctx.adapter.remote_next()
+        print("Следующий трек отправлен в Spotify.")
+    else:
+        ctx.adapter.remote_previous()
+        print("Предыдущий трек отправлен в Spotify.")
+    return 0
+
+
 def _cmd_playlists(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
     _require_capability(ctx, Capability.PLAYLISTS)
@@ -551,6 +651,8 @@ def _cmd_wave(args: argparse.Namespace, ctx: Context) -> int:
 
 
 def _cmd_play(args: argparse.Namespace, ctx: Context) -> int:
+    # Сначала объясняем отсутствие потока: вход тут ничего не изменит.
+    _require_capability(ctx, Capability.DIRECT_STREAM)
     _require_token(ctx)
     if not args.query and not args.track_id:
         raise PlayerError("Укажите поисковый запрос или --id")
@@ -863,6 +965,14 @@ def _provider_dependency_checks(provider_id: str) -> list[tuple[str, bool, str]]
     if provider_id == "soundcloud":
         return [
             ("soundcloud API", True, "стандартная библиотека, доп. пакеты не нужны")
+        ]
+    if provider_id == "spotify":
+        return [
+            (
+                "spotify API",
+                True,
+                "стандартная библиотека; поток отдаёт только приложение Spotify",
+            )
         ]
     return []
 

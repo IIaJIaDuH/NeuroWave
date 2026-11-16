@@ -65,6 +65,18 @@ def test_local_provider_is_implemented_without_account() -> None:
     assert spec.login is None  # входить некуда
 
 
+def test_spotify_provider_is_delegated_playback_only() -> None:
+    spec = get_spec("spotify")
+    assert spec.info.implemented is True
+    assert spec.info.auth is AuthKind.API_TOKEN
+    assert spec.info.supports(Capability.CATALOG)
+    assert spec.info.supports(Capability.DELEGATED_PLAYBACK)
+    assert not spec.info.supports(Capability.DIRECT_STREAM)
+    assert spec.info.plays_in_mpv is False
+    assert spec.info.cache_allowed is False
+    assert spec.login is None  # токен вводится через login --token
+
+
 def test_soundcloud_provider_requires_app_key() -> None:
     spec = get_spec("soundcloud")
     assert spec.info.auth is AuthKind.API_TOKEN
@@ -91,8 +103,8 @@ def test_unknown_provider_lists_available() -> None:
 
 def test_planned_provider_explains_why_not_connected() -> None:
     with pytest.raises(ProviderNotImplemented) as exc:
-        get_spec("spotify")
-    assert "Spotify" in str(exc.value)
+        get_spec("vk")
+    assert "VK" in str(exc.value)
 
 
 def test_planned_catalogue_is_honest_about_playback() -> None:
@@ -100,10 +112,9 @@ def test_planned_catalogue_is_honest_about_playback() -> None:
     assert "yandex" not in by_id  # реализованные не попадают в «не подключённые»
     assert "local" not in by_id  # локальные файлы уже подключены
     assert "soundcloud" not in by_id  # поток уже реализован
-    assert {"spotify", "vk", "deezer", "tidal", "youtube-music"} <= set(by_id)
+    assert "spotify" not in by_id  # подключён как «пульт»
+    assert {"vk", "deezer", "tidal", "youtube-music"} <= set(by_id)
 
-    assert by_id["spotify"].plays_in_mpv is False
-    assert by_id["spotify"].supports(Capability.DELEGATED_PLAYBACK)
     assert by_id["vk"].capabilities == frozenset()
     for info in by_id.values():
         assert info.implemented is False
@@ -191,9 +202,10 @@ def test_providers_command_lists_connected_and_planned(tmp_path, capsys) -> None
     data = json.loads(capsys.readouterr().out)
     assert data["current"] == "yandex"
     ids = {row["id"] for row in data["connected"]}
-    assert ids == {"yandex", "local", "soundcloud"}
+    assert ids == {"yandex", "local", "soundcloud", "spotify"}
     planned_ids = {row["id"] for row in data["not_connected"]}
-    assert {"spotify", "vk"} <= planned_ids
+    assert {"vk", "deezer"} <= planned_ids
+    assert "spotify" not in planned_ids
     yandex = next(row for row in data["connected"] if row["id"] == "yandex")
     assert yandex["plays_in_mpv"] is True
     assert "direct_stream" in yandex["capabilities"]
@@ -204,6 +216,12 @@ def test_providers_command_lists_connected_and_planned(tmp_path, capsys) -> None
     assert soundcloud["auth"] == "api_token"
     assert soundcloud["cache_allowed"] is False
     assert soundcloud["plays_in_mpv"] is True
+    spotify = next(row for row in data["connected"] if row["id"] == "spotify")
+    assert spotify["auth"] == "api_token"
+    assert spotify["plays_in_mpv"] is False
+    assert spotify["cache_allowed"] is False
+    assert "delegated_playback" in spotify["capabilities"]
+    assert "direct_stream" not in spotify["capabilities"]
 
 
 def test_providers_command_human_output(tmp_path, capsys) -> None:
@@ -216,7 +234,7 @@ def test_providers_command_human_output(tmp_path, capsys) -> None:
 
 
 def test_provider_flag_selects_provider_and_reports_unimplemented(tmp_path, capsys) -> None:
-    code = main(["--home", str(tmp_path), "--provider", "spotify", "status"])
+    code = main(["--home", str(tmp_path), "--provider", "vk", "status"])
     assert code == 2
     assert "не подключён" in capsys.readouterr().err
 

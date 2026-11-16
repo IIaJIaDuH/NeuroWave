@@ -32,7 +32,7 @@
 - [x] Локальные файлы (`--provider local`, папка `local_music_dir`): без аккаунта, DRM и кеша.
 - [ ] MPD как внешняя библиотека (локальный провайдер уже читает файлы с диска).
 - [x] SoundCloud (`--provider soundcloud`): поиск и поток `playable`-треков, ключ через `login --token`, атрибуция автора, кеш отключён; превью и `blocked` в очередь не попадают.
-- [ ] Spotify только как «пульт» (каталог + Spotify Connect), если будет доступ к Web API.
+- [x] Spotify только как «пульт»: каталог, `devices`/`connect`/`remote`, `DELEGATED_PLAYBACK` без потока и кеша.
 - [ ] VK, Deezer, TIDAL, Apple Music, YouTube Music — только при появлении официальной потоковой поддержки.
 
 ## Sprint 2 — Sound

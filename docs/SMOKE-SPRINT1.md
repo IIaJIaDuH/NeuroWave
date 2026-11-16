@@ -7,7 +7,7 @@ GUI нет — всё проверяется из терминала. Скрип
 
 Ориентировочное время: 1 ч 40 мин (из них 60 мин — пассивный прогон «Моей
 волны», всё остальное можно делать параллельно) плюс ~20 мин на шаги 12–13
-(локальные файлы и SoundCloud).
+(локальные файлы, SoundCloud и Spotify-пульт).
 
 ---
 
@@ -17,8 +17,9 @@ GUI нет — всё проверяется из терминала. Скрип
 - свой аккаунт Яндекс Музыки (для lossless нужен Плюс, но lossless не требуется
   для прохождения — важно, что показано **фактическое** качество потока);
 - Bluetooth-наушники/колонка и HDMI-выход (монитор, ТВ или ресивер);
-- один локальный аудиофайл (`.flac`/`.mp3`) для шага 12 и ключ приложения
-  SoundCloud (Artist Pro) для шага 13;
+- один локальный аудиофайл (`.flac`/`.mp3`) для шага 12, ключ приложения
+  SoundCloud (Artist Pro) для шага 13 и OAuth access token Spotify Premium
+  для шага 14 (пункты, которых нет, можно пропустить с пометкой в отчёте);
 - два терминала и место под отчёт: `mkdir -p ~/nw-smoke`.
 
 Перед началом: закройте другие плееры и браузер с музыкой, чтобы замеры CPU и
@@ -43,6 +44,7 @@ Smoke считается пройденным, если выполнены **в�
 | 11 | MPRIS видит сессию, пауза/next из панели работают, трей открывается и не оставляет `mpv` | шаг 11 |
 | 12 | Локальный файл играет, кеш не растёт, `library`/путь вне папки отказаны, `me` без подписки | шаг 12 |
 | 13 | SoundCloud: атрибуция в выводе, поток playable-трека, кеш `0 файлов`, `library` отказ | шаг 13 |
+| 14 | Spotify: `devices` видит устройства, `connect`/`remote` управляют ими, `play` отказывает, кеш `0` | шаг 14 |
 
 Пункты «поведение записано» — это наблюдения, а не обещания кода: выбор
 устройства из приложения, `DEVICE_CHANGED` и MPRIS в Sprint 1 не реализованы,
@@ -390,6 +392,40 @@ grep -il 'client_id\|OAuth ' ~/nw-smoke/*.log
 
 ---
 
+## Шаг 14. Spotify как «пульт» (10 мин)
+
+Нужны OAuth access token Spotify (scopes `user-read-playback-state`,
+`user-modify-playback-state`, `user-read-private`), Premium и любое устройство
+с открытым приложением Spotify в том же аккаунте. Поток через нас не идёт —
+это и проверяем.
+
+```bash
+neurowave --provider spotify login --token <access token>
+neurowave --provider spotify doctor
+neurowave --provider spotify me
+neurowave --provider spotify search "daft punk" --limit 5
+neurowave --provider spotify devices
+neurowave --provider spotify connect "<имя устройства>"
+neurowave --provider spotify remote play "daft punk"
+neurowave --provider spotify remote pause
+neurowave --provider spotify remote next
+neurowave --provider spotify play "daft punk"     # должно отказать
+neurowave --provider spotify cache info
+```
+
+Ожидаемо: `doctor` показывает `spotify API` и пинг `api.spotify.com`; `me`
+показывает аккаунт и `Подписка Premium: активна/не активна` по полю `product`;
+поиск отдаёт реальные ID и ссылки `open.spotify.com`; `devices` перечисляет
+устройства (активное — с `*`); `connect` пишет «перенесено на «…»»; `remote`
+реально меняет трек/паузу в приложении Spotify; `play` для Spotify отвечает
+«не поддерживает: поток в mpv», а `cache info` — `0 файлов`. Локальный `mpv`
+в этот момент не запускается (`pgrep -af mpv` пуст).
+
+Если устройств нет — открыть Spotify на телефоне/ПК и повторить; если `403` —
+проверить Premium и scopes токена. Это ожидаемые сообщения, а не дефект.
+
+---
+
 ## Отчёт
 
 Заполните и приложите к задаче:
@@ -408,6 +444,7 @@ HDMI:             <sink, rate, поведение при hot-plug>
 Кеш:              <МБ, файлов после часа>
 Локальные файлы:  <поиск/воспроизведение/отказы, текст при пустой папке>
 SoundCloud:       <ключ принят, атрибуция, поток, кеш 0, превью отброшены>
+Spotify:          <devices/connect/remote работают, play отказан, mpv не запускался>
 Дефекты:          <список с шагами воспроизведения>
 ```
 
