@@ -40,6 +40,10 @@ class SoundCloudAdapter:
     def token(self) -> str | None:
         return getattr(self._client, "token", None)
 
+    def verify(self) -> None:
+        """Проверка ключа при входе: неверный ключ отваливается сразу."""
+        self._client.verify()
+
     def search(self, text: str, limit: int = 20, kind: str = "all") -> SearchResults:
         query = (text or "").strip()
         if not query:

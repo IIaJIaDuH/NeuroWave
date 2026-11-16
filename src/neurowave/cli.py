@@ -20,7 +20,7 @@ from . import __version__
 from .audio import MpvBackend, NullBackend
 from .config import ConfigStore, Paths, Settings
 from .domain import AccountInfo, Track
-from .errors import AuthError, NeuroWaveError, PlayerError
+from .errors import AuthError, NetworkError, NeuroWaveError, PlayerError
 from .player import PlayerService
 from .providers import (
     AuthKind,
@@ -308,12 +308,24 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
         token = args.token.strip()
         if not token:
             raise AuthError("Ключ пустой")
-        ctx.tokens.save(token)
-        ctx.adapter = create(
+        adapter = create(
             spec, ProviderContext(token=token, paths=ctx.paths, settings=ctx.settings)
         )
+        verify = getattr(adapter, "verify", None)
+        if verify is not None:
+            print("Проверяю ключ…", flush=True)
+            try:
+                verify()
+            except NetworkError as exc:
+                # Ключ не подтверждён, но и не опровергнут: сеть — не повод его терять.
+                print(
+                    f"Ключ не проверен: {exc}. Сохраняю — проверить можно позже.",
+                    file=sys.stderr,
+                    flush=True,
+                )
+        ctx.tokens.save(token)
+        ctx.adapter = adapter
         print(f"Ключ сохранён ({spec.info.title}). Хранилище: {ctx.tokens.backend}.")
-        print('Проверка ключа — первый запрос, например: neurowave search "запрос"')
         return 0
     if spec.login is None:
         raise ProviderNotImplemented(

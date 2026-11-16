@@ -151,6 +151,10 @@ class SoundCloudClient:
             items = payload or []
         return [item for item in items if isinstance(item, dict)]
 
+    def verify(self) -> None:
+        """Проверить ключ дешёвым запросом — сразу, а не на первом поиске."""
+        self._get_json("/tracks", {"limit": 1, "access": PLAYABLE_ACCESS})
+
     def track(self, track_id: str) -> dict[str, Any]:
         payload = self._get_json(f"/tracks/{self._quote(track_id)}")
         if not isinstance(payload, dict) or not payload.get("id"):

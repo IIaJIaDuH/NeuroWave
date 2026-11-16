@@ -141,9 +141,11 @@ neurowave --provider soundcloud play "запрос"               # поток p
 
 `SoundCloudAdapter` подключён ровно в границах API: поиск и поток для
 `playable`-треков. Ключ приложения или пользовательский access token
-сохраняется тем же `TokenStore` (`neurowave login --token <ключ>`); access
-token отправляется заголовком `Authorization: OAuth`, client_id — параметром
-`client_id`. Сеть инкапсулирована в `soundcloud/client.py` на стандартной
+проверяется дешёвым запросом при входе и сохраняется тем же `TokenStore`
+(`neurowave login --token <ключ>`): неверный ключ отклоняется сразу и не
+записывается, а при недоступной сети ключ сохраняется с предупреждением.
+Access token отправляется заголовком `Authorization: OAuth`, client_id —
+параметром `client_id`. Сеть инкапсулирована в `soundcloud/client.py` на стандартной
 библиотеке; транспорт, сон и повторы инъектируются, поэтому тесты не ходят в
 интернет.
 
@@ -238,7 +240,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 187 unit-тестов ядра, интеграций и провайдеров,
+Проверено в этом окружении: 192 unit-теста ядра, интеграций и провайдеров,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
 импорт и сборка пакета, работа MPRIS на отдельном сессионном шине
@@ -251,7 +253,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 187 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
+python -m pytest        # 192 теста: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —

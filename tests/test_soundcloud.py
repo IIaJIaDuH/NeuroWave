@@ -107,6 +107,33 @@ def test_client_requires_key() -> None:
     assert "--token" in str(exc.value)
 
 
+def test_client_verify_accepts_valid_key_with_cheap_request() -> None:
+    transport = FakeTransport([make_response({"collection": []})])
+    make_client(transport).verify()
+    _, url, headers = transport.calls[0]
+    assert "/tracks?" in url
+    assert "limit=1" in url
+    assert headers.get("Authorization") is None  # client_id ушёл параметром
+
+
+def test_client_verify_rejects_bad_key() -> None:
+    transport = FakeTransport([make_response({}, status=401)])
+    with pytest.raises(AuthError) as exc:
+        make_client(transport).verify()
+    assert "отклонил ключ" in str(exc.value)
+    assert len(transport.calls) == 1  # 401 не повторяем
+
+
+def test_adapter_verify_delegates_to_client() -> None:
+    transport = FakeTransport([make_response({"collection": []})])
+    make_adapter(transport).verify()
+    assert len(transport.calls) == 1
+
+    bad = FakeTransport([make_response({}, status=401)])
+    with pytest.raises(AuthError):
+        make_adapter(bad).verify()
+
+
 def test_client_maps_http_errors() -> None:
     with pytest.raises(AuthError):
         make_client(FakeTransport([make_response({}, status=401)])).search_tracks("x")
@@ -279,15 +306,28 @@ def test_cli_soundcloud_without_key_explains_how_to_login(tmp_path, capsys) -> N
     assert "login --token" in captured.err
 
 
-def test_cli_soundcloud_login_accepts_key_offline(tmp_path, capsys) -> None:
+def patch_verify(monkeypatch, behaviour) -> None:
+    """Подменить сетевую проверку ключа, чтобы CLI-тесты шли без сети."""
+    from neurowave.soundcloud import SoundCloudAdapter
+
+    def fake_verify(self) -> None:
+        if isinstance(behaviour, Exception):
+            raise behaviour
+
+    monkeypatch.setattr(SoundCloudAdapter, "verify", fake_verify)
+
+
+def test_cli_soundcloud_login_verifies_and_saves_key(tmp_path, capsys, monkeypatch) -> None:
     from neurowave.cli import main
 
+    patch_verify(monkeypatch, None)
     home = tmp_path / "home"
     code = main(
         ["--home", str(home), "--provider", "soundcloud", "login", "--token", "app-key-123"]
     )
     captured = capsys.readouterr()
     assert code == 0
+    assert "Проверяю ключ…" in captured.out
     assert "Ключ сохранён" in captured.out
     assert "app-key-123" not in captured.out  # ключ не печатается
 
@@ -298,6 +338,40 @@ def test_cli_soundcloud_login_accepts_key_offline(tmp_path, capsys) -> None:
     assert data["token"]["required"] is True
 
 
+def test_cli_soundcloud_login_rejects_bad_key_before_saving(tmp_path, capsys, monkeypatch) -> None:
+    from neurowave.cli import main
+
+    patch_verify(monkeypatch, AuthError("SoundCloud отклонил ключ: проверьте client_id/access token"))
+    home = tmp_path / "home"
+    code = main(
+        ["--home", str(home), "--provider", "soundcloud", "login", "--token", "bad-key"]
+    )
+    captured = capsys.readouterr()
+    assert code == 2
+    assert "отклонил ключ" in captured.err
+    assert "Ключ сохранён" not in captured.out
+
+    main(["--home", str(home), "--provider", "soundcloud", "--json", "status"])
+    data = json.loads(capsys.readouterr().out)
+    assert data["token"]["present"] is False
+
+
+def test_cli_soundcloud_login_keeps_key_when_network_unavailable(
+    tmp_path, capsys, monkeypatch
+) -> None:
+    from neurowave.cli import main
+
+    patch_verify(monkeypatch, NetworkError("Сеть недоступна: timeout"))
+    home = tmp_path / "home"
+    code = main(
+        ["--home", str(home), "--provider", "soundcloud", "login", "--token", "key-123"]
+    )
+    captured = capsys.readouterr()
+    assert code == 0
+    assert "Ключ не проверен" in captured.err
+    assert "Ключ сохранён" in captured.out
+
+
 def test_cli_yandex_rejects_manual_key(tmp_path, capsys) -> None:
     from neurowave.cli import main
 
@@ -306,9 +380,10 @@ def test_cli_yandex_rejects_manual_key(tmp_path, capsys) -> None:
     assert "интерактивный вход" in capsys.readouterr().err
 
 
-def test_cli_soundcloud_library_is_refused(tmp_path, capsys) -> None:
+def test_cli_soundcloud_library_is_refused(tmp_path, capsys, monkeypatch) -> None:
     from neurowave.cli import main
 
+    patch_verify(monkeypatch, None)
     home = tmp_path / "home"
     main(["--home", str(home), "--provider", "soundcloud", "login", "--token", "k"])
     capsys.readouterr()
