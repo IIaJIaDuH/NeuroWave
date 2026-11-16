@@ -61,7 +61,7 @@ neurowave wave              # «Моя волна», управление из �
 
 | Команда | Назначение |
 |---|---|
-| `neurowave doctor [--json]` | окружение: Python, библиотека API, mpv, keyring, каталоги, токен, сеть |
+| `neurowave --json doctor` | окружение: Python, библиотека API, mpv, keyring, каталоги, токен, сеть |
 | `neurowave login` / `logout` | вход по Device Flow и удаление токена |
 | `neurowave me` | аккаунт и признак подписки Плюс |
 | `neurowave search "запрос"` | треки, исполнители, альбомы, плейлисты |
@@ -73,7 +73,9 @@ neurowave wave              # «Моя волна», управление из �
 | `neurowave playlists` | список своих плейлистов |
 | `neurowave like ID` / `unlike ID` | лайк и снятие лайка |
 | `neurowave cache info\|clear\|evict` | состояние и очистка кеша |
-| `neurowave status [--json]` | конфигурация, кеш, недавняя история |
+| `neurowave --json status` | конфигурация, кеш, недавняя история |
+
+`--json` — общий флаг и ставится до подкоманды (`neurowave --json status`, не `neurowave status --json`).
 
 В интерактивном режиме: `q` — выход, `n` — следующий, `p` — пауза,
 `+`/`-` — громкость, `s` — состояние и качество источника.
@@ -133,7 +135,8 @@ python -m pytest        # 67 тестов: очередь, состояния, �
 ## Следующие шаги
 
 1. Smoke-тест на Linux Mint: `doctor` → `login` → `wave` 60 минут, замеры
-   PSS/CPU и поведение Bluetooth/HDMI.
+   PSS/CPU и поведение Bluetooth/HDMI. Чек-лист и команды замеров:
+   [SMOKE-SPRINT1.md](SMOKE-SPRINT1.md).
 2. ADR о выборе UI-основы (Qt Widgets против QML) поверх текущего контракта.
 3. MPRIS + трей: управление вне окна без изменения ядра.
 4. Sound Lab: Pure/Enhanced поверх `mpv`-фильтров, отдельные пресеты для
