@@ -39,6 +39,22 @@ FEEDBACK_TYPES = {
 }
 
 
+def _plus_flag(value: Any) -> bool | None:
+    """Свести статус Плюса к bool|None.
+
+    API отдаёт объект ``Plus`` (или словарь) с полем ``has_plus``, а не сам
+    флаг; сырое значение ломало вывод статуса подписки.
+    """
+    if value is None or isinstance(value, bool):
+        return value
+    has_plus = getattr(value, "has_plus", None)
+    if has_plus is None and isinstance(value, dict):
+        has_plus = value.get("has_plus")
+    if has_plus is None:
+        return None
+    return bool(has_plus)
+
+
 def _require_yandex_music():
     try:
         import yandex_music  # type: ignore
@@ -120,17 +136,19 @@ class YandexMusicAdapter:
     # --- аккаунт ------------------------------------------------------
     def account(self) -> AccountInfo:
         client = self.client
-        account = self._call(lambda: client.me)
+        # ``client.me`` — это Status, а сам пользователь лежит в ``me.account``.
+        me = self._call(lambda: client.me)
+        account = getattr(me, "account", None) or me
         plus: bool | None = None
         try:
             status = client.account_status()
-            plus = getattr(status, "plus", None)
+            plus = _plus_flag(getattr(status, "plus", None))
         except Exception:
             plus = None
         return AccountInfo(
             uid=getattr(account, "uid", None),
             login=getattr(account, "login", None),
-            display_name=getattr(account, "display_name", None),
+            display_name=getattr(account, "display_name", None) or getattr(account, "full_name", None),
             service_available=bool(getattr(account, "service_available", True)),
             plus=plus,
         )

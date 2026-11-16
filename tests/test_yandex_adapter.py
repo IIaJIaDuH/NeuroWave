@@ -187,3 +187,50 @@ def test_missing_token_requires_login():
     adapter = YandexMusicAdapter()
     with pytest.raises(AuthError):
         _ = adapter.client
+
+
+def test_account_reads_user_inside_status_wrapper(client):
+    """Реальный API: ``client.me`` — это Status, пользователь лежит в ``me.account``."""
+    client.me = SimpleNamespace(
+        account=SimpleNamespace(
+            uid=4242,
+            login="listener",
+            display_name="Слушатель Музыки",
+            full_name="Музыки Слушатель",
+            service_available=True,
+        )
+    )
+    adapter = YandexMusicAdapter(client=client, retries=1, backoff=0.01, sleep=lambda _s: None)
+
+    account = adapter.account()
+
+    assert account.uid == 4242
+    assert account.login == "listener"
+    assert account.title == "Слушатель Музыки"
+
+
+def test_account_normalizes_plus_object(client):
+    """Плюс приходит объектом с ``has_plus``; сырое значение давало KeyError в CLI."""
+    client.account_status = lambda: SimpleNamespace(
+        plus=SimpleNamespace(has_plus=True, is_tutorial_completed=True, migrated=None)
+    )
+    adapter = YandexMusicAdapter(client=client, retries=1, backoff=0.01, sleep=lambda _s: None)
+
+    assert adapter.account().plus is True
+
+
+def test_account_without_plus_data_is_unknown(client):
+    client.account_status = lambda: SimpleNamespace(plus=None)
+    adapter = YandexMusicAdapter(client=client, retries=1, backoff=0.01, sleep=lambda _s: None)
+
+    assert adapter.account().plus is None
+
+
+def test_print_account_survives_unexpected_plus(capsys):
+    """Вывод статуса не должен падать ни на каком типе plus."""
+    from neurowave.cli import _print_account
+    from neurowave.domain import AccountInfo
+
+    _print_account(AccountInfo(display_name="X", plus={"has_plus": True}), False, "Плюс")
+
+    assert "Подписка Плюс: неизвестно" in capsys.readouterr().out
