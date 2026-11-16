@@ -82,11 +82,13 @@ neurowave --provider spotify devices                     # устройства 
 neurowave --provider spotify remote play "запрос"         # играть на устройстве Spotify
 neurowave --provider spotify login --token <access> \
   --refresh-token <refresh> --client-id <id>            # чтобы пульт не отваливался
+neurowave sound         # профиль звука: режим, полосы, лимитер, lavfi-граф
+neurowave sound --profile bluetooth --graph   # выбрать профиль и увидеть цепь
 neurowave tray          # волна + значок в трее + MPRIS: pip install -e '.[desktop]'
 ./packaging/install-desktop.sh   # ярлык в меню и на рабочем столе
 ```
 
-Управление в сессии: `q` — выход, `n` — следующий, `p` — пауза, `+`/`-` — громкость, `s` — состояние. Полный список команд: `neurowave --help`, тесты: `python -m pytest`.
+Управление в сессии: `q` — выход, `n` — следующий, `p` — пауза, `+`/`-` — громкость, `e` — Pure/Enhanced, `s` — состояние. Полный список команд: `neurowave --help`, тесты: `python -m pytest`.
 
 ## Безопасность и приватность
 

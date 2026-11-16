@@ -81,6 +81,8 @@ class Settings:
     language: str = "ru"
     ai_enabled: bool = False
     autoplay_wave_feedback: bool = True
+    #: id выбранного профиля DSP; сами профили живут в audio/dsp_profiles.py.
+    dsp_profile: str = "flat"
     # Ставится в True только когда в цепи есть проверенный лимитер (PR-04).
     # До этого громкость выше SAFE_VOLUME не применяется.
     boost_verified: bool = False
@@ -116,6 +118,11 @@ class Settings:
         settings = cls(**filtered)
         settings.volume = settings.clamp_volume(settings.volume)
         settings.repeat = RepeatMode.parse(settings.repeat).value
+        # Ленивый импорт: audio импортирует config (MAX_VOLUME), поэтому
+        # обычный импорт на уровне модуля дал бы цикл.
+        from .audio.dsp_profiles import resolve_profile
+
+        settings.dsp_profile = resolve_profile(settings.dsp_profile).id
         return settings
 
 

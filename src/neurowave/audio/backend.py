@@ -20,6 +20,8 @@ class AudioBackend(Protocol):
     def seek(self, position_ms: int) -> None: ...
     def position_ms(self) -> int: ...
     def is_playing(self) -> bool: ...
+    def set_audio_filter(self, graph: str) -> None: ...
+    def audio_filter(self) -> str | None: ...
     def shutdown(self) -> None: ...
 
 
@@ -34,6 +36,7 @@ class NullBackend:
         self.calls: list[tuple[str, object]] = []
         self.loaded_url: str | None = None
         self.volume = 100
+        self.audio_filter_value: str | None = None
         self._playing = False
         self._position = 0
         self._started_at: float | None = None
@@ -81,6 +84,13 @@ class NullBackend:
 
     def is_playing(self) -> bool:
         return self._playing
+
+    def set_audio_filter(self, graph: str) -> None:
+        self.calls.append(("af", graph))
+        self.audio_filter_value = graph or None
+
+    def audio_filter(self) -> str | None:
+        return self.audio_filter_value
 
     def shutdown(self) -> None:
         self.calls.append(("shutdown", None))
