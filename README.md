@@ -53,6 +53,7 @@
 - [ADR-0003: Основа интерфейса](docs/decisions/0003-ui-foundation.md)
 - [ADR-0004: Провайдеры музыки](docs/decisions/0004-multi-provider.md)
 - [ADR-0005: Аудиодвижок](docs/decisions/0005-audio-engine.md) — mpv + IPC + lavfi, альтернативы и условия пересмотра
+- [Сравнение с CloudMus и YaMusic](docs/COMPARISON-CLOUDMUS-YAMUSIC.md) — старт, память, CPU, локальное воспроизведение
 - [ADR-0006: Лицензия](docs/decisions/0006-license.md) — принято: MIT, замена `mutagen` на `tinytag`
 - [Бета-чеклист](docs/BETA-CHECKLIST.md) — что проверено, что открыто, замеры soak и памяти
 - [Smoke-тест Sprint 1 на Mint](docs/SMOKE-SPRINT1.md)
@@ -61,7 +62,7 @@
 
 **Sprint 1: Core MVP (headless).** Реализованы адаптер Яндекс Музыки, «Моя волна», поиск, библиотека, лайки, плейлисты, очередь, машина состояний, кеш, SQLite и вывод через mpv. Подробности и границы — в [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md).
 
-Sprint 0 (сравнение CloudMus/YaMusic на целевой машине и замеры) остаётся нужным до публичного релиза: GUI и DSP не выбираются до этих замеров.
+Сравнение с CloudMus/YaMusic выполнено ([замеры](docs/COMPARISON-CLOUDMUS-YAMUSIC.md)), замеры Sprint 0 — в [SPRINT0-MEASUREMENTS.md](docs/SPRINT0-MEASUREMENTS.md). Открыты: 6-часовой soak (идёт), физический HDMI (порт не подключён) и стриминг конкурентов под живым аккаунтом.
 
 Платформа первой версии: **Linux Mint / Linux x86_64**. Приоритетные аудиоустройства: **Bluetooth и HDMI**.
 
