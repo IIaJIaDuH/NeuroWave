@@ -191,3 +191,22 @@ def test_backend_survives_failed_command(fake_mpv, tmp_path) -> None:
     assert backend.position_ms() == 0  # следующая команда работает
     backend.shutdown()
     assert not socket_path.exists()
+
+
+def test_stale_sockets_of_dead_processes_are_removed(tmp_path) -> None:
+    """SIGKILL оставляет сокет: при следующем запуске его надо убрать."""
+    from neurowave.audio.mpv import cleanup_stale_sockets
+
+    dead = tmp_path / "neurowave-mpv-999999.sock"
+    dead.write_text("")
+    mine = tmp_path / f"neurowave-mpv-{__import__('os').getpid()}.sock"
+    mine.write_text("")
+    other = tmp_path / "unrelated.sock"
+    other.write_text("")
+
+    removed = cleanup_stale_sockets(tmp_path)
+
+    assert removed == 1
+    assert not dead.exists()
+    assert mine.exists()  # свой сокет не трогаем
+    assert other.exists()  # чужие файлы не наши
