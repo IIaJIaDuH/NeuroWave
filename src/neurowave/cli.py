@@ -175,6 +175,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("status", help="состояние конфигурации и локальных данных")
     sub.add_parser("doctor", help="диагностика окружения (без токенов)")
     sub.add_parser("providers", help="провайдеры музыки: что подключено и что умеет")
+    sub.add_parser("app", help="графическое окно (Qt): транспорт, громкость, звук, выход")
     return parser
 
 
@@ -259,6 +260,7 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
             "play": _cmd_play,
             "playlist": _cmd_playlist,
             "tray": _cmd_tray,
+            "app": _cmd_app,
             "devices": _cmd_devices,
             "connect": _cmd_connect,
             "remote": _cmd_remote,
@@ -928,6 +930,29 @@ def _stop_quietly(service) -> None:
         service.stop()
     except Exception:
         pass
+
+
+def _cmd_app(args: argparse.Namespace, ctx: Context) -> int:
+    from .ui.app import UiUnavailable, is_available, run_window
+
+    available, reason = is_available()
+    if not available:
+        print(f"Окно недоступно: {reason}", file=sys.stderr)
+        return 1
+
+    player = _build_player(args, ctx)
+    mpris = _start_mpris(player) if getattr(args, "mpris", False) else None
+    try:
+        try:
+            return run_window(player)
+        except UiUnavailable as exc:
+            print(f"Окно недоступно: {exc}", file=sys.stderr)
+            return 1
+    finally:
+        _stop_quietly(mpris)
+        player.stop()
+        player.close()
+        ConfigStore(ctx.paths).save(ctx.settings)
 
 
 def _cmd_tray(args: argparse.Namespace, ctx: Context) -> int:

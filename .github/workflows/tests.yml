@@ -32,7 +32,34 @@ jobs:
         # чтобы тесты не зависели от keyring окружения.
         env:
           NEUROWAVE_KEYRING: "off"
-        run: python -m pytest -q -m "not integration"
+        # Qt-тесты требуют PySide6: они вынесены в отдельную джобу.
+        run: python -m pytest -q -m "not integration" --ignore=tests/test_ui_qt.py
+
+  # Окно проверяется в offscreen-режиме: без X/Wayland, но с настоящими
+  # виджетами и настоящим Qt.
+  qt:
+    name: Qt window (offscreen)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Установить зависимости
+        run: |
+          python -m pip install --upgrade pip
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libegl1 libxkbcommon0
+          pip install -e '.[dev,local,mpris,ui]'
+
+      - name: Smoke-тест окна
+        env:
+          NEUROWAVE_KEYRING: "off"
+          QT_QPA_PLATFORM: "offscreen"
+        run: python -m pytest -q tests/test_ui_qt.py
 
   # Слой mpv проверяется настоящим mpv, а не двойником: звук уходит в
   # --ao=null, поэтому звуковая карта не нужна.
