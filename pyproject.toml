@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]  # PEP 639: license expression + license-files
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,14 @@ version = "0.1.0"
 description = "NeuroWave — headless Music Core for a lightweight Linux Yandex Music client"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "Proprietary" }
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: POSIX :: Linux",
+  "Topic :: Multimedia :: Sound/Audio :: Players",
+]
+keywords = ["music", "player", "linux", "mpv", "yandex-music", "dsp"]
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [{ name = "NeuroWave contributors" }]
 dependencies = [
     "yandex-music>=3.2,<4",
@@ -17,7 +24,7 @@ dependencies = [
 [project.optional-dependencies]
 keyring = ["keyring>=24"]
 mpris = ["dbus-next>=0.2.3"]
-local = ["mutagen>=1.47"]
+local = ["tinytag>=1.10"]
 ui = ["PySide6-Essentials>=6.6"]
 desktop = ["dbus-next>=0.2.3", "PySide6-Essentials>=6.6", "keyring>=24"]
 dev = ["pytest>=8", "build>=1.2"]
