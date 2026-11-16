@@ -1,5 +1,6 @@
 # Build and IDE
 build/
+dist/
 cmake-build-*/
 .cache/
 .idea/
