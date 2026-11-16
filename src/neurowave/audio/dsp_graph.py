@@ -76,7 +76,7 @@ def build_filter_graph(profile: AudioProfile, *, include_limiter: bool = True) -
 def describe_profile(profile: AudioProfile) -> str:
     """Короткое человеческое описание для CLI/UI и логов."""
     if profile.mode is DspMode.PURE:
-        return f"{profile.name} · без обработки"
+        return f"{profile.name} · фильтры сняты"
     parts: list[str] = []
     if profile.preamp_db:
         parts.append(f"preamp {profile.preamp_db:+g} дБ")

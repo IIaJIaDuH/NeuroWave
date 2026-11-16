@@ -13,6 +13,8 @@ import time
 from typing import Any, Callable, Iterable, Protocol
 
 from .audio.backend import AudioBackend
+from .audio.dsp_controller import DspController, DspStatus
+from .audio.dsp_profiles import AudioProfile, resolve_profile
 from .config import SAFE_VOLUME, Settings
 from .domain import Quality, RepeatMode, StreamInfo, Track
 from .errors import NeuroWaveError, PlayerError, TrackUnavailable
@@ -47,6 +49,7 @@ class PlayerService:
         listener: EventListener | None = None,
         router: Any | None = None,
         prefetch: bool = True,
+        dsp: DspController | None = None,
     ):
         self.adapter = adapter
         self._router = router
@@ -75,6 +78,9 @@ class PlayerService:
         self._started_at: float | None = None
         self._boost_notice_shown = False
         backend.on_end = self._handle_end
+        self.dsp = dsp if dsp is not None else DspController(
+            backend, settings=self.settings, listener=self._notify_dsp
+        )
         self.backend.set_volume(self._apply_volume_policy())
 
     # --- свойства -----------------------------------------------------
@@ -199,12 +205,38 @@ class PlayerService:
             self.state.transition(PlayerStatus.STOPPED)
         self._emit("stopped", track=self.current_track)
 
+    def set_dsp_profile(self, profile: AudioProfile | str) -> DspStatus:
+        """Выбрать профиль звука: применить сейчас или сохранить до старта."""
+        chosen = resolve_profile(profile) if not isinstance(profile, AudioProfile) else profile
+        self.settings.dsp_profile = chosen.id
+        if self.store is not None:
+            self.store.set_setting("dsp_profile", chosen.id)
+        if getattr(self.backend, "is_running", False):
+            return self.dsp.apply(chosen)
+        # mpv ещё не запущен: не поднимаем процесс ради фильтра.
+        return DspStatus(profile=chosen, mode=chosen.mode, graph=None, confirmed=False)
+
+    def set_dsp_mode(self, mode: str) -> DspStatus:
+        from .audio.dsp_profiles import DspMode
+
+        parsed = DspMode.parse(mode)
+        if not getattr(self.backend, "is_running", False):
+            self.settings.dsp_profile = (
+                "flat" if parsed is DspMode.PURE else resolve_profile(self.settings.dsp_profile).id
+            )
+            return DspStatus(profile=resolve_profile(self.settings.dsp_profile), mode=parsed)
+        return self.dsp.set_mode(parsed)
+
     def close(self) -> None:
         try:
+            self.dsp.invalidate()
             self.backend.shutdown()
         finally:
             if self.store is not None:
                 self.store.save_queue(self.queue.snapshot())
+
+    def _notify_dsp(self, event: str, payload: dict[str, Any]) -> None:
+        self._emit(event, **payload)
 
     # --- внутреннее ---------------------------------------------------
     def _play_current(self) -> None:
@@ -223,6 +255,8 @@ class PlayerService:
         quality = self._current_quality  # снимок: диспетчер может уже уйти вперёд
         self.backend.load(url)
         self.backend.set_volume(self._apply_volume_policy())
+        # Фильтры живут в mpv между треками, поэтому sync() обычно no-op.
+        self.dsp.sync()
         self.backend.play()
         self.state.transition(PlayerStatus.PLAYING)
         self.state.clear_overlay(Overlay.TRACK_UNAVAILABLE)

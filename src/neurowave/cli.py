@@ -19,6 +19,8 @@ from typing import Any, Sequence
 
 from . import __version__
 from .audio import MpvBackend, NullBackend
+from .audio.dsp_graph import build_filter_graph, describe_profile
+from .audio.dsp_profiles import BUILTIN_PROFILES, DspError, get_profile, resolve_profile
 from .config import ConfigStore, Paths, Settings
 from .domain import AccountInfo, Track
 from .errors import AuthError, NetworkError, NeuroWaveError, PlayerError
@@ -154,6 +156,12 @@ def build_parser() -> argparse.ArgumentParser:
     cache = sub.add_parser("cache", help="управление дисковым кешем")
     cache.add_argument("action", choices=["info", "clear", "evict"])
 
+    sound = sub.add_parser("sound", help="профиль звука: Pure/Enhanced, EQ, лимитер")
+    sound.add_argument("--profile", help=f"id профиля ({', '.join(sorted(BUILTIN_PROFILES))})")
+    sound.add_argument("--pure", action="store_true", help="снять наши фильтры (Pure)")
+    sound.add_argument("--enhanced", action="store_true", help="вернуть обработку (Enhanced)")
+    sound.add_argument("--graph", action="store_true", help="показать lavfi-граф профиля")
+
     sub.add_parser("status", help="состояние конфигурации и локальных данных")
     sub.add_parser("doctor", help="диагностика окружения (без токенов)")
     sub.add_parser("providers", help="провайдеры музыки: что подключено и что умеет")
@@ -235,6 +243,7 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
             "like": _cmd_like,
             "unlike": _cmd_unlike,
             "status": _cmd_status,
+            "sound": _cmd_sound,
             "wave": _cmd_wave,
             "play": _cmd_play,
             "playlist": _cmd_playlist,
@@ -670,6 +679,59 @@ def _cmd_unlike(args: argparse.Namespace, ctx: Context) -> int:
     return 0 if ok else 1
 
 
+def _cmd_sound(args: argparse.Namespace, ctx: Context) -> int:
+    """Показать или выбрать профиль. Работающий mpv не трогаем из другого процесса."""
+    if args.pure and args.enhanced:
+        print("Нельзя одновременно --pure и --enhanced.", file=sys.stderr)
+        return 2
+    chosen = None
+    if args.pure:
+        chosen = BUILTIN_PROFILES["flat"]
+    elif args.enhanced:
+        chosen = resolve_profile(ctx.settings.dsp_profile)
+        if chosen.mode.value == "pure":
+            chosen = BUILTIN_PROFILES["hifi"]
+    elif args.profile:
+        try:
+            chosen = get_profile(args.profile)
+        except DspError as exc:
+            print(f"Ошибка: {exc}", file=sys.stderr)
+            return 2
+    if chosen is not None:
+        ctx.settings.dsp_profile = chosen.id
+        ConfigStore(ctx.paths).save(ctx.settings)
+    profile = resolve_profile(ctx.settings.dsp_profile)
+    graph = build_filter_graph(profile)
+    note = " (сохранено, применится при следующем воспроизведении)" if chosen is not None else ""
+    data = {
+        "profile": profile.id,
+        "name": profile.name,
+        "mode": profile.mode.value,
+        "description": describe_profile(profile),
+        "preamp_db": profile.preamp_db,
+        "bands": len(profile.bands),
+        "limiter": profile.limiter.to_dict() if profile.limiter.enabled else None,
+        "graph": graph,
+        "boost_verified": ctx.settings.boost_verified,
+        "available": sorted(BUILTIN_PROFILES),
+    }
+    if args.json:
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        return 0
+    print(f"Профиль: {describe_profile(profile)}{note}")
+    print(f"Режим: {profile.mode.value} · id: {profile.id}")
+    if args.graph:
+        print(f"Граф: {graph or '— (без обработки)'}")
+    if profile.limiter.enabled:
+        print(
+            f"Лимитер: потолок {profile.limiter.ceiling_dbfs:g} dBFS, "
+            f"lookahead {profile.limiter.lookahead_ms:g} мс"
+        )
+    if not ctx.settings.boost_verified:
+        print("Усиление выше 100 % выключено: лимитер ещё не подтверждён измерениями")
+    return 0
+
+
 def _cmd_status(args: argparse.Namespace, ctx: Context) -> int:
     stats = ctx.cache.stats()
     recent = ctx.db.recent_tracks(limit=5)
@@ -904,6 +966,10 @@ def _handle_key(player: PlayerService, key: str) -> bool:
         player.set_volume(player.volume + 5)
     elif key == "-":
         player.set_volume(player.volume - 5)
+    elif key in {"e", "effects"}:
+        mode = "pure" if player.dsp.status.mode.value == "enhanced" else "enhanced"
+        status = player.set_dsp_mode(mode)
+        print(f"Звук: {status.mode.value} · {status.name}", flush=True)
     elif key in {"s", "status"}:
         track = player.current_track
         quality = player.current_quality

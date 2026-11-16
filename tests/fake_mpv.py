@@ -32,6 +32,7 @@ PLANS = {
     "eof-late": (4.0, "eof", "current"),
     "eof-stale": (0.1, "eof", "previous"),
     "deny-af": (None, None, None),
+    "deny-af-graph": (None, None, None),
     "deny-loadfile": (None, None, None),
 }
 
@@ -150,10 +151,15 @@ def main() -> int:
                     )
                     schedule_end()
             elif name == "af":
-                if plan == "deny-af":
+                raw = str(command[2]) if len(command) > 2 else ""
+                denied = plan == "deny-af" or (plan == "deny-af-graph" and raw)
+                if denied:
                     send({"request_id": request_id, "error": "error running command"})
                 else:
-                    state["af"] = str(command[2]) if len(command) > 2 else ""
+                    # Настоящий mpv хранит внутреннюю часть графа без lavfi=[…].
+                    if raw.startswith("lavfi=[") and raw.endswith("]"):
+                        raw = raw[len("lavfi=[") : -1]
+                    state["af"] = raw
                     reply(request_id)
             elif name == "stop":
                 state["loaded"] = False
