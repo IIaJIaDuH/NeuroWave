@@ -21,6 +21,7 @@ from pathlib import Path
 
 import pytest
 
+from neurowave.audio.dsp_profiles import BUILTIN_PROFILES
 from neurowave.audio.mpv import MpvBackend
 from neurowave.config import Settings
 from neurowave.domain import Quality, StreamInfo, Track
@@ -204,3 +205,46 @@ def test_player_advances_to_next_track_with_real_mpv(tmp_path: Path) -> None:
             player.stop()
         finally:
             player.close()
+
+
+@pytest.mark.parametrize("profile_id", sorted(BUILTIN_PROFILES))
+def test_real_mpv_accepts_every_builtin_dsp_graph(backend: MpvBackend, tmp_path: Path, profile_id: str) -> None:
+    """Граф профиля должен собираться настоящим libavfilter, а не только нами.
+
+    Это ловит опечатки в параметрах (`t=q`, `level=0`, `dB`) и фильтры,
+    которых нет в сборке mpv, — двойник такое не проверяет.
+    """
+    from neurowave.audio.dsp_graph import build_filter_graph
+
+    profile = BUILTIN_PROFILES[profile_id]
+    graph = build_filter_graph(profile)
+    audio = make_wav(tmp_path / f"tone-{profile_id}.wav", 0.6)
+    try:
+        backend.start()
+        backend.load(str(audio))
+        backend.set_volume(100)
+        if graph is not None:
+            backend.set_audio_filter(graph)  # PlayerError, если mpv отверг
+            applied = backend.audio_filter()
+            assert applied is not None
+            assert "alimiter" in applied if profile.limiter.enabled else True
+        else:
+            assert backend.audio_filter() is None
+    finally:
+        backend.shutdown()
+
+
+def test_real_mpv_plays_through_enhanced_graph(tmp_path: Path) -> None:
+    """Не только «фильтр принят», но и звук идёт и позиция растёт."""
+    from neurowave.audio.dsp_graph import build_filter_graph
+
+    audio = make_wav(tmp_path / "tone-graph.wav", 1.2)
+    backend = MpvBackend(extra_args=["--ao=null", "--volume=100"])
+    try:
+        backend.load(str(audio))
+        backend.set_audio_filter(build_filter_graph(BUILTIN_PROFILES["bluetooth"]))
+        backend.play()
+        assert wait_until(lambda: backend.position_ms() > 300, timeout=5.0)
+        assert backend.is_playing() is True
+    finally:
+        backend.shutdown()
