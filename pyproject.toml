@@ -31,4 +31,7 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+markers = [
+    "integration: тесты с настоящим mpv (пропускаются, если mpv не установлен)",
+]
 addopts = "-q"
