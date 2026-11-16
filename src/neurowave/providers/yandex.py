@@ -21,6 +21,7 @@ YANDEX_INFO = ProviderInfo(
     ),
     auth=AuthKind.OAUTH_DEVICE,
     implemented=True,
+    subscription="Плюс",
     summary="«Моя волна», поиск, библиотека и playlists; поток играет mpv",
     notes=(
         "Неофициальный API: функции могут меняться. Lossless показывается только "

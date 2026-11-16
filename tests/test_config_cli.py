@@ -70,6 +70,54 @@ def test_doctor_reports_checks(tmp_path, capsys):
     assert code in (0, 1)
 
 
+def test_doctor_checks_only_selected_provider(tmp_path, capsys):
+    cases = (
+        ("yandex", "yandex-music", "soundcloud API"),
+        ("soundcloud", "soundcloud API", "yandex-music"),
+        ("local", "mutagen", "yandex-music"),
+    )
+    for provider, expected, absent in cases:
+        code = main(
+            [
+                "--home",
+                str(tmp_path / provider),
+                "--provider",
+                provider,
+                "--json",
+                "doctor",
+            ]
+        )
+        names = {item["check"] for item in json.loads(capsys.readouterr().out)}
+        assert expected in names, provider
+        assert absent not in names, provider
+        assert code in (0, 1)
+
+
+def test_account_without_subscription_omits_plus_line(capsys):
+    from neurowave.cli import _print_account
+    from neurowave.domain import AccountInfo
+
+    _print_account(AccountInfo(display_name="SoundCloud"), False, None)
+    out = capsys.readouterr().out
+    assert "Аккаунт: SoundCloud" in out
+    assert "Подписка" not in out
+
+
+def test_account_with_subscription_shows_plus_line(capsys):
+    from neurowave.cli import _print_account
+    from neurowave.domain import AccountInfo
+
+    _print_account(AccountInfo(display_name="Яндекс Музыка", plus=True), False, "Плюс")
+    assert "Подписка Плюс: активна" in capsys.readouterr().out
+
+
+def test_me_for_local_has_no_subscription_line(tmp_path, capsys):
+    assert main(["--home", str(tmp_path), "--provider", "local", "me"]) == 0
+    out = capsys.readouterr().out
+    assert "Локальная музыка" in out
+    assert "Подписка" not in out
+
+
 def test_cache_command(tmp_path, capsys):
     assert main(["--home", str(tmp_path), "cache", "clear"]) == 0
     assert "Кеш" in capsys.readouterr().out

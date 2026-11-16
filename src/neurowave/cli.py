@@ -339,7 +339,7 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
     except NeuroWaveError as exc:
         print(f"Аккаунт пока недоступен: {exc}")
         return 0
-    _print_account(account, args.json)
+    _print_account(account, args.json, spec.info.subscription)
     return 0
 
 
@@ -354,11 +354,13 @@ def _cmd_logout(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_me(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
-    _print_account(ctx.adapter.account(), args.json)
+    _print_account(ctx.adapter.account(), args.json, ctx.provider_info.subscription)
     return 0
 
 
-def _print_account(account: AccountInfo, as_json: bool) -> None:
+def _print_account(
+    account: AccountInfo, as_json: bool, subscription: str | None = None
+) -> None:
     if as_json:
         print(
             json.dumps(
@@ -376,8 +378,9 @@ def _print_account(account: AccountInfo, as_json: bool) -> None:
     print(f"Аккаунт: {account.title}")
     if account.login:
         print(f"Логин: {account.login}")
-    plus = {True: "активна", False: "не активна", None: "неизвестно"}[account.plus]
-    print(f"Подписка Плюс: {plus}")
+    if subscription:
+        plus = {True: "активна", False: "не активна", None: "неизвестно"}[account.plus]
+        print(f"Подписка {subscription}: {plus}")
     if not account.service_available:
         print("Сервис сообщает о недоступности — функции каталога могут не работать.")
 
@@ -806,18 +809,46 @@ def _cmd_cache(args: argparse.Namespace) -> int:
     return 0
 
 
+def _provider_dependency_checks(provider_id: str) -> list[tuple[str, bool, str]]:
+    """Проверить только то, что нужно выбранному провайдеру."""
+    if provider_id == "yandex":
+        try:
+            import yandex_music
+
+            return [
+                (
+                    "yandex-music",
+                    True,
+                    getattr(yandex_music, "__version__", "установлена"),
+                )
+            ]
+        except ImportError:
+            return [("yandex-music", False, "pip install yandex-music")]
+    if provider_id == "local":
+        try:
+            import mutagen
+
+            return [("mutagen", True, getattr(mutagen, "version_string", "установлен"))]
+        except ImportError:
+            return [
+                (
+                    "mutagen",
+                    True,
+                    "не установлен — теги из имён файлов (extras [local])",
+                )
+            ]
+    if provider_id == "soundcloud":
+        return [
+            ("soundcloud API", True, "стандартная библиотека, доп. пакеты не нужны")
+        ]
+    return []
+
+
 def _cmd_doctor(args: argparse.Namespace) -> int:
     checks: list[tuple[str, bool, str]] = []
 
     python_ok = sys.version_info >= (3, 10)
     checks.append(("Python ≥ 3.10", python_ok, sys.version.split()[0]))
-
-    try:
-        import yandex_music
-
-        checks.append(("yandex-music", True, getattr(yandex_music, "__version__", "установлена")))
-    except ImportError:
-        checks.append(("yandex-music", False, "pip install yandex-music"))
 
     mpv_path = shutil.which("mpv")
     checks.append(("mpv", bool(mpv_path), mpv_path or "sudo apt install mpv"))
@@ -843,6 +874,7 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         checks.append(("Каталоги XDG", False, str(exc)))
 
     provider_id = _resolve_provider_id(args, ConfigStore(paths).load())
+    checks.extend(_provider_dependency_checks(provider_id))
     try:
         provider_title = get_spec(provider_id).info.title
         provider_ok, provider_note = True, f"{provider_id} — {provider_title}"

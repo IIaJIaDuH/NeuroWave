@@ -68,6 +68,9 @@ class ProviderInfo:
     cache_allowed: bool = True
     summary: str = ""
     notes: str = ""
+    #: Название подписки сервиса («Плюс»), если она вообще существует.
+    #: None — у провайдера нет подписки, и CLI не должен про неё спрашивать.
+    subscription: str | None = None
 
     def as_dict(self) -> dict[str, object]:
         return {
