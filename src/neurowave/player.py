@@ -214,8 +214,10 @@ class PlayerService:
             self.store.set_setting("dsp_profile", chosen.id)
         if getattr(self.backend, "is_running", False):
             return self.dsp.apply(chosen)
-        # mpv ещё не запущен: не поднимаем процесс ради фильтра.
-        return DspStatus(profile=chosen, mode=chosen.mode, graph=None, confirmed=False)
+        # mpv ещё не запущен: не поднимаем процесс ради фильтра, но интерфейс
+        # должен видеть выбранный профиль, а не предыдущий.
+        self.dsp.status = DspStatus(profile=chosen, mode=chosen.mode, graph=None, confirmed=False)
+        return self.dsp.status
 
     # --- аудиовыход ---------------------------------------------------
     def outputs(self) -> list[AudioOutput]:
@@ -288,7 +290,9 @@ class PlayerService:
             self.settings.dsp_profile = (
                 "flat" if parsed is DspMode.PURE else resolve_profile(self.settings.dsp_profile).id
             )
-            return DspStatus(profile=resolve_profile(self.settings.dsp_profile), mode=parsed)
+            chosen = resolve_profile(self.settings.dsp_profile)
+            self.dsp.status = DspStatus(profile=chosen, mode=parsed)
+            return self.dsp.status
         return self.dsp.set_mode(parsed)
 
     def close(self) -> None:
