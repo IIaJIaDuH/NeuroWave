@@ -10,6 +10,7 @@ import argparse
 import json
 import os
 import shutil
+import signal
 import socket
 import sys
 import time
@@ -179,11 +180,32 @@ def _add_playback_options(parser: argparse.ArgumentParser) -> None:
 
 
 # --- точка входа -------------------------------------------------------
+def _raise_interrupt(signum, frame):
+    """Завершение по SIGTERM/SIGHUP не должно оставлять mpv-сироту.
+
+    Сигнал превращается в KeyboardInterrupt, чтобы отработали finally
+    в сессии и backend.shutdown() закрыл mpv.
+    """
+    raise KeyboardInterrupt
+
+
+def _install_signal_handlers() -> None:
+    for name in ("SIGTERM", "SIGHUP"):
+        number = getattr(signal, name, None)
+        if number is None:
+            continue
+        try:
+            signal.signal(number, _raise_interrupt)
+        except (OSError, ValueError, RuntimeError):
+            pass
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv is not None else None)
     if args.home:
         os.environ["NEUROWAVE_HOME"] = args.home
+    _install_signal_handlers()
     try:
         return _dispatch(args, parser)
     except KeyboardInterrupt:

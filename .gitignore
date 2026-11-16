@@ -37,3 +37,6 @@ recordings/
 generated/
 downloads/
 profiles/
+
+# Локальные инструменты (статическая сборка mpv для проверок)
+.tools/

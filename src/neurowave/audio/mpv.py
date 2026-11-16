@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import queue
 import shutil
 import socket
 import subprocess
@@ -44,6 +45,10 @@ class MpvBackend:
         self._process: subprocess.Popen[bytes] | None = None
         self._socket: socket.socket | None = None
         self._reader: threading.Thread | None = None
+        self._event_thread: threading.Thread | None = None
+        # Обработчики завершения трека не должны исполняться в потоке
+        # чтения IPC: изнутри них посылаются новые команды и нужен ответ.
+        self._events: queue.Queue[tuple[Callable[[str], None], str] | None] = queue.Queue()
         self._write_lock = threading.Lock()
         self._pending: dict[int, tuple[threading.Event, dict[str, Any]]] = {}
         self._request_id = 0
@@ -88,6 +93,10 @@ class MpvBackend:
                     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                     sock.settimeout(COMMAND_TIMEOUT)
                     sock.connect(str(self._socket_path))
+                    # Чтение — блокирующее: mpv молчит между треками, и тишина
+                    # в сокете не означает обрыв. Таймаут команд считает
+                    # _command через Event.wait.
+                    sock.settimeout(None)
                     self._socket = sock
                     break
                 except OSError:
@@ -101,6 +110,8 @@ class MpvBackend:
         self._closing = False
         self._reader = threading.Thread(target=self._read_loop, daemon=True)
         self._reader.start()
+        self._event_thread = threading.Thread(target=self._dispatch_loop, daemon=True)
+        self._event_thread.start()
 
     def shutdown(self) -> None:
         self._closing = True
@@ -129,6 +140,10 @@ class MpvBackend:
         if self._reader is not None and self._reader.is_alive():
             self._reader.join(timeout=1)
         self._reader = None
+        self._events.put(None)
+        if self._event_thread is not None and self._event_thread.is_alive():
+            self._event_thread.join(timeout=1)
+        self._event_thread = None
         try:
             self._socket_path.unlink()
         except OSError:
@@ -167,8 +182,10 @@ class MpvBackend:
     def is_playing(self) -> bool:
         if not self.is_running:
             return False
-        pause = self._get_property("pause")
-        return pause is False and self.position_ms() >= 0
+        if self._get_property("pause") is not False:
+            return False
+        # В idle time-pos равен None: файла нет, и играть нечего.
+        return self._get_property("time-pos") is not None
 
     # --- IPC ----------------------------------------------------------
     def _set_property(self, name: str, value: Any) -> None:
@@ -201,7 +218,11 @@ class MpvBackend:
                 self._pending[request_id] = (threading.Event(), {})
             assert self._socket is not None
             data = (json.dumps(payload) + "\n").encode("utf-8")
-            self._socket.sendall(data)
+            try:
+                self._socket.sendall(data)
+            except OSError as exc:
+                self._pending.pop(request_id, None)
+                raise PlayerError(f"Связь с mpv потеряна: {exc}") from exc
         return request_id
 
     def _read_loop(self) -> None:
@@ -227,16 +248,25 @@ class MpvBackend:
                     continue
                 self._handle_message(message)
 
+    def _dispatch_loop(self) -> None:
+        """Отдавать события трека отдельному потоку, а не читателю IPC."""
+        while True:
+            item = self._events.get()
+            if item is None:
+                return
+            handler, reason = item
+            try:
+                handler(reason)
+            except Exception:
+                pass
+
     def _handle_message(self, message: dict[str, Any]) -> None:
         if "event" in message:
             if message["event"] == "end-file":
                 reason = str(message.get("reason", "eof"))
                 handler: Callable[[str], None] | None = self.on_end
                 if handler is not None and reason in {"eof", "error"}:
-                    try:
-                        handler(reason)
-                    except Exception:
-                        pass
+                    self._events.put((handler, reason))
             return
         request_id = message.get("request_id")
         if request_id is None:

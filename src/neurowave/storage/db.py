@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 import time
 from pathlib import Path
 from typing import Any, Mapping
@@ -77,7 +78,12 @@ class Database:
     def __init__(self, path: Path | str):
         self._path = Path(path)
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = sqlite3.connect(str(self._path), timeout=5.0)
+        # Историю пишет и главный поток, и поток автоперехода трека/MPRIS:
+        # соединение общее, но доступ к нему сериализован блокировкой.
+        self._conn = sqlite3.connect(
+            str(self._path), timeout=5.0, check_same_thread=False
+        )
+        self._lock = threading.RLock()
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._conn.execute("PRAGMA synchronous=NORMAL")
@@ -89,7 +95,8 @@ class Database:
 
     @property
     def schema_version(self) -> int:
-        return int(self._conn.execute("PRAGMA user_version").fetchone()[0])
+        with self._lock:
+            return int(self._conn.execute("PRAGMA user_version").fetchone()[0])
 
     def _migrate(self) -> None:
         version = self.schema_version
@@ -109,9 +116,10 @@ class Database:
 
     # --- настройки ----------------------------------------------------
     def get_setting(self, key: str, default: Any = None) -> Any:
-        row = self._conn.execute(
-            "SELECT value FROM settings WHERE key = ?", (key,)
-        ).fetchone()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT value FROM settings WHERE key = ?", (key,)
+            ).fetchone()
         if row is None:
             return default
         try:
@@ -120,7 +128,7 @@ class Database:
             return default
 
     def set_setting(self, key: str, value: Any) -> None:
-        with self._conn:
+        with self._lock, self._conn:
             self._conn.execute(
                 "INSERT INTO settings(key, value) VALUES(?, ?) "
                 "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
@@ -129,7 +137,7 @@ class Database:
 
     # --- история ------------------------------------------------------
     def record_play(self, track: Track, played_at: float | None = None) -> int:
-        with self._conn:
+        with self._lock, self._conn:
             cursor = self._conn.execute(
                 "INSERT INTO history(track_id, provider, track_key, title, artists, played_at) "
                 "VALUES(?, ?, ?, ?, ?, ?)",
@@ -145,18 +153,19 @@ class Database:
         return int(cursor.lastrowid)
 
     def mark_finished(self, history_id: int, finished: bool = True) -> None:
-        with self._conn:
+        with self._lock, self._conn:
             self._conn.execute(
                 "UPDATE history SET finished = ? WHERE id = ?",
                 (1 if finished else 0, int(history_id)),
             )
 
     def recent_tracks(self, limit: int = 20) -> list[Track]:
-        rows = self._conn.execute(
-            "SELECT track_id, provider, title, artists FROM history "
-            "GROUP BY track_key ORDER BY MAX(played_at) DESC LIMIT ?",
-            (max(0, int(limit)),),
-        ).fetchall()
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT track_id, provider, title, artists FROM history "
+                "GROUP BY track_key ORDER BY MAX(played_at) DESC LIMIT ?",
+                (max(0, int(limit)),),
+            ).fetchall()
         return [
             Track(
                 id=str(row["track_id"]),
@@ -169,7 +178,7 @@ class Database:
 
     # --- лайки --------------------------------------------------------
     def like(self, track: Track, updated_at: float | None = None) -> None:
-        with self._conn:
+        with self._lock, self._conn:
             self._conn.execute(
                 "INSERT INTO likes(track_key, provider, track_id, title, artists, updated_at) "
                 "VALUES(?, ?, ?, ?, ?, ?) "
@@ -186,22 +195,24 @@ class Database:
             )
 
     def unlike(self, track_key: str) -> None:
-        with self._conn:
+        with self._lock, self._conn:
             self._conn.execute("DELETE FROM likes WHERE track_key = ?", (track_key,))
 
     def liked_ids(self) -> set[str]:
-        rows = self._conn.execute("SELECT track_key FROM likes").fetchall()
+        with self._lock:
+            rows = self._conn.execute("SELECT track_key FROM likes").fetchall()
         return {str(row["track_key"]) for row in rows}
 
     def is_liked(self, track_key: str) -> bool:
-        row = self._conn.execute(
-            "SELECT 1 FROM likes WHERE track_key = ?", (track_key,)
-        ).fetchone()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT 1 FROM likes WHERE track_key = ?", (track_key,)
+            ).fetchone()
         return row is not None
 
     # --- очередь ------------------------------------------------------
     def save_queue(self, snapshot: Mapping[str, Any]) -> None:
-        with self._conn:
+        with self._lock, self._conn:
             self._conn.execute(
                 "INSERT INTO queue_state(id, payload, updated_at) VALUES(1, ?, ?) "
                 "ON CONFLICT(id) DO UPDATE SET payload=excluded.payload, "
@@ -210,9 +221,10 @@ class Database:
             )
 
     def load_queue(self) -> dict[str, Any] | None:
-        row = self._conn.execute(
-            "SELECT payload FROM queue_state WHERE id = 1"
-        ).fetchone()
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT payload FROM queue_state WHERE id = 1"
+            ).fetchone()
         if row is None:
             return None
         try:
@@ -222,4 +234,5 @@ class Database:
         return data if isinstance(data, dict) else None
 
     def close(self) -> None:
-        self._conn.close()
+        with self._lock:
+            self._conn.close()
