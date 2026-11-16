@@ -53,8 +53,12 @@ class PlayerService:
         self.backend = backend
         self.settings = settings or Settings()
         self.state = state or PlayerStateMachine()
-        self.queue = queue or Queue(
-            repeat=self.settings.repeat, shuffle=self.settings.shuffle
+        # Не `queue or …`: пустая очередь ложна из-за __len__, и переданная
+        # очередь с repeat/shuffle молча терялась бы.
+        self.queue = (
+            queue
+            if queue is not None
+            else Queue(repeat=self.settings.repeat, shuffle=self.settings.shuffle)
         )
         self.store = store
         self.cache = cache
@@ -63,6 +67,9 @@ class PlayerService:
         self._prefetch_thread: threading.Thread | None = None
         self._failures = 0
         self._wave_active = False
+        # Автопереход идёт из потока аудиособытий, а команды — из CLI/MPRIS.
+        # Старт трека должен выполняться целиком, иначе события перепутаются.
+        self._lock = threading.RLock()
         self._current_history_id: int | None = None
         self._current_quality: Quality | None = None
         self._started_at: float | None = None
@@ -175,6 +182,10 @@ class PlayerService:
 
     # --- внутреннее ---------------------------------------------------
     def _play_current(self) -> None:
+        with self._lock:
+            self._start_current()
+
+    def _start_current(self) -> None:
         track = self.queue.current
         if track is None:
             raise PlayerError("Очередь пуста")
@@ -183,6 +194,7 @@ class PlayerService:
         self.state.transition(PlayerStatus.BUFFERING)
         self._current_quality = None
         url, from_cache = self._resolve_url(track)
+        quality = self._current_quality  # снимок: диспетчер может уже уйти вперёд
         self.backend.load(url)
         self.backend.set_volume(self.settings.volume)
         self.backend.play()
@@ -196,7 +208,7 @@ class PlayerService:
         self._emit(
             "track",
             track=track,
-            quality=self._current_quality,
+            quality=quality,
             from_cache=from_cache,
         )
         self._prefetch_next()
