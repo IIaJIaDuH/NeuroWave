@@ -130,7 +130,7 @@ AI recommendations NEVER call Safe writer or OS APIs directly.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — модель данных, state machine, file tree, контракты.
 - [SOURCES-AND-RIGHTS.md](SOURCES-AND-RIGHTS.md) — права источников, форматы, DRM/caching rules.
 - [SAFETY-AND-QA.md](SAFETY-AND-QA.md) — safety threats, writer, тестовая матрица.
-- [ADR-0006](../../decisions/0006-usb-mixtape.md) — выбор и аргументация.
+- [ADR-0007](../../decisions/0007-usb-mixtape.md) — выбор и аргументация.
 
 На этом этапе в src/ нет реализации и нет новых Runtime dependencies. Это **правильное** состояние: пока не проверили устройство/политику и UX, не рискуем реальными носителями.
 

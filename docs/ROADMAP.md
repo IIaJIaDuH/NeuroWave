@@ -108,7 +108,7 @@
 **Статус: спецификация на отдельной ветке, код не реализован.** Не блокирует Sound Lab, GUI и ближайший релиз.
 
 - [x] Подготовлены [ТЗ, архитектура и безопасность](features/usb-mixtape/README.md) как предложение к ревью.
-- [ ] Принять [ADR-0006](decisions/0006-usb-mixtape.md): независимый модуль, только разрешённые аудиофайлы.
+- [ ] Принять [ADR-0007](decisions/0007-usb-mixtape.md): независимый модуль, только разрешённые аудиофайлы.
 - [ ] Offline planner + LocalExportSource (без LLM и стриминговых загрузок).
 - [ ] Safe UDisks2 device detection и USB writer с checksum, resume, no-clobber.
 - [ ] CLI, профили автомагнитол, MP3/Original/FLAC-only и M3U8.

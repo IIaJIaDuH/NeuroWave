@@ -55,7 +55,7 @@
 - [ADR-0004: Провайдеры музыки](docs/decisions/0004-multi-provider.md)
 - [ADR-0005: Аудиодвижок](docs/decisions/0005-audio-engine.md) — mpv + IPC + lavfi, альтернативы и условия пересмотра
 - [USB Mixtape: ТЗ, безопасность, архитектура, план PR](docs/features/usb-mixtape/README.md) — **документы, функция ещё не реализована**
-- [ADR-0006: USB Mixtape](docs/decisions/0006-usb-mixtape.md) — предложенная архитектура автономного экспорта
+- [ADR-0007: USB Mixtape](docs/decisions/0007-usb-mixtape.md) — предложенная архитектура автономного экспорта
 - [Smoke-тест Sprint 1 на Mint](docs/SMOKE-SPRINT1.md)
 
 ## Текущее состояние
