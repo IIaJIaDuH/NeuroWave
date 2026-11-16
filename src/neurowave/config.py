@@ -14,7 +14,10 @@ from .errors import ConfigError
 
 APP_NAME = "neurowave"
 DEFAULT_VOLUME = 80
-MAX_VOLUME = 130  # безопасное усиление выше 100 % допустимо только с лимитером
+MAX_VOLUME = 130  # верхняя граница, которую принимает backend
+# Предел пользовательской цифровой громкости, пока лимитер не подтверждён
+# измерениями: выше 100 % возможен клиппинг без защиты.
+SAFE_VOLUME = 100
 DEFAULT_CACHE_QUOTA_GB = 2.0
 DEFAULT_CACHE_TTL_DAYS = 7
 
@@ -78,9 +81,22 @@ class Settings:
     language: str = "ru"
     ai_enabled: bool = False
     autoplay_wave_feedback: bool = True
+    # Ставится в True только когда в цепи есть проверенный лимитер (PR-04).
+    # До этого громкость выше SAFE_VOLUME не применяется.
+    boost_verified: bool = False
 
     def clamp_volume(self, value: int) -> int:
+        """Ограничить значение рамками шкалы, сохранив желание пользователя."""
         return max(0, min(MAX_VOLUME, int(value)))
+
+    def effective_volume(self) -> int:
+        """Фактическая громкость: без проверенного лимитера — не выше 100 %."""
+        limit = MAX_VOLUME if self.boost_verified else SAFE_VOLUME
+        return max(0, min(limit, int(self.volume)))
+
+    def volume_limited(self) -> bool:
+        """Запрошено больше, чем безопасно применить сейчас."""
+        return self.effective_volume() != int(self.volume)
 
     @property
     def cache_quota_bytes(self) -> int:

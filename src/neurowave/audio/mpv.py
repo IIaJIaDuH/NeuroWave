@@ -7,6 +7,7 @@ mpv декодирует поток и отдаёт звук в PipeWire/PulseAu
 from __future__ import annotations
 
 import json
+import math
 import os
 import queue
 import shutil
@@ -18,11 +19,58 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from ..config import MAX_VOLUME
 from ..errors import PlayerError
 from .backend import EndHandler
 
 CONNECT_TIMEOUT = 5.0
 COMMAND_TIMEOUT = 3.0
+
+
+def _volume_value(volume: Any) -> int:
+    """Проверить громкость до отправки в mpv.
+
+    NaN/inf или строка вместо числа вешают/ломают mpv: на проверке `volume
+    NaN` ответ не пришёл вообще. Поэтому валидация обязательна и до IPC.
+    """
+    if isinstance(volume, bool) or not isinstance(volume, (int, float)):
+        raise PlayerError(f"Некорректная громкость: {volume!r}")
+    if not math.isfinite(float(volume)):
+        raise PlayerError(f"Некорректная громкость: {volume!r}")
+    return max(0, min(MAX_VOLUME, int(round(float(volume)))))
+
+
+def _entry_id_of(reply: dict[str, Any] | None) -> int | None:
+    """Идентификатор загрузки, который mpv вернул на `loadfile`."""
+    data = (reply or {}).get("data")
+    if isinstance(data, dict):
+        value = data.get("playlist_entry_id")
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+    return None
+
+
+def _filter_text(value: Any) -> str | None:
+    """Свойство `af` → строка графа.
+
+    Форма ответа mpv не фиксирована: в 0.42 при одном фильтре приходит объект
+    ``{"name": "lavfi", "params": {"graph": "…"}}``, при нескольких — массив.
+    Пустое значение — ``[]``.
+    """
+    if not value:
+        return None
+    items = value if isinstance(value, list) else [value]
+    parts: list[str] = []
+    for item in items:
+        if isinstance(item, dict):
+            params = item.get("params")
+            graph = params.get("graph") if isinstance(params, dict) else None
+            text = graph if graph is not None else item.get("name")
+            if text:
+                parts.append(str(text))
+        elif str(item).strip():
+            parts.append(str(item))
+    return ",".join(parts) or None
 
 
 class MpvBackend:
@@ -53,6 +101,9 @@ class MpvBackend:
         self._pending: dict[int, tuple[threading.Event, dict[str, Any]]] = {}
         self._request_id = 0
         self._closing = False
+        # Идентификатор текущей загрузки: по нему отсеиваем устаревшие end-file.
+        self._entry_id: int | None = None
+        self.last_error: str | None = None
 
     # --- жизненный цикл ----------------------------------------------
     @property
@@ -152,7 +203,10 @@ class MpvBackend:
     # --- команды ------------------------------------------------------
     def load(self, url: str, start_ms: int = 0) -> None:
         self.start()
-        self._command("loadfile", url, "replace")
+        reply = self._command("loadfile", url, "replace")
+        # mpv возвращает id загрузки: без него нельзя отличить свой end-file
+        # от конца предыдущего трека после ручного next.
+        self._entry_id = _entry_id_of(reply)
         if start_ms > 0:
             self.seek(start_ms)
 
@@ -165,12 +219,44 @@ class MpvBackend:
     def stop(self) -> None:
         if self.is_running:
             self._command("stop")
+        self._entry_id = None
 
     def set_volume(self, volume: int) -> None:
-        self._set_property("volume", max(0, min(130, int(volume))))
+        self._set_property("volume", _volume_value(volume))
 
     def seek(self, position_ms: int) -> None:
-        self._command("seek", max(0.0, position_ms / 1000.0), "absolute")
+        if isinstance(position_ms, bool) or not isinstance(position_ms, (int, float)):
+            raise PlayerError(f"Некорректная позиция: {position_ms!r}")
+        if not math.isfinite(float(position_ms)):
+            raise PlayerError(f"Некорректная позиция: {position_ms!r}")
+        self._command("seek", max(0.0, float(position_ms) / 1000.0), "absolute")
+
+    def set_audio_filter(self, graph: str) -> None:
+        """Применить граф фильтров. Отказ mpv — это ошибка, а не тихий no-op."""
+        if not isinstance(graph, str):
+            raise PlayerError("Граф аудиофильтров должен быть строкой")
+        self._command("af", "set", graph.strip())
+
+    def audio_filter(self) -> str | None:
+        """Фактический граф фильтров по данным mpv (None — пусто)."""
+        return _filter_text(self._get_property("af"))
+
+    def snapshot_state(self) -> dict[str, Any]:
+        """Срез фактического состояния mpv: для диагностики и логов."""
+        if not self.is_running:
+            return {"running": False, "entry_id": self._entry_id, "last_error": self.last_error}
+        return {
+            "running": True,
+            "idle": self._get_property("idle-active"),
+            "time_pos": self._get_property("time-pos"),
+            "pause": self._get_property("pause"),
+            "volume": self._get_property("volume"),
+            "audio_device": self._get_property("audio-device"),
+            "audio_params": self._get_property("audio-out-params"),
+            "af": self.audio_filter(),
+            "entry_id": self._entry_id,
+            "last_error": self.last_error,
+        }
 
     def position_ms(self) -> int:
         value = self._get_property("time-pos")
@@ -188,16 +274,24 @@ class MpvBackend:
         return self._get_property("time-pos") is not None
 
     # --- IPC ----------------------------------------------------------
-    def _set_property(self, name: str, value: Any) -> None:
-        self._command("set_property", name, value)
+    def _is_current_entry(self, message: dict[str, Any]) -> bool:
+        """Относится ли событие к текущей загрузке."""
+        incoming = message.get("playlist_entry_id")
+        if incoming is None or self._entry_id is None:
+            return True  # нет данных для сравнения — событие не отбрасываем
+        return incoming == self._entry_id
+
+    def _set_property(self, name: str, value: Any, optional: bool = False) -> None:
+        self._command("set_property", name, value, optional=optional)
 
     def _get_property(self, name: str) -> Any:
-        reply = self._command("get_property", name)
+        # Отсутствующее свойство — штатная ситуация (например time-pos в idle).
+        reply = self._command("get_property", name, optional=True)
         if not reply or reply.get("error") != "success":
             return None
         return reply.get("data")
 
-    def _command(self, *args: Any) -> dict[str, Any] | None:
+    def _command(self, *args: Any, optional: bool = False) -> dict[str, Any] | None:
         self.start() if self._socket is None and not self._closing else None
         if self._socket is None:
             raise PlayerError("mpv IPC недоступен")
@@ -205,9 +299,25 @@ class MpvBackend:
         event, box = self._pending[request_id]
         if not event.wait(COMMAND_TIMEOUT):
             self._pending.pop(request_id, None)
+            self.last_error = f"timeout: {args[0]}"
             raise PlayerError(f"mpv не ответил на команду {args[0]}")
         self._pending.pop(request_id, None)
-        return box.get("reply")
+        reply = box.get("reply")
+        if not optional:
+            self._check_reply(args, reply)
+        return reply
+
+    def _check_reply(self, args: tuple[Any, ...], reply: dict[str, Any] | None) -> None:
+        """Проверить ответ mpv: «успешно отправлено» ≠ «применено»."""
+        if reply is None:
+            self.last_error = f"empty reply: {args[0]}"
+            raise PlayerError(f"mpv не ответил на команду {args[0]}")
+        error = reply.get("error")
+        if error == "success":
+            self.last_error = None
+            return
+        self.last_error = str(error)
+        raise PlayerError(f"mpv отклонил {args[0]}: {error}")
 
     def _send(self, payload: dict[str, Any]) -> int:
         with self._write_lock:
@@ -264,6 +374,8 @@ class MpvBackend:
         if "event" in message:
             if message["event"] == "end-file":
                 reason = str(message.get("reason", "eof"))
+                if not self._is_current_entry(message):
+                    return  # конец предыдущего файла: очередь двигать нельзя
                 handler: Callable[[str], None] | None = self.on_end
                 if handler is not None and reason in {"eof", "error"}:
                     self._events.put((handler, reason))

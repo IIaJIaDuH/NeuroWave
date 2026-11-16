@@ -354,6 +354,14 @@ def _console_listener(event: str, payload: dict[str, Any]) -> None:
                 print(f"   Источник: {track.url}", flush=True)
     elif event in {"paused", "resumed", "stopped"}:
         print({"paused": "⏸ пауза", "resumed": "▶ продолжаем", "stopped": "■ остановлено"}[event], flush=True)
+    elif event == "volume_limited":
+        print(
+            f"! Громкость ограничена до {payload.get('applied')} %: усиление выше "
+            f"{payload.get('limit')} % включится только после проверки лимитера. "
+            f"В настройках сохранено {payload.get('requested')} %.",
+            file=sys.stderr,
+            flush=True,
+        )
     elif event == "error":
         print(f"! {payload.get('error')}", file=sys.stderr, flush=True)
     elif event == "finished":
@@ -678,6 +686,7 @@ def _cmd_status(args: argparse.Namespace, ctx: Context) -> int:
         },
         "backend": ctx.settings.audio_backend,
         "volume": ctx.settings.volume,
+        "volume_effective": ctx.settings.effective_volume(),
         "cache": {
             "files": stats.count,
             "mb": stats.megabytes_used,
@@ -699,7 +708,12 @@ def _cmd_status(args: argparse.Namespace, ctx: Context) -> int:
         )
     else:
         print("Токен: не требуется")
-    print(f"Аудиовыход: {ctx.settings.audio_backend}, громкость {ctx.settings.volume}%")
+    print(f"Аудиовыход: {ctx.settings.audio_backend}, громкость {ctx.settings.effective_volume()}%")
+    if ctx.settings.volume_limited():
+        print(
+            f"Ограничение: в настройках {ctx.settings.volume}%, применяется "
+            f"{ctx.settings.effective_volume()}% — лимитер ещё не подтверждён"
+        )
     print(f"Кеш: {stats.megabytes_used} МБ из {stats.megabytes_quota} МБ ({stats.count} файлов)")
     if recent:
         print("Недавно слушали:")

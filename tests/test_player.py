@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 
 from neurowave.audio import NullBackend
+from neurowave.config import MAX_VOLUME, SAFE_VOLUME
 from neurowave.domain import Track
 from neurowave.errors import PlayerError, TrackUnavailable
 from neurowave.player import PlayerService
@@ -74,9 +75,13 @@ def test_pause_and_resume(player, backend):
 
 
 def test_volume_is_clamped_and_saved(player, backend):
-    assert player.set_volume(500) == 130
-    assert backend.volume == 130
+    # Запрошенное значение хранится (шкала до 130 %), но в звук без
+    # проверенного лимитера уходит не больше 100 % — см. test_volume_safety.
+    assert player.set_volume(500) == SAFE_VOLUME
+    assert backend.volume == SAFE_VOLUME
+    assert player.settings.volume == MAX_VOLUME
     assert player.set_volume(-10) == 0
+    assert backend.volume == 0
 
 
 def test_play_tracks_skips_unavailable_and_starts(player, backend):
