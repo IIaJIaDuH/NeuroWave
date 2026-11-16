@@ -17,7 +17,7 @@ flowchart TB
   MPV --> DSP[Pure: обход наших фильтров / Enhanced: lavfi]
   DSP --> PW[PipeWire / WirePlumber]
   PW --> OUT[Bluetooth / HDMI / системный sink]
-  PW -. опциональный tap только своего потока .-> TAP[PCM capture worker]
+  PW -. tap только своего sink (PoC пройден) .-> TAP[PCM capture worker]
   TAP --> FFT[FFT + сглаживание]
   FFT --> UI
   DISP -. валидированные команды .-> AI[AI DJ sidecar]

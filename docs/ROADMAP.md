@@ -72,7 +72,7 @@
 | 03 | Модель DSP: профиль, пресеты, валидация, построение графа | [x] |
 | 04 | DSP runtime: EQ, лимитер, Pure/Enhanced, rollback, A/B | [x] |
 | 05 | Менеджер устройств BT/HDMI, реальный кодек и маршрут | [x] |
-| 06 | PCM tap PoC: только поток NeuroWave | [ ] |
+| 06 | PCM tap PoC: только поток NeuroWave | [x] |
 | 07 | Qt Desktop: рабочее приложение, один PlayerService | [ ] |
 | 08 | Sound Lab UI: пресеты, PEQ, статус DSP | [ ] |
 | 09 | FFT-спектроанализатор (только если PR-06 прошёл gate) | [ ] |
