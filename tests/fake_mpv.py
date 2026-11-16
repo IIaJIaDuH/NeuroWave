@@ -33,6 +33,7 @@ PLANS = {
     "eof-stale": (0.1, "eof", "previous"),
     "deny-af": (None, None, None),
     "deny-af-graph": (None, None, None),
+    "deny-device": (None, None, None),
     "deny-loadfile": (None, None, None),
 }
 
@@ -69,6 +70,11 @@ def main() -> int:
         "entry": 0,
         "previous_entry": 0,
         "af": "",
+        "audio-device": "auto",
+        "audio-device-list": [
+            {"name": "auto", "description": "Autoselect device"},
+            {"name": "pulse/fake-sink", "description": "Fake Sink"},
+        ],
     }
     send_lock = threading.Lock()
 
@@ -128,6 +134,10 @@ def main() -> int:
                     reply(request_id, not state["loaded"])
                 elif prop == "af":
                     reply(request_id, [state["af"]] if state["af"] else [])
+                elif prop == "audio-device":
+                    reply(request_id, state["audio-device"])
+                elif prop == "audio-device-list":
+                    reply(request_id, state["audio-device-list"])
                 elif prop == "playlist/0/id":
                     if state["entry"]:
                         reply(request_id, state["entry"])
@@ -167,7 +177,16 @@ def main() -> int:
             elif name == "quit":
                 state["quitting"] = True
                 reply(request_id)
-            elif name in {"set_property", "seek"}:
+            elif name == "set_property":
+                if len(command) >= 3 and command[1] == "audio-device":
+                    if plan == "deny-device":
+                        send({"request_id": request_id, "error": "error changing device"})
+                    else:
+                        state["audio-device"] = str(command[2])
+                        reply(request_id)
+                else:
+                    reply(request_id)
+            elif name == "seek":
                 reply(request_id)
             else:
                 reply(request_id)

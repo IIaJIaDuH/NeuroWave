@@ -231,6 +231,27 @@ class MpvBackend:
             raise PlayerError(f"Некорректная позиция: {position_ms!r}")
         self._command("seek", max(0.0, float(position_ms) / 1000.0), "absolute")
 
+    def audio_devices(self) -> list[dict[str, Any]]:
+        """Все выходы, которые видит mpv (`audio-device-list`)."""
+        value = self._get_property("audio-device-list")
+        if not isinstance(value, list):
+            return []
+        return [item for item in value if isinstance(item, dict)]
+
+    def audio_device(self) -> str | None:
+        value = self._get_property("audio-device")
+        return str(value) if value else None
+
+    def set_audio_device(self, device_id: str) -> None:
+        """Переключить выход.
+
+        mpv принимает даже несуществующий id без ошибки (проверено на 0.42),
+        поэтому вызывающий обязан сверить id со `audio-devices()` до вызова.
+        """
+        if not isinstance(device_id, str) or not device_id.strip():
+            raise PlayerError(f"Некорректный аудиовыход: {device_id!r}")
+        self._set_property("audio-device", device_id.strip())
+
     def set_audio_filter(self, graph: str) -> None:
         """Применить граф фильтров. Отказ mpv — это ошибка, а не тихий no-op."""
         if not isinstance(graph, str):

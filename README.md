@@ -79,6 +79,8 @@ neurowave --provider spotify devices                     # устройства 
 neurowave --provider spotify remote play "запрос"         # играть на устройстве Spotify
 neurowave --provider spotify login --token <access> \
   --refresh-token <refresh> --client-id <id>            # чтобы пульт не отваливался
+neurowave output        # выходы: Bluetooth/HDMI, реальный кодек, текущий маршрут
+neurowave output --set pulse/bluez_output.…   # выбрать выход (систему не меняем)
 neurowave sound         # профиль звука: режим, полосы, лимитер, lavfi-граф
 neurowave sound --profile bluetooth --graph   # выбрать профиль и увидеть цепь
 neurowave tray          # волна + значок в трее + MPRIS: pip install -e '.[desktop]'
