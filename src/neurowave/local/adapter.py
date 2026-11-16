@@ -1,7 +1,7 @@
 """Локальная библиотека: файлы на диске как музыкальный провайдер.
 
 Никакой сети, аккаунта, DRM и кеша: файл уже лежит на диске, и `mpv` играет
-его напрямую. Теги читаются через `mutagen`, если он установлен (extras
+его напрямую. Теги читаются через MIT-библиотеку `tinytag`, если она установлена (extras
 ``[local]``); иначе используются имена файлов и папок — без выдумывания данных.
 
 Все пути проверяются на выход за пределы музыкальной папки: ``id`` трека —
@@ -58,48 +58,56 @@ def default_root(settings: Any = None) -> Path:
 
 
 def _read_tags(path: Path) -> dict[str, Any]:
-    """Прочитать теги, если есть mutagen. Без него — пустой словарь."""
+    """Read audio metadata through optional MIT-licensed TinyTag.
+
+    TinyTag reports bitrate in kbit/s, unlike mutagen (bit/s).
+    Unsupported or damaged files fall back to their filenames.
+    """
     try:
-        import mutagen  # type: ignore
-    except Exception:
-        return {}
-    try:
-        audio = mutagen.File(path, easy=True)
-    except Exception:
-        return {}
-    if audio is None:
+        from tinytag import TinyTag
+    except ImportError:
         return {}
 
-    tags = getattr(audio, "tags", None) or {}
+    try:
+        audio = TinyTag.get(path)
+    except Exception:
+        # A corrupted tag must not make a local music library unscannable.
+        return {}
 
-    def first(*keys: str) -> list[str]:
-        for key in keys:
-            value = tags.get(key)
-            if not value:
-                continue
-            if isinstance(value, (list, tuple)):
-                return [str(item) for item in value if str(item).strip()]
-            text = str(value).strip()
-            return [text] if text else []
-        return []
+    def clean(value: Any) -> str | None:
+        if not isinstance(value, str):
+            return None
+        value = value.strip()
+        return value or None
 
     result: dict[str, Any] = {}
-    titles = first("title")
-    artists = first("artist", "albumartist")
-    albums = first("album")
-    if titles:
-        result["title"] = titles[0]
-    if artists:
+    title = clean(getattr(audio, "title", None))
+    album = clean(getattr(audio, "album", None))
+    artist = clean(getattr(audio, "artist", None)) or clean(
+        getattr(audio, "albumartist", None)
+    )
+    if title:
+        result["title"] = title
+    if album:
+        result["album"] = album
+    if artist:
+        # TinyTag exposes the primary artist as a string and any additional
+        # values through other["artist"]; preserve multi-artist tags.
+        artists = [artist]
+        other = getattr(audio, "other", None) or {}
+        for extra in other.get("artist", ()):
+            name = clean(extra)
+            if name and name not in artists:
+                artists.append(name)
         result["artists"] = tuple(artists)
-    if albums:
-        result["album"] = albums[0]
-    info = getattr(audio, "info", None)
-    length = getattr(info, "length", None)
-    if length:
-        result["duration_ms"] = int(float(length) * 1000)
-    bitrate = getattr(info, "bitrate", None)
-    if bitrate:
-        result["bitrate_kbps"] = max(1, int(bitrate) // 1000)
+
+    length = getattr(audio, "duration", None)
+    if isinstance(length, (int, float)) and 0 < length < float("inf"):
+        result["duration_ms"] = int(length * 1000)
+
+    bitrate = getattr(audio, "bitrate", None)
+    if isinstance(bitrate, (int, float)) and 0 < bitrate < float("inf"):
+        result["bitrate_kbps"] = max(1, round(bitrate))
     return result
 
 
