@@ -45,6 +45,9 @@ done
 
 command -v awk >/dev/null || { echo "Нужен awk" >&2; exit 2; }
 HZ=$(getconf CLK_TCK 2>/dev/null || echo 100)
+# CSV должен быть машиночитаемым: в русской локали awk/printf пишут «125,9»,
+# и десятичная запятая совпадает с разделителем полей.
+export LC_NUMERIC=C
 
 find_root() {
   local want=${1:-}

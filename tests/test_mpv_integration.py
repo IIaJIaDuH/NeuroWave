@@ -198,5 +198,9 @@ def test_player_advances_to_next_track_with_real_mpv(tmp_path: Path) -> None:
         assert wait_until(lambda: bridge.position_ms() > 100, timeout=8.0)
         assert player.state.status is PlayerStatus.PLAYING
     finally:
-        player.stop()
-        player.close()
+        # stop() может бросить (mpv не ответил), но close() обязан выполниться:
+        # иначе процесс mpv остаётся сиротой.
+        try:
+            player.stop()
+        finally:
+            player.close()
