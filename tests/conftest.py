@@ -67,6 +67,16 @@ class FakeAdapter:
         return AccountInfo(uid=1, login="tester", display_name="Tester", plus=True)
 
 
+@pytest.fixture(autouse=True)
+def _isolate_secrets(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Тесты не должны писать в настоящий keyring машины.
+
+    Иначе токены прогонов оседают в Secret Service пользователя, а результат
+    зависит от того, есть ли на машине keyring и что в нём осталось.
+    """
+    monkeypatch.setenv("NEUROWAVE_KEYRING", "off")
+
+
 @pytest.fixture
 def tracks() -> list[Track]:
     return [make_track(i) for i in (1, 2, 3)]

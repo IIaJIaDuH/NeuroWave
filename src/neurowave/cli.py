@@ -38,7 +38,7 @@ from .providers import (
 from .providers.router import ProviderRouter
 from .queue import Queue
 from .state import PlayerStatus
-from .storage import Database, MediaCache, TokenStore
+from .storage import Database, MediaCache, TokenStore, keyring_disabled
 
 DEFAULT_SEARCH_LIMIT = 20
 API_HOSTS = {
@@ -1062,15 +1062,20 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     mpv_path = shutil.which("mpv")
     checks.append(("mpv", bool(mpv_path), mpv_path or "sudo apt install mpv"))
 
-    try:
-        import keyring
-
-        backend = keyring.get_keyring()
-        checks.append(("keyring", True, type(backend).__name__))
-    except Exception:
+    if keyring_disabled():
         checks.append(
-            ("keyring", True, "нет backend — токен будет в файле 0600")
+            ("keyring", True, "отключён (NEUROWAVE_KEYRING) — токен в файле 0600")
         )
+    else:
+        try:
+            import keyring
+
+            backend = keyring.get_keyring()
+            checks.append(("keyring", True, type(backend).__name__))
+        except Exception:
+            checks.append(
+                ("keyring", True, "нет backend — токен будет в файле 0600")
+            )
 
     paths = Paths.resolve()
     try:
