@@ -1,8 +1,8 @@
 """Локальная библиотека: файлы на диске как музыкальный провайдер.
 
 Никакой сети, аккаунта, DRM и кеша: файл уже лежит на диске, и `mpv` играет
-его напрямую. Теги читаются через `mutagen`, если он установлен (extras
-``[local]``); иначе используются имена файлов и папок — без выдумывания данных.
+его напрямую. Теги читаются через `tinytag` (MIT), если установлен extras
+``[local]``; иначе используются имена файлов и папок — без выдумывания данных.
 
 Все пути проверяются на выход за пределы музыкальной папки: ``id`` трека —
 относительный путь, и он не должен уметь читать ``/etc/passwd``.
@@ -58,48 +58,40 @@ def default_root(settings: Any = None) -> Path:
 
 
 def _read_tags(path: Path) -> dict[str, Any]:
-    """Прочитать теги, если есть mutagen. Без него — пустой словарь."""
+    """Теги через tinytag (MIT). Без него — пустой словарь и имена файлов.
+
+    tinytag отдаёт bitrate в кбит/с и одну строку исполнителя, поэтому
+    несколько исполнителей через «;» разделяются здесь же. Ошибка чтения
+    тегов не должна делать файл недоступным: он всё равно играет.
+    """
     try:
-        import mutagen  # type: ignore
+        from tinytag import TinyTag  # type: ignore
     except Exception:
         return {}
     try:
-        audio = mutagen.File(path, easy=True)
+        tag = TinyTag.get(str(path))
     except Exception:
         return {}
-    if audio is None:
+    if tag is None:
         return {}
 
-    tags = getattr(audio, "tags", None) or {}
-
-    def first(*keys: str) -> list[str]:
-        for key in keys:
-            value = tags.get(key)
-            if not value:
-                continue
-            if isinstance(value, (list, tuple)):
-                return [str(item) for item in value if str(item).strip()]
-            text = str(value).strip()
-            return [text] if text else []
-        return []
+    def text(value: Any) -> str:
+        return str(value).strip() if value is not None else ""
 
     result: dict[str, Any] = {}
-    titles = first("title")
-    artists = first("artist", "albumartist")
-    albums = first("album")
-    if titles:
-        result["title"] = titles[0]
-    if artists:
-        result["artists"] = tuple(artists)
-    if albums:
-        result["album"] = albums[0]
-    info = getattr(audio, "info", None)
-    length = getattr(info, "length", None)
-    if length:
-        result["duration_ms"] = int(float(length) * 1000)
-    bitrate = getattr(info, "bitrate", None)
-    if bitrate:
-        result["bitrate_kbps"] = max(1, int(bitrate) // 1000)
+    title = text(tag.title)
+    if title:
+        result["title"] = title
+    artist = text(tag.artist) or text(tag.albumartist)
+    if artist:
+        result["artists"] = tuple(part.strip() for part in artist.split(";") if part.strip())
+    album = text(tag.album)
+    if album:
+        result["album"] = album
+    if tag.duration:
+        result["duration_ms"] = int(float(tag.duration) * 1000)
+    if tag.bitrate:
+        result["bitrate_kbps"] = max(1, int(round(float(tag.bitrate))))
     return result
 
 
@@ -121,7 +113,10 @@ def _from_filename(path: Path, root: Path) -> tuple[str, tuple[str, ...], str | 
 
 
 class LocalMusicAdapter:
-    """Каталог файлов на диске, отдающий `mpv` прямые пути."""
+    """Каталог файлов на диске, отдающий `mpv` прямые пути.
+
+    Теги читает tinytag (MIT), если установлен extras `[local]`.
+    """
 
     provider = "local"
     token: str | None = None  # для единообразия с сетевыми провайдерами

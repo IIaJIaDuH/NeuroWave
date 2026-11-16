@@ -74,7 +74,7 @@ def test_doctor_checks_only_selected_provider(tmp_path, capsys):
     cases = (
         ("yandex", "yandex-music", "soundcloud API"),
         ("soundcloud", "soundcloud API", "yandex-music"),
-        ("local", "mutagen", "yandex-music"),
+        ("local", "tinytag", "yandex-music"),
     )
     for provider, expected, absent in cases:
         code = main(

@@ -1212,13 +1212,13 @@ def _provider_dependency_checks(provider_id: str) -> list[tuple[str, bool, str]]
             return [("yandex-music", False, "pip install yandex-music")]
     if provider_id == "local":
         try:
-            import mutagen
+            import tinytag
 
-            return [("mutagen", True, getattr(mutagen, "version_string", "установлен"))]
+            return [("tinytag", True, getattr(tinytag, "__version__", "установлен"))]
         except ImportError:
             return [
                 (
-                    "mutagen",
+                    "tinytag",
                     True,
                     "не установлен — теги из имён файлов (extras [local])",
                 )
