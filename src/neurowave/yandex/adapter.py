@@ -346,6 +346,7 @@ class YandexMusicAdapter:
             duration_ms=getattr(item, "duration_ms", None),
             available=True if available is None else bool(available),
             liked=liked,
+            provider="yandex",
         )
 
     # --- повторы -------------------------------------------------------

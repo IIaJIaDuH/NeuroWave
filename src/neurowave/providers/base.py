@@ -32,6 +32,7 @@ class Capability(str, Enum):
     PERSONAL_RADIO = "personal_radio"  # персональный поток («Моя волна»)
     DIRECT_STREAM = "direct_stream"  # ссылка, которую играет mpv
     DELEGATED_PLAYBACK = "delegated_playback"  # управление чужим плеером/устройством
+    SHUFFLE_LIBRARY = "shuffle_library"  # случайная выборка из своей библиотеки
     LYRICS = "lyrics"
 
     @property
@@ -43,6 +44,7 @@ class Capability(str, Enum):
             Capability.PERSONAL_RADIO: "персональный поток",
             Capability.DIRECT_STREAM: "поток в mpv",
             Capability.DELEGATED_PLAYBACK: "управление устройством сервиса",
+            Capability.SHUFFLE_LIBRARY: "случайная выборка из библиотеки",
             Capability.LYRICS: "тексты",
         }[self]
 
@@ -63,8 +65,22 @@ class ProviderInfo:
     capabilities: frozenset[Capability] = frozenset()
     auth: AuthKind = AuthKind.OAUTH_DEVICE
     implemented: bool = True
+    cache_allowed: bool = True
     summary: str = ""
     notes: str = ""
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "title": self.title,
+            "capabilities": sorted(capability.value for capability in self.capabilities),
+            "auth": self.auth.value,
+            "implemented": self.implemented,
+            "cache_allowed": self.cache_allowed,
+            "plays_in_mpv": self.plays_in_mpv,
+            "summary": self.summary,
+            "notes": self.notes,
+        }
 
     def supports(self, capability: Capability) -> bool:
         return capability in self.capabilities

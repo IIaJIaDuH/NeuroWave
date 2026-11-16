@@ -86,9 +86,10 @@ class Queue:
         self._items.insert(index, track)
         return index
 
-    def remove(self, track_id: str) -> bool:
+    def remove(self, track_key: str) -> bool:
+        """Удалить по ``provider:track_id`` (или по голому id, если провайдера нет)."""
         for index, track in enumerate(self._items):
-            if track.id == track_id:
+            if track.key == track_key:
                 del self._items[index]
                 if not self._items:
                     self._position = -1
@@ -104,12 +105,12 @@ class Queue:
         self._check_position(to_position)
         if from_position == to_position:
             return
-        current_id = self.current.id if self.current else None
+        current_key = self.current.key if self.current else None
         track = self._items.pop(from_position)
         self._items.insert(to_position, track)
-        if current_id is not None:
+        if current_key is not None:
             self._position = next(
-                (i for i, item in enumerate(self._items) if item.id == current_id),
+                (i for i, item in enumerate(self._items) if item.key == current_key),
                 self._position,
             )
 
@@ -163,9 +164,9 @@ class Queue:
         if not self._items:
             return None
         if self._history:
-            track_id = self._history.pop()
+            track_key = self._history.pop()
             for index, track in enumerate(self._items):
-                if track.id == track_id:
+                if track.key == track_key:
                     self._position = index
                     return self.current
         if self._position > 0:
@@ -215,7 +216,7 @@ class Queue:
     def _remember(self, track: Track | None) -> None:
         if track is None:
             return
-        self._history.append(track.id)
+        self._history.append(track.key)
         if len(self._history) > HISTORY_LIMIT:
             del self._history[: len(self._history) - HISTORY_LIMIT]
 
@@ -224,7 +225,7 @@ class Queue:
         pool = [
             index
             for index, track in enumerate(self._items)
-            if index != self._position and track.id not in recent
+            if index != self._position and track.key not in recent
         ]
         if not pool:
             pool = [i for i in range(len(self._items)) if i != self._position]

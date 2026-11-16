@@ -2,6 +2,10 @@
 
 Схема версионируется через ``PRAGMA user_version``; миграции выполняются в
 транзакции, чтобы не оставить наполовину обновлённую базу.
+
+С версии 2 история и лайки хранят **квалифицированный** ключ
+``provider:track_id``: без него «123» из разных сервисов — один и тот же трек.
+Старые строки версии 1 помечаются провайдером ``yandex`` (других тогда не было).
 """
 
 from __future__ import annotations
@@ -15,7 +19,7 @@ from typing import Any, Mapping
 from ..domain import Track
 from ..errors import NeuroWaveError
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _SCHEMA_V1 = """
 CREATE TABLE IF NOT EXISTS settings (
@@ -44,6 +48,30 @@ CREATE TABLE IF NOT EXISTS queue_state (
 );
 """
 
+# v2: квалифицированные ключи. Таблица likes перестраивается, потому что её
+# первичный ключ был сырым track_id.
+_SCHEMA_V2 = """
+ALTER TABLE history ADD COLUMN provider TEXT;
+ALTER TABLE history ADD COLUMN track_key TEXT;
+UPDATE history
+   SET provider = COALESCE(provider, 'yandex'),
+       track_key = COALESCE(track_key, 'yandex:' || track_id);
+CREATE INDEX IF NOT EXISTS idx_history_track_key ON history(track_key);
+
+CREATE TABLE likes_v2 (
+    track_key  TEXT PRIMARY KEY,
+    provider   TEXT,
+    track_id   TEXT NOT NULL,
+    title      TEXT,
+    artists    TEXT,
+    updated_at REAL NOT NULL
+);
+INSERT OR IGNORE INTO likes_v2(track_key, provider, track_id, title, artists, updated_at)
+    SELECT 'yandex:' || track_id, 'yandex', track_id, title, artists, updated_at FROM likes;
+DROP TABLE likes;
+ALTER TABLE likes_v2 RENAME TO likes;
+"""
+
 
 class Database:
     def __init__(self, path: Path | str):
@@ -59,8 +87,12 @@ class Database:
     def path(self) -> Path:
         return self._path
 
+    @property
+    def schema_version(self) -> int:
+        return int(self._conn.execute("PRAGMA user_version").fetchone()[0])
+
     def _migrate(self) -> None:
-        version = int(self._conn.execute("PRAGMA user_version").fetchone()[0])
+        version = self.schema_version
         if version > SCHEMA_VERSION:
             raise NeuroWaveError(
                 f"База создана более новой версией приложения (schema {version})"
@@ -68,7 +100,12 @@ class Database:
         if version < 1:
             with self._conn:
                 self._conn.executescript(_SCHEMA_V1)
-                self._conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+                self._conn.execute("PRAGMA user_version = 1")
+            version = 1
+        if version < 2:
+            with self._conn:
+                self._conn.executescript(_SCHEMA_V2)
+                self._conn.execute("PRAGMA user_version = 2")
 
     # --- настройки ----------------------------------------------------
     def get_setting(self, key: str, default: Any = None) -> Any:
@@ -94,9 +131,12 @@ class Database:
     def record_play(self, track: Track, played_at: float | None = None) -> int:
         with self._conn:
             cursor = self._conn.execute(
-                "INSERT INTO history(track_id, title, artists, played_at) VALUES(?, ?, ?, ?)",
+                "INSERT INTO history(track_id, provider, track_key, title, artists, played_at) "
+                "VALUES(?, ?, ?, ?, ?, ?)",
                 (
                     track.id,
+                    track.provider,
+                    track.key,
                     track.title,
                     ", ".join(track.artists),
                     float(played_at if played_at is not None else time.time()),
@@ -113,8 +153,8 @@ class Database:
 
     def recent_tracks(self, limit: int = 20) -> list[Track]:
         rows = self._conn.execute(
-            "SELECT track_id, title, artists FROM history "
-            "GROUP BY track_id ORDER BY MAX(played_at) DESC LIMIT ?",
+            "SELECT track_id, provider, title, artists FROM history "
+            "GROUP BY track_key ORDER BY MAX(played_at) DESC LIMIT ?",
             (max(0, int(limit)),),
         ).fetchall()
         return [
@@ -122,6 +162,7 @@ class Database:
                 id=str(row["track_id"]),
                 title=row["title"] or "Без названия",
                 artists=tuple(filter(None, (row["artists"] or "").split(", "))),
+                provider=row["provider"],
             )
             for row in rows
         ]
@@ -130,10 +171,13 @@ class Database:
     def like(self, track: Track, updated_at: float | None = None) -> None:
         with self._conn:
             self._conn.execute(
-                "INSERT INTO likes(track_id, title, artists, updated_at) VALUES(?, ?, ?, ?) "
-                "ON CONFLICT(track_id) DO UPDATE SET title=excluded.title, "
+                "INSERT INTO likes(track_key, provider, track_id, title, artists, updated_at) "
+                "VALUES(?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(track_key) DO UPDATE SET title=excluded.title, "
                 "artists=excluded.artists, updated_at=excluded.updated_at",
                 (
+                    track.key,
+                    track.provider,
                     track.id,
                     track.title,
                     ", ".join(track.artists),
@@ -141,17 +185,17 @@ class Database:
                 ),
             )
 
-    def unlike(self, track_id: str) -> None:
+    def unlike(self, track_key: str) -> None:
         with self._conn:
-            self._conn.execute("DELETE FROM likes WHERE track_id = ?", (track_id,))
+            self._conn.execute("DELETE FROM likes WHERE track_key = ?", (track_key,))
 
     def liked_ids(self) -> set[str]:
-        rows = self._conn.execute("SELECT track_id FROM likes").fetchall()
-        return {str(row["track_id"]) for row in rows}
+        rows = self._conn.execute("SELECT track_key FROM likes").fetchall()
+        return {str(row["track_key"]) for row in rows}
 
-    def is_liked(self, track_id: str) -> bool:
+    def is_liked(self, track_key: str) -> bool:
         row = self._conn.execute(
-            "SELECT 1 FROM likes WHERE track_id = ?", (track_id,)
+            "SELECT 1 FROM likes WHERE track_key = ?", (track_key,)
         ).fetchone()
         return row is not None
 

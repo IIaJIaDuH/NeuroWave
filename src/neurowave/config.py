@@ -73,6 +73,7 @@ class Settings:
     shuffle: bool = False
     audio_backend: str = "mpv"
     provider: str = "yandex"
+    local_music_dir: str = ""
     reduced_motion: bool = False
     language: str = "ru"
     ai_enabled: bool = False

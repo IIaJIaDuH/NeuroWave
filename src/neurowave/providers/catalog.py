@@ -25,15 +25,6 @@ PLANNED: tuple[ProviderInfo, ...] = (
         ),
     ),
     ProviderInfo(
-        id="local",
-        title="Локальные файлы (MPD)",
-        capabilities=frozenset({Capability.CATALOG, Capability.DIRECT_STREAM}),
-        auth=AuthKind.NONE,
-        implemented=False,
-        summary="Файлы на диске и сетевые хранилища; аккаунт не нужен",
-        notes="Самый простой путь: ни DRM, ни подписки, ни неофициальных API.",
-    ),
-    ProviderInfo(
         id="spotify",
         title="Spotify",
         capabilities=frozenset(

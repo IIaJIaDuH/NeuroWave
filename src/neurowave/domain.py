@@ -21,7 +21,12 @@ def format_duration(ms: int | None) -> str:
 
 @dataclass(frozen=True)
 class Track:
-    """Одна композиция в терминах приложения, а не конкретного API."""
+    """Одна композиция в терминах приложения, а не конкретного API.
+
+    ``id`` уникален только внутри провайдера: «123» у Яндекса и «123» у
+    SoundCloud — разные треки. Для истории, кеша и снимка очереди
+    используется :attr:`key` — квалифицированный ``provider:track_id``.
+    """
 
     id: str
     title: str
@@ -30,6 +35,22 @@ class Track:
     duration_ms: int | None = None
     available: bool = True
     liked: bool = False
+    provider: str | None = None
+
+    @property
+    def key(self) -> str:
+        """Квалифицированный ID для истории, кеша и очереди."""
+        if self.provider:
+            return f"{self.provider}:{self.id}"
+        return str(self.id)
+
+    @classmethod
+    def split_key(cls, key: str) -> tuple[str | None, str]:
+        """Разобрать ``provider:track_id`` (без провайдера — ``(None, key)``)."""
+        provider, separator, raw = str(key).partition(":")
+        if not separator:
+            return None, str(key)
+        return (provider or None), raw
 
     @property
     def artists_line(self) -> str:
@@ -52,6 +73,7 @@ class Track:
             "duration_ms": self.duration_ms,
             "available": self.available,
             "liked": self.liked,
+            "provider": self.provider,
         }
 
     @classmethod
@@ -64,6 +86,7 @@ class Track:
             duration_ms=data.get("duration_ms"),
             available=bool(data.get("available", True)),
             liked=bool(data.get("liked", False)),
+            provider=data.get("provider") or None,
         )
 
 

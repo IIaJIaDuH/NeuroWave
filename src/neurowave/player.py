@@ -45,9 +45,11 @@ class PlayerService:
         store: Database | None = None,
         cache: MediaCache | None = None,
         listener: EventListener | None = None,
+        router: Any | None = None,
         prefetch: bool = True,
     ):
         self.adapter = adapter
+        self._router = router
         self.backend = backend
         self.settings = settings or Settings()
         self.state = state or PlayerStateMachine()
@@ -87,7 +89,7 @@ class PlayerService:
     def start_wave(self) -> Track | None:
         if self.state.status in (PlayerStatus.IDLE, PlayerStatus.STOPPED):
             self.state.transition(PlayerStatus.READY)
-        tracks = self.adapter.wave_tracks()
+        tracks = self._router.wave_tracks() if self._router is not None else self.adapter.wave_tracks()
         if not tracks:
             raise TrackUnavailable("«Моя волна» не вернула треки")
         self._wave_active = True
@@ -142,10 +144,7 @@ class PlayerService:
         self.backend.seek(position_ms)
 
     def next_track(self, automatic: bool = False) -> Track | None:
-        if self._wave_active:
-            self.adapter.wave_feedback(
-                "finished" if automatic else "skip", self._current_id()
-            )
+        self._send_feedback("finished" if automatic else "skip")
         track = self.queue.next(automatic=automatic)
         if track is None:
             self._finish()
@@ -193,8 +192,7 @@ class PlayerService:
         self._started_at = time.monotonic()
         if self.store is not None:
             self._current_history_id = self.store.record_play(track)
-        if self._wave_active:
-            self.adapter.wave_feedback("started", track.id)
+        self._send_feedback("started")
         self._emit(
             "track",
             track=track,
@@ -204,14 +202,40 @@ class PlayerService:
         self._prefetch_next()
 
     def _resolve_url(self, track: Track) -> tuple[str, bool]:
-        if self.cache is not None:
-            cached = self.cache.get(track.id)
+        if self.cache is not None and self._cache_allowed(track):
+            cached = self.cache.get(track.key)
             if cached is not None:
                 self._emit("cache_hit", track=track)
                 return str(cached), True
-        stream = self.adapter.stream_url(track.id)
+        stream = self._stream_url(track)
         self._current_quality = stream.quality
         return stream.url, False
+
+    def _stream_url(self, track: Track) -> StreamInfo:
+        """Ссылка у того провайдера, которому принадлежит трек."""
+        if self._router is not None:
+            return self._router.stream_url(track)
+        return self.adapter.stream_url(track.id)
+
+    def _cache_allowed(self, track: Track) -> bool:
+        if self._router is not None:
+            return self._router.cache_allowed(track)
+        return True
+
+    def _send_feedback(self, kind: str) -> None:
+        """Обратная связь «Моей волне» по провайдеру трека; сбой не ломает звук."""
+        if not self._wave_active:
+            return
+        track_key = self._current_id()
+        if track_key is None:
+            return
+        try:
+            if self._router is not None:
+                self._router.wave_feedback(kind, track_key)
+            else:
+                self.adapter.wave_feedback(kind, track_key)
+        except Exception:
+            return
 
     def _advance(self, track: Track) -> None:
         try:
@@ -248,8 +272,11 @@ class PlayerService:
             self.next_track(automatic=True)
 
     def _current_id(self) -> str | None:
+        """С ``router`` — квалифицированный ключ, иначе сырой id адаптера."""
         track = self.queue.current
-        return track.id if track else None
+        if track is None:
+            return None
+        return track.key if self._router is not None else track.id
 
     def _prefetch_next(self) -> None:
         if not self._prefetch_enabled or self.cache is None:
@@ -257,13 +284,15 @@ class PlayerService:
         if self._prefetch_thread is not None and self._prefetch_thread.is_alive():
             return
         upcoming = self.queue.preview_next()
-        if upcoming is None or self.cache.has(upcoming.id):
+        if upcoming is None or not self._cache_allowed(upcoming):
+            return
+        if self.cache.has(upcoming.key):
             return
 
         def worker() -> None:
             try:
-                stream = self.adapter.stream_url(upcoming.id)
-                download_to_cache(self.cache, upcoming.id, stream.url, timeout=20.0)
+                stream = self._stream_url(upcoming)
+                download_to_cache(self.cache, upcoming.key, stream.url, timeout=20.0)
                 self._emit("prefetched", track=upcoming)
             except Exception:
                 return  # предзагрузка необязательна и не должна шуметь

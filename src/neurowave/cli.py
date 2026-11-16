@@ -23,6 +23,8 @@ from .domain import AccountInfo, Track
 from .errors import AuthError, NeuroWaveError, PlayerError
 from .player import PlayerService
 from .providers import (
+    AuthKind,
+    Capability,
     ProviderContext,
     ProviderNotImplemented,
     all_specs,
@@ -32,6 +34,7 @@ from .providers import (
     planned,
     plugin_errors,
 )
+from .providers.router import ProviderRouter
 from .queue import Queue
 from .state import PlayerStatus
 from .storage import Database, MediaCache, TokenStore
@@ -48,6 +51,10 @@ class Context:
     tokens: TokenStore
     adapter: Any
     provider: str = "yandex"
+    router: Any = None
+    @property
+    def provider_info(self):
+        return get_spec(self.provider).info
 
 
 # --- разбор аргументов -------------------------------------------------
@@ -202,18 +209,32 @@ def _context(args: argparse.Namespace) -> Context:
     cache.evict_expired()
     provider_id = _resolve_provider_id(args, settings)
     discover()
-    spec = get_spec(provider_id)
+    get_spec(provider_id)  # валидация выбора: UnknownProvider/ProviderNotImplemented
+    specs = {spec.info.id: spec for spec in all_specs()}
+
+    def builder_for(info_id: str):
+        def build():
+            token = TokenStore(paths, provider=info_id).load()
+            return create(
+                specs[info_id],
+                ProviderContext(token=token, paths=paths, settings=settings),
+            )
+
+        return build
+
+    router = ProviderRouter(
+        {info_id: builder_for(info_id) for info_id in specs}, default=provider_id
+    )
     tokens = TokenStore(paths, provider=provider_id)
-    token = tokens.load()
-    adapter = create(spec, ProviderContext(token=token, paths=paths, settings=settings))
     return Context(
         paths=paths,
         settings=settings,
         db=db,
         cache=cache,
         tokens=tokens,
-        adapter=adapter,
+        adapter=router.adapter(provider_id),
         provider=provider_id,
+        router=router,
     )
 
 
@@ -225,9 +246,24 @@ def _build_backend(args: argparse.Namespace, settings: Settings):
 
 
 def _require_token(ctx: Context) -> None:
+    info = ctx.provider_info
+    if info.auth is AuthKind.NONE:
+        return
     if not getattr(ctx.adapter, "token", None):
-        title = get_spec(ctx.provider).info.title
-        raise AuthError(f"Требуется вход в {title}. Выполните: neurowave login")
+        raise AuthError(
+            f"Требуется вход в {info.title}. Выполните: neurowave login"
+        )
+
+
+def _require_capability(ctx: Context, capability: Capability) -> None:
+    """Не показывать действие, которого у провайдера нет."""
+    info = ctx.provider_info
+    if info.supports(capability):
+        return
+    raise ProviderNotImplemented(
+        f"«{info.title}» не поддерживает: {capability.title}."
+        + (f" {info.summary}" if info.summary else "")
+    )
 
 
 def _console_listener(event: str, payload: dict[str, Any]) -> None:
@@ -249,6 +285,9 @@ def _console_listener(event: str, payload: dict[str, Any]) -> None:
 # --- команды: аккаунт --------------------------------------------------
 def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
     spec = get_spec(ctx.provider)
+    if spec.info.auth is AuthKind.NONE:
+        print(f"Вход не требуется: «{spec.info.title}» работает с локальными файлами.")
+        return 0
     if spec.login is None:
         raise ProviderNotImplemented(
             f"Вход для «{spec.info.title}» пока не поддержан: провайдеру нужен "
@@ -319,6 +358,7 @@ def _print_account(account: AccountInfo, as_json: bool) -> None:
 # --- команды: каталог --------------------------------------------------
 def _cmd_search(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
+    _require_capability(ctx, Capability.CATALOG)
     results = ctx.adapter.search(args.query, limit=args.limit)
     if args.json:
         print(
@@ -348,6 +388,7 @@ def _cmd_search(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_library(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
+    _require_capability(ctx, Capability.LIBRARY)
     tracks = ctx.adapter.liked_tracks(limit=args.limit)
     if args.json:
         print(json.dumps([track.to_dict() for track in tracks], ensure_ascii=False))
@@ -361,6 +402,7 @@ def _cmd_library(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_playlists(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
+    _require_capability(ctx, Capability.PLAYLISTS)
     playlists = ctx.adapter.playlists()
     if args.json:
         print(json.dumps([ref.__dict__ for ref in playlists], ensure_ascii=False))
@@ -375,6 +417,7 @@ def _cmd_playlists(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_like(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
+    _require_capability(ctx, Capability.LIBRARY)
     ok = ctx.adapter.like(args.track_id)
     print("Лайк поставлен." if ok else "Сервис не подтвердил лайк.")
     return 0 if ok else 1
@@ -382,6 +425,7 @@ def _cmd_like(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_unlike(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
+    _require_capability(ctx, Capability.LIBRARY)
     ok = ctx.adapter.unlike(args.track_id)
     print("Лайк убран." if ok else "Сервис не подтвердил удаление лайка.")
     return 0 if ok else 1
@@ -390,10 +434,17 @@ def _cmd_unlike(args: argparse.Namespace, ctx: Context) -> int:
 def _cmd_status(args: argparse.Namespace, ctx: Context) -> int:
     stats = ctx.cache.stats()
     recent = ctx.db.recent_tracks(limit=5)
+    info = ctx.provider_info
+    needs_auth = info.auth is not AuthKind.NONE
     data = {
         "version": __version__,
         "home": str(ctx.paths.config_dir.parent),
-        "token": {"present": bool(ctx.adapter.token), "backend": ctx.tokens.backend},
+        "provider": {"id": info.id, "title": info.title, "auth": info.auth.value},
+        "token": {
+            "present": bool(getattr(ctx.adapter, "token", None)),
+            "required": needs_auth,
+            "backend": ctx.tokens.backend,
+        },
         "backend": ctx.settings.audio_backend,
         "volume": ctx.settings.volume,
         "cache": {
@@ -408,11 +459,15 @@ def _cmd_status(args: argparse.Namespace, ctx: Context) -> int:
         return 0
     print(f"NeuroWave {__version__}")
     print(f"Каталог состояния: {ctx.paths.config_dir.parent}")
-    print(
-        "Токен: "
-        + ("сохранён" if data["token"]["present"] else "нет")
-        + f" ({ctx.tokens.backend})"
-    )
+    print(f"Провайдер: {info.title} ({info.id})")
+    if needs_auth:
+        print(
+            "Токен: "
+            + ("сохранён" if data["token"]["present"] else "нет")
+            + f" ({ctx.tokens.backend})"
+        )
+    else:
+        print("Токен: не требуется")
     print(f"Аудиовыход: {ctx.settings.audio_backend}, громкость {ctx.settings.volume}%")
     print(f"Кеш: {stats.megabytes_used} МБ из {stats.megabytes_quota} МБ ({stats.count} файлов)")
     if recent:
@@ -424,6 +479,18 @@ def _cmd_status(args: argparse.Namespace, ctx: Context) -> int:
 
 # --- команды: воспроизведение -----------------------------------------
 def _cmd_wave(args: argparse.Namespace, ctx: Context) -> int:
+    info = ctx.provider_info
+    if not info.supports(Capability.PERSONAL_RADIO):
+        if info.supports(Capability.SHUFFLE_LIBRARY):
+            print(
+                f"У «{info.title}» нет персонального потока: случайная выборка из библиотеки.",
+                file=sys.stderr,
+                flush=True,
+            )
+        else:
+            raise ProviderNotImplemented(
+                f"«{info.title}» не поддерживает: {Capability.PERSONAL_RADIO.title}."
+            )
     _require_token(ctx)
     return _play_session(args, ctx, lambda player: player.start_wave())
 
@@ -446,6 +513,7 @@ def _cmd_play(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_playlist(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
+    _require_capability(ctx, Capability.PLAYLISTS)
     tracks = ctx.adapter.playlist_tracks(args.identifier)
     if not tracks:
         raise PlayerError("Плейлист пуст или недоступен")
@@ -464,6 +532,7 @@ def _build_player(args: argparse.Namespace, ctx: Context, listener=None) -> Play
         store=ctx.db,
         cache=ctx.cache,
         listener=listener or _console_listener,
+        router=ctx.router,
     )
 
 
@@ -617,6 +686,7 @@ def _cmd_providers(args: argparse.Namespace) -> int:
                 "capabilities_text": info.capabilities_text,
                 "auth": info.auth.value,
                 "plays_in_mpv": info.plays_in_mpv,
+                "cache_allowed": info.cache_allowed,
                 "notes": info.notes,
                 "token_present": TokenStore(paths, provider=info.id).present(),
                 "current": info.id == current,
@@ -651,7 +721,10 @@ def _cmd_providers(args: argparse.Namespace) -> int:
     print("Провайдеры:")
     for row in rows:
         mark = "*" if row["current"] else " "
-        state = "токен есть" if row["token_present"] else "нужен вход"
+        if row["auth"] == AuthKind.NONE.value:
+            state = "вход не требуется"
+        else:
+            state = "токен есть" if row["token_present"] else "нужен вход"
         playback = "поток в mpv" if row["plays_in_mpv"] else "без прямого потока"
         print(f"{mark} {row['id']:<10} {row['title']} — {state}, {playback}")
         if row["summary"]:
@@ -746,11 +819,23 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         provider_ok, provider_note = False, str(exc)
     checks.append(("Провайдер", provider_ok, provider_note))
 
+    try:
+        needs_auth = get_spec(provider_id).info.auth is not AuthKind.NONE
+    except NeuroWaveError:
+        needs_auth = True
     token_present = TokenStore(paths, provider=provider_id).present()
-    checks.append(("Токен", True, "сохранён" if token_present else "нет — нужен neurowave login"))
+    if not needs_auth:
+        checks.append(("Токен", True, "не требуется — локальные файлы"))
+    else:
+        checks.append(
+            ("Токен", True, "сохранён" if token_present else "нет — нужен neurowave login")
+        )
 
-    network_ok, network_note = _probe_network()
-    checks.append(("Сеть до API", network_ok, network_note))
+    if needs_auth:
+        network_ok, network_note = _probe_network()
+        checks.append(("Сеть до API", network_ok, network_note))
+    else:
+        checks.append(("Сеть", True, "не требуется — файлы на диске"))
 
     if args.json:
         print(
