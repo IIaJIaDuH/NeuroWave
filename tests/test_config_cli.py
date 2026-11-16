@@ -111,6 +111,27 @@ def test_account_with_subscription_shows_plus_line(capsys):
     assert "Подписка Плюс: активна" in capsys.readouterr().out
 
 
+def test_me_for_local_points_to_local_music_dir(tmp_path, capsys):
+    from neurowave.config import ConfigStore, Paths, Settings
+
+    home = tmp_path / "home"
+    paths = Paths.resolve({"NEUROWAVE_HOME": str(home)}).ensure()
+    ConfigStore(paths).save(Settings(local_music_dir=str(tmp_path / "NoMusic")))
+
+    assert main(["--home", str(home), "--provider", "local", "me"]) == 0
+    out = capsys.readouterr().out
+    assert "local_music_dir" in out
+    assert "Сервис сообщает" not in out
+
+
+def test_account_unavailable_uses_generic_hint_by_default(capsys):
+    from neurowave.cli import _print_account
+    from neurowave.domain import AccountInfo
+
+    _print_account(AccountInfo(display_name="Сервис", service_available=False), False)
+    assert "Сервис сообщает о недоступности" in capsys.readouterr().out
+
+
 def test_me_for_local_has_no_subscription_line(tmp_path, capsys):
     assert main(["--home", str(tmp_path), "--provider", "local", "me"]) == 0
     out = capsys.readouterr().out

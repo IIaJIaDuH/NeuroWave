@@ -339,7 +339,9 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
     except NeuroWaveError as exc:
         print(f"Аккаунт пока недоступен: {exc}")
         return 0
-    _print_account(account, args.json, spec.info.subscription)
+    _print_account(
+        account, args.json, spec.info.subscription, spec.info.unavailable_hint or None
+    )
     return 0
 
 
@@ -354,12 +356,18 @@ def _cmd_logout(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_me(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
-    _print_account(ctx.adapter.account(), args.json, ctx.provider_info.subscription)
+    info = ctx.provider_info
+    _print_account(
+        ctx.adapter.account(), args.json, info.subscription, info.unavailable_hint or None
+    )
     return 0
 
 
 def _print_account(
-    account: AccountInfo, as_json: bool, subscription: str | None = None
+    account: AccountInfo,
+    as_json: bool,
+    subscription: str | None = None,
+    unavailable_hint: str | None = None,
 ) -> None:
     if as_json:
         print(
@@ -382,7 +390,10 @@ def _print_account(
         plus = {True: "активна", False: "не активна", None: "неизвестно"}[account.plus]
         print(f"Подписка {subscription}: {plus}")
     if not account.service_available:
-        print("Сервис сообщает о недоступности — функции каталога могут не работать.")
+        print(
+            unavailable_hint
+            or "Сервис сообщает о недоступности — функции каталога могут не работать."
+        )
 
 
 # --- команды: каталог --------------------------------------------------

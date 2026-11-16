@@ -71,6 +71,8 @@ class ProviderInfo:
     #: Название подписки сервиса («Плюс»), если она вообще существует.
     #: None — у провайдера нет подписки, и CLI не должен про неё спрашивать.
     subscription: str | None = None
+    #: Что сказать, если сервис недоступен. Пусто — общий текст про сервис.
+    unavailable_hint: str = ""
 
     def as_dict(self) -> dict[str, object]:
         return {

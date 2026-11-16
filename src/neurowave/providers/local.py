@@ -18,6 +18,10 @@ LOCAL_INFO = ProviderInfo(
     auth=AuthKind.NONE,
     implemented=True,
     cache_allowed=False,
+    unavailable_hint=(
+        "Папка музыки не найдена: укажите local_music_dir в config.json "
+        "или создайте ~/Music."
+    ),
     summary="Файлы из локальной папки: без сети, аккаунта и DRM",
     notes=(
         "Кеш не используется — файл уже на диске. Теги читаются через mutagen "

@@ -64,7 +64,7 @@ neurowave wave              # «Моя волна», управление из �
 
 | Команда | Назначение |
 |---|---|
-| `neurowave --json doctor` | окружение: Python, библиотека API, mpv, keyring, каталоги, токен, сеть |
+| `neurowave --json doctor` | окружение: Python, зависимости выбранного провайдера, mpv, keyring, каталоги, токен, сеть |
 | `neurowave login` / `logout` | вход по Device Flow и удаление токена |
 | `neurowave me` | аккаунт и признак подписки Плюс |
 | `neurowave search "запрос"` | треки, исполнители, альбомы, плейлисты |
@@ -238,7 +238,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 185 unit-тестов ядра, интеграций и провайдеров,
+Проверено в этом окружении: 187 unit-тестов ядра, интеграций и провайдеров,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
 импорт и сборка пакета, работа MPRIS на отдельном сессионном шине
@@ -251,7 +251,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 185 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
+python -m pytest        # 187 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
