@@ -137,7 +137,9 @@ python -m pytest        # 67 тестов: очередь, состояния, �
 1. Smoke-тест на Linux Mint: `doctor` → `login` → `wave` 60 минут, замеры
    PSS/CPU и поведение Bluetooth/HDMI. Чек-лист и команды замеров:
    [SMOKE-SPRINT1.md](SMOKE-SPRINT1.md).
-2. ADR о выборе UI-основы (Qt Widgets против QML) поверх текущего контракта.
+2. ADR о выборе UI-основы: принят
+   [ADR-0003](decisions/0003-ui-foundation.md) — PySide6/Qt Widgets, ядро в том
+   же процессе, мост `PlayerBridge`; критерий пересмотра — замер PSS на Mint.
 3. MPRIS + трей: управление вне окна без изменения ядра.
 4. Sound Lab: Pure/Enhanced поверх `mpv`-фильтров, отдельные пресеты для
    Bluetooth и HDMI.

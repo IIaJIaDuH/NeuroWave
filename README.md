@@ -34,6 +34,8 @@
 - [Риски и ограничения](docs/RISKS.md)
 - [Решения по архитектуре (ADR)](docs/decisions/0001-research-first.md)
 - [ADR-0002: Python-ядро как первый срез](docs/decisions/0002-python-core-prototype.md)
+- [ADR-0003: Основа интерфейса](docs/decisions/0003-ui-foundation.md)
+- [Smoke-тест Sprint 1 на Mint](docs/SMOKE-SPRINT1.md)
 
 ## Текущее состояние
 
