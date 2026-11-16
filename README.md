@@ -43,6 +43,7 @@
 - [Архитектура](docs/ARCHITECTURE.md)
 - [Дорожная карта](docs/ROADMAP.md)
 - [Отчёт о состоянии на 16.11.2026](docs/REPORT-2026-11-16.md) — что сделано и что осталось
+- [QA-прогон на живом окружении](docs/QA-RUN-2026-11-16.md) — реальный mpv, звук, аккаунт: прогоны, дефекты, тесты
 - [Риски и ограничения](docs/RISKS.md)
 - [Решения по архитектуре (ADR)](docs/decisions/0001-research-first.md)
 - [ADR-0002: Python-ядро как первый срез](docs/decisions/0002-python-core-prototype.md)
