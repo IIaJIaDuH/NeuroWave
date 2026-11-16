@@ -86,6 +86,12 @@ def build_parser() -> argparse.ArgumentParser:
     playlist.add_argument("identifier", help="kind плейлиста")
     _add_playback_options(playlist)
 
+    tray = sub.add_parser("tray", help="трей и MPRIS поверх «Моей волны»")
+    tray.add_argument(
+        "--no-mpris", dest="mpris", action="store_false", help="не публиковать MPRIS"
+    )
+    tray.set_defaults(mpris=True, seconds=None)
+
     like = sub.add_parser("like", help="поставить лайк треку")
     like.add_argument("track_id")
     unlike = sub.add_parser("unlike", help="убрать лайк")
@@ -110,6 +116,11 @@ def _add_playback_options(parser: argparse.ArgumentParser) -> None:
         "--no-interactive",
         action="store_true",
         help="не читать команды из stdin",
+    )
+    parser.add_argument(
+        "--mpris",
+        action="store_true",
+        help="опубликовать сессию в MPRIS (playerctl, медиа-клавиши, панель)",
     )
 
 
@@ -149,6 +160,7 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
             "wave": _cmd_wave,
             "play": _cmd_play,
             "playlist": _cmd_playlist,
+            "tray": _cmd_tray,
         }
         return handlers[args.command](args, ctx)
     finally:
@@ -401,22 +413,72 @@ def _cmd_playlist(args: argparse.Namespace, ctx: Context) -> int:
     return _play_session(args, ctx, lambda player: player.play_tracks(tracks))
 
 
-def _play_session(
-    args: argparse.Namespace,
-    ctx: Context,
-    starter,
-) -> int:
+def _build_player(args: argparse.Namespace, ctx: Context, listener=None) -> PlayerService:
     backend = _build_backend(args, ctx.settings)
     queue = Queue(repeat=ctx.settings.repeat, shuffle=ctx.settings.shuffle)
-    player = PlayerService(
+    return PlayerService(
         adapter=ctx.adapter,
         backend=backend,
         queue=queue,
         settings=ctx.settings,
         store=ctx.db,
         cache=ctx.cache,
-        listener=_console_listener,
+        listener=listener or _console_listener,
     )
+
+
+def _start_mpris(player: PlayerService, quit_callback=None):
+    """Поднять MPRIS; отсутствие шины не мешает музыке."""
+    from .integrations.mpris_dbus import start_mpris
+
+    service = start_mpris(player, quit_callback=quit_callback)
+    if service is not None and not service.available:
+        print(f"MPRIS недоступен: {service.error}", file=sys.stderr)
+        return None
+    return service
+
+
+def _stop_quietly(service) -> None:
+    if service is None:
+        return
+    try:
+        service.stop()
+    except Exception:
+        pass
+
+
+def _cmd_tray(args: argparse.Namespace, ctx: Context) -> int:
+    _require_token(ctx)
+    from .integrations.tray import TrayUnavailable, is_available, run_tray
+
+    available, reason = is_available()
+    if not available:
+        print(f"Трей недоступен: {reason}", file=sys.stderr)
+        return 1
+
+    player = _build_player(args, ctx)
+    mpris = _start_mpris(player) if getattr(args, "mpris", False) else None
+    try:
+        player.start_wave()
+        try:
+            return run_tray(player)
+        except TrayUnavailable as exc:
+            print(f"Трей недоступен: {exc}", file=sys.stderr)
+            return 1
+    finally:
+        _stop_quietly(mpris)
+        player.stop()
+        player.close()
+        ConfigStore(ctx.paths).save(ctx.settings)
+
+
+def _play_session(
+    args: argparse.Namespace,
+    ctx: Context,
+    starter,
+) -> int:
+    player = _build_player(args, ctx)
+    mpris = _start_mpris(player) if getattr(args, "mpris", False) else None
     try:
         starter(player)
         if not args.no_interactive:
@@ -424,6 +486,7 @@ def _play_session(
         elif args.seconds:
             _wait_for_seconds(player, args.seconds)
     finally:
+        _stop_quietly(mpris)
         player.stop()
         player.close()
         ConfigStore(ctx.paths).save(ctx.settings)

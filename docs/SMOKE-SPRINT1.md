@@ -37,6 +37,7 @@ Smoke считается пройденным, если выполнены **в�
 | 8 | HDMI: звук идёт, частота совпадает с устройством, xrun нет | шаг 7 |
 | 9 | Кеш растёт, не превышает 2048 МБ, `evict`/`clear` работают | шаг 8 |
 | 10 | В логах нет токена и OAuth-кода | шаг 10 |
+| 11 | MPRIS видит сессию, пауза/next из панели работают, трей открывается и не оставляет `mpv` | шаг 11 |
 
 Пункты «поведение записано» — это наблюдения, а не обещания кода: выбор
 устройства из приложения, `DEVICE_CHANGED` и MPRIS в Sprint 1 не реализованы,
@@ -277,6 +278,43 @@ grep -cE '[A-Za-z0-9_-]{40,}' ~/nw-smoke/*.log
 
 Ожидаемо: `0` совпадений (длинные строки в логе треков — это названия, проверьте
 глазами). Токен и код подтверждения в логах появляться не должны.
+
+---
+
+## Шаг 11. MPRIS и трей (10 мин)
+
+Нужны extras: `pip install -e '.[desktop]'`.
+
+Терминал A:
+
+```bash
+neurowave wave --mpris --seconds 600
+```
+
+Терминал B:
+
+```bash
+playerctl -p neurowave status        # если playerctl установлен
+busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer2 | head -20
+busctl --user get-property org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer2 \
+  org.mpris.MediaPlayer2.Player Metadata
+```
+
+Проверить: медиа-клавиша Play/Pause (или кнопка в панели) ставит на паузу и
+снимает её; `playerctl -p neurowave next` переключает трек; `position` растёт;
+в `Metadata` — реальные `xesam:title`/`xesam:artist` и `neurowave:quality`,
+без выдуманных полей.
+
+Затем трей:
+
+```bash
+neurowave tray
+```
+
+Ожидаемо: значок в лотке, меню «Пауза/Играть», «Следующий», «Предыдущий»,
+«Источник: …», «Выход» завершает сессию. Записать: открывается ли меню в
+Cinnamon, обновляется ли подпись источника, и не остаётся ли `mpv` после
+выхода (`pgrep -af 'neurowave|mpv'`).
 
 ---
 
