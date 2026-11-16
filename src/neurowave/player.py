@@ -16,6 +16,7 @@ from .audio.backend import AudioBackend
 from .audio.dsp_controller import DspController, DspStatus
 from .audio.devices import AudioOutput, build_outputs, classify, probe_default_sink, probe_sinks
 from .audio.dsp_profiles import AudioProfile, resolve_profile
+from .audio.profile_store import ProfileRegistry
 from .config import SAFE_VOLUME, Settings
 from .domain import Quality, RepeatMode, StreamInfo, Track
 from .errors import NeuroWaveError, PlayerError, TrackUnavailable
@@ -79,8 +80,9 @@ class PlayerService:
         self._started_at: float | None = None
         self._boost_notice_shown = False
         backend.on_end = self._handle_end
+        self.profiles = ProfileRegistry.from_settings(self.settings)
         self.dsp = dsp if dsp is not None else DspController(
-            backend, settings=self.settings, listener=self._notify_dsp
+            backend, settings=self.settings, listener=self._notify_dsp, registry=self.profiles
         )
         self.backend.set_volume(self._apply_volume_policy())
 
@@ -206,9 +208,30 @@ class PlayerService:
             self.state.transition(PlayerStatus.STOPPED)
         self._emit("stopped", track=self.current_track)
 
+    def available_profiles(self) -> list[AudioProfile]:
+        return self.profiles.all()
+
+    def save_profile(self, profile: AudioProfile) -> AudioProfile:
+        """Сохранить пользовательский профиль в настройках плеера."""
+        existing = profile.id in self.profiles.custom
+        saved = self.profiles.update(profile) if existing else self.profiles.add(profile)
+        self.profiles.save(self.settings)
+        return saved
+
+    def delete_profile(self, profile_id: str) -> bool:
+        removed = self.profiles.remove(profile_id)
+        self.profiles.save(self.settings)
+        if self.settings.dsp_profile == profile_id:
+            self.settings.dsp_profile = "flat"
+        return removed
+
     def set_dsp_profile(self, profile: AudioProfile | str) -> DspStatus:
         """Выбрать профиль звука: применить сейчас или сохранить до старта."""
-        chosen = resolve_profile(profile) if not isinstance(profile, AudioProfile) else profile
+        chosen = (
+            profile
+            if isinstance(profile, AudioProfile)
+            else (self.profiles.get(profile) or resolve_profile(profile))
+        )
         self.settings.dsp_profile = chosen.id
         if self.store is not None:
             self.store.set_setting("dsp_profile", chosen.id)
@@ -288,9 +311,9 @@ class PlayerService:
         parsed = DspMode.parse(mode)
         if not getattr(self.backend, "is_running", False):
             self.settings.dsp_profile = (
-                "flat" if parsed is DspMode.PURE else resolve_profile(self.settings.dsp_profile).id
+                "flat" if parsed is DspMode.PURE else self.profiles.resolve(self.settings.dsp_profile).id
             )
-            chosen = resolve_profile(self.settings.dsp_profile)
+            chosen = self.profiles.resolve(self.settings.dsp_profile)
             self.dsp.status = DspStatus(profile=chosen, mode=parsed)
             return self.dsp.status
         return self.dsp.set_mode(parsed)

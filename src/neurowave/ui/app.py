@@ -83,11 +83,13 @@ def _build_window(vm: PlayerViewModel) -> Any:
     next_button = QPushButton("⏭")
     stop_button = QPushButton("⏹")
     wave_button = QPushButton("Волна")
+    lab_button = QPushButton("Sound Lab")
     wave_button.setMinimumHeight(36)
     for button in (prev_button, play_button, next_button, stop_button):
         button.setMinimumHeight(36)
         transport.addWidget(button)
     transport.addWidget(wave_button)
+    transport.addWidget(lab_button)
     layout.addLayout(transport)
 
     volume_row = QHBoxLayout()
@@ -198,6 +200,14 @@ def _build_window(vm: PlayerViewModel) -> Any:
     next_button.clicked.connect(lambda: guarded("Следующий", vm.next))
     stop_button.clicked.connect(lambda: guarded("Стоп", vm.stop))
     wave_button.clicked.connect(lambda: guarded("Волна", vm.start_wave))
+
+    def open_lab() -> None:
+        from .soundlab import open_soundlab
+
+        open_soundlab(vm)
+        refresh()
+
+    lab_button.clicked.connect(open_lab)
     volume.valueChanged.connect(lambda value: guarded("Громкость", lambda: vm.set_volume(value)))
     seek.sliderPressed.connect(lambda: state.__setitem__("dragging", True))
     seek.sliderReleased.connect(lambda: _seek_released())

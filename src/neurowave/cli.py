@@ -28,6 +28,7 @@ from .audio.devices import (
 )
 from .audio.dsp_graph import build_filter_graph, describe_profile
 from .audio.dsp_profiles import BUILTIN_PROFILES, DspError, get_profile, resolve_profile
+from .audio.profile_store import ProfileRegistry
 from .config import ConfigStore, Paths, Settings
 from .domain import AccountInfo, Track
 from .errors import AuthError, NetworkError, NeuroWaveError, PlayerError
@@ -168,6 +169,7 @@ def build_parser() -> argparse.ArgumentParser:
     sound.add_argument("--pure", action="store_true", help="снять наши фильтры (Pure)")
     sound.add_argument("--enhanced", action="store_true", help="вернуть обработку (Enhanced)")
     sound.add_argument("--graph", action="store_true", help="показать lavfi-граф профиля")
+    sound.add_argument("--profiles", action="store_true", help="список профилей, включая свои")
 
     output = sub.add_parser("output", help="аудиовыходы: Bluetooth/HDMI, кодек, выбор")
     output.add_argument("--set", dest="set_id", help="id выхода из списка (auto — системный выбор)")
@@ -753,15 +755,17 @@ def _cmd_sound(args: argparse.Namespace, ctx: Context) -> int:
         if chosen.mode.value == "pure":
             chosen = BUILTIN_PROFILES["hifi"]
     elif args.profile:
+        registry = ProfileRegistry.from_settings(ctx.settings)
         try:
-            chosen = get_profile(args.profile)
+            chosen = registry.get(args.profile) or get_profile(args.profile)
         except DspError as exc:
             print(f"Ошибка: {exc}", file=sys.stderr)
             return 2
     if chosen is not None:
         ctx.settings.dsp_profile = chosen.id
         ConfigStore(ctx.paths).save(ctx.settings)
-    profile = resolve_profile(ctx.settings.dsp_profile)
+    registry = ProfileRegistry.from_settings(ctx.settings)
+    profile = registry.resolve(ctx.settings.dsp_profile)
     graph = build_filter_graph(profile)
     note = " (сохранено, применится при следующем воспроизведении)" if chosen is not None else ""
     data = {
@@ -776,8 +780,21 @@ def _cmd_sound(args: argparse.Namespace, ctx: Context) -> int:
         "boost_verified": ctx.settings.boost_verified,
         "available": sorted(BUILTIN_PROFILES),
     }
+    if args.profiles:
+        data["profiles"] = [
+            {"id": item.id, "name": item.name, "builtin": registry.is_builtin(item.id)}
+            for item in registry.all()
+        ]
     if args.json:
         print(json.dumps(data, ensure_ascii=False, indent=2))
+        return 0
+    if args.profiles:
+        for item in registry.all():
+            mark = "*" if item.id == profile.id else " "
+            kind = "встроенный" if registry.is_builtin(item.id) else "свой"
+            print(f"{mark} {item.name} · {item.id} ({kind})")
+        if registry.errors:
+            print("Пропущены при чтении: " + "; ".join(registry.errors))
         return 0
     print(f"Профиль: {describe_profile(profile)}{note}")
     print(f"Режим: {profile.mode.value} · id: {profile.id}")

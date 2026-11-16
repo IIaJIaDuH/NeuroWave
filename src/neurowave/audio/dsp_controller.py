@@ -14,6 +14,7 @@ from typing import Any, Callable
 
 from ..config import Settings
 from ..errors import PlayerError
+from .profile_store import ProfileRegistry
 from .backend import AudioBackend
 from .dsp_graph import build_filter_graph
 from .dsp_profiles import (
@@ -84,9 +85,11 @@ class DspController:
         backend: AudioBackend,
         settings: Settings | None = None,
         listener: Listener | None = None,
+        registry: ProfileRegistry | None = None,
     ):
         self._backend = backend
         self.settings = settings
+        self.registry = registry or ProfileRegistry.from_settings(settings or Settings())
         self._listener = listener
         self._profile: AudioProfile | None = None
         self._graph: str | None = None
@@ -116,7 +119,8 @@ class DspController:
     # --- применение ---------------------------------------------------
     def apply(self, profile: AudioProfile | str, *, persist: bool = True) -> DspStatus:
         """Применить профиль; при отказе — откат, а не ложный успех."""
-        profile = get_profile(profile) if isinstance(profile, str) else profile
+        if isinstance(profile, str):
+            profile = self.registry.get(profile) or get_profile(profile)
         previous, previous_graph = self._profile, self._graph
         try:
             graph = self._push(profile)
@@ -159,16 +163,17 @@ class DspController:
         if mode is DspMode.PURE:
             return self.apply(BUILTIN_PROFILES[DEFAULT_PROFILE_ID], persist=False)
         profile_id = self.settings.dsp_profile if self.settings is not None else DEFAULT_PROFILE_ID
-        candidate = resolve_profile(profile_id)
+        candidate = self.registry.get(profile_id) or resolve_profile(profile_id)
         if candidate.mode is DspMode.PURE:
-            candidate = resolve_profile(self._last_enhanced)
+            candidate = self.registry.get(self._last_enhanced) or resolve_profile(self._last_enhanced)
         if candidate.mode is DspMode.PURE:
             candidate = BUILTIN_PROFILES["hifi"]
         return self.apply(candidate)
 
     def sync(self) -> DspStatus:
         """Привести mpv к сохранённому профилю. Повторный вызов не шлёт IPC."""
-        profile = resolve_profile(self.settings.dsp_profile if self.settings is not None else DEFAULT_PROFILE_ID)
+        wanted = self.settings.dsp_profile if self.settings is not None else DEFAULT_PROFILE_ID
+        profile = self.registry.get(wanted) or resolve_profile(wanted)
         desired = None if profile.mode is DspMode.PURE else build_filter_graph(profile)
         signature = (profile.id, _normalized(desired))
         if self._verified and _normalized(self._graph) == _normalized(desired):

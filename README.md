@@ -83,7 +83,8 @@ neurowave output        # выходы: Bluetooth/HDMI, реальный код�
 neurowave output --set pulse/bluez_output.…   # выбрать выход (систему не меняем)
 neurowave sound         # профиль звука: режим, полосы, лимитер, lavfi-граф
 neurowave sound --profile bluetooth --graph   # выбрать профиль и увидеть цепь
-neurowave app           # окно: транспорт, перемотка, громкость, звук, выход
+neurowave sound --profiles                     # встроенные и свои профили
+neurowave app           # окно: транспорт, перемотка, громкость, звук, выход, Sound Lab
 neurowave tray          # волна + значок в трее + MPRIS: pip install -e '.[desktop]'
 ./packaging/install-desktop.sh   # ярлык в меню и на рабочем столе
 ```

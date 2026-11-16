@@ -85,6 +85,8 @@ class Settings:
     dsp_profile: str = "flat"
     #: id аудиовыхода mpv; пусто — авто (системный выбор PipeWire).
     audio_output: str = ""
+    #: Пользовательские профили звука, уже проверенные при чтении.
+    custom_profiles: list[dict[str, Any]] = field(default_factory=list)
     # Ставится в True только когда в цепи есть проверенный лимитер (PR-04).
     # До этого громкость выше SAFE_VOLUME не применяется.
     boost_verified: bool = False
@@ -122,9 +124,20 @@ class Settings:
         settings.repeat = RepeatMode.parse(settings.repeat).value
         # Ленивый импорт: audio импортирует config (MAX_VOLUME), поэтому
         # обычный импорт на уровне модуля дал бы цикл.
-        from .audio.dsp_profiles import resolve_profile
+        from .audio.dsp_profiles import AudioProfile, DspError
 
-        settings.dsp_profile = resolve_profile(settings.dsp_profile).id
+        # Битые и устаревшие профили отбрасываются по одному: один испорченный
+        # JSON не должен уносить остальные настройки.
+        valid: list[dict[str, Any]] = []
+        for item in settings.custom_profiles or []:
+            try:
+                valid.append(AudioProfile.from_dict(item).to_dict())
+            except (DspError, TypeError, ValueError):
+                continue
+        settings.custom_profiles = valid
+        from .audio.profile_store import ProfileRegistry
+
+        settings.dsp_profile = ProfileRegistry.from_settings(settings).resolve(settings.dsp_profile).id
         return settings
 
 

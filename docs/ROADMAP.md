@@ -74,7 +74,7 @@
 | 05 | Менеджер устройств BT/HDMI, реальный кодек и маршрут | [x] |
 | 06 | PCM tap PoC: только поток NeuroWave | [x] |
 | 07 | Qt Desktop: рабочее приложение, один PlayerService | [x] |
-| 08 | Sound Lab UI: пресеты, PEQ, статус DSP | [ ] |
+| 08 | Sound Lab UI: пресеты, PEQ, статус DSP | [x] |
 | 09 | FFT-спектроанализатор (только если PR-06 прошёл gate) | [ ] |
 | 10 | Beta hardening: тесты, упаковка, лицензия, soak, релиз | [ ] |
 

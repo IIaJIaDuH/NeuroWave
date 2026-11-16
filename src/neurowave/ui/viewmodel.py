@@ -40,6 +40,8 @@ class UiState:
     output_name: str = "auto"
     quality: str = ""
     last_event: str = ""
+    dsp_confirmed: bool = False
+    dsp_reason: str = ""
 
     @property
     def progress(self) -> float:
@@ -175,6 +177,8 @@ class PlayerViewModel:
             output_name=self._output_name(output_id),
             quality=quality.label() if quality else "",
             last_event=self._last_event,
+            dsp_confirmed=bool(getattr(dsp_status, "confirmed", False)),
+            dsp_reason=getattr(dsp_status, "reason", None) or "",
         )
 
     _last_event: str = ""
@@ -223,8 +227,22 @@ class PlayerViewModel:
     def adjust_volume(self, delta: int) -> None:
         self.set_volume(self.player.volume + int(delta))
 
+    def profiles(self) -> list[tuple[str, str, bool]]:
+        """(id, имя, встроенный) для списка в Sound Lab."""
+        return list(self.player.profiles.describe())
+
     def set_profile(self, profile_id: str) -> None:
         self._cmd("profile", lambda: self.player.set_dsp_profile(profile_id))
+
+    def apply_profile(self, profile: Any) -> None:
+        """Применить собранный профиль (в том числе несохранённый)."""
+        self._cmd("apply-profile", lambda: self.player.set_dsp_profile(profile))
+
+    def save_profile(self, profile: Any) -> None:
+        self._cmd("save-profile", lambda: self.player.save_profile(profile))
+
+    def delete_profile(self, profile_id: str) -> None:
+        self._cmd("delete-profile", lambda: self.player.delete_profile(profile_id))
 
     def set_mode(self, mode: str) -> None:
         self._cmd("mode", lambda: self.player.set_dsp_mode(mode))

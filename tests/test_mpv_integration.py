@@ -341,3 +341,34 @@ def test_real_mpv_lists_and_switches_audio_device(tmp_path: Path) -> None:
         )
     finally:
         backend.shutdown()
+
+
+def test_real_mpv_accepts_custom_profile_graph(tmp_path: Path) -> None:
+    """Пользовательский профиль (4 полосы + лимитер) должен собрать живой lavfi."""
+    from neurowave.audio.dsp_controller import DspController
+    from neurowave.audio.dsp_profiles import AudioProfile, EqBand, Limiter
+    from neurowave.config import Settings
+
+    profile = AudioProfile(
+        id="custom-live",
+        name="Проверка",
+        preamp_db=-5.0,
+        bands=(
+            EqBand("lowshelf", 90.0, -2.0, 0.7),
+            EqBand("peaking", 450.0, 1.5, 1.4),
+            EqBand("peaking", 3200.0, -1.0, 2.0),
+            EqBand("highshelf", 10500.0, -2.5, 0.7),
+        ),
+        limiter=Limiter(enabled=True, ceiling_dbfs=-3.5, lookahead_ms=6.0, release_ms=70.0),
+    )
+    backend = MpvBackend(extra_args=["--ao=null", "--volume=100"])
+    controller = DspController(backend, settings=Settings(dsp_profile="flat"))
+    audio = make_wav(tmp_path / "tone-custom.wav", 2.5, freq=450, level=26000)
+    try:
+        backend.load(str(audio))
+        status = controller.apply(profile)
+        assert status.confirmed is True, status.reason
+        assert "lowshelf=f=90" in (backend.audio_filter() or "")
+        assert wait_until(lambda: backend.position_ms() > 300, timeout=5.0)
+    finally:
+        backend.shutdown()

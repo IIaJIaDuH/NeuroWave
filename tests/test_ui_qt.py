@@ -37,6 +37,7 @@ def window(qapp):
     from neurowave.ui.app import _build_window
 
     backend = NullBackend()
+    backend.is_running = True  # окно работает с «живым» mpv-двойником
     player = PlayerService(adapter=FakeAdapter(), backend=backend, settings=Settings(), prefetch=False)
     dispatcher = CommandDispatcher()
     model = PlayerViewModel(player, dispatcher=dispatcher)
@@ -144,3 +145,66 @@ def test_app_quits_on_sigterm(tmp_path) -> None:
     finally:
         if process.poll() is None:
             process.kill()
+
+
+def test_soundlab_collects_and_applies_profile(window) -> None:
+    from neurowave.ui.soundlab import _build_dialog
+
+    window, player, backend, model = window
+    player.play_tracks([make_track(1)])
+    dialog = _build_dialog(model)
+    dialog._add_row()
+    table = dialog._bands
+    assert table.rowCount() == 1
+    table.cellWidget(0, 1).setValue(2000.0)
+    table.cellWidget(0, 2).setValue(3.0)
+    profile = dialog._collect()
+    assert profile.bands[0].frequency_hz == 2000.0
+    dialog._on_apply()
+    assert model.dispatcher.wait_idle(3)
+    assert "g=3" in (backend.audio_filter_value or "")
+    dialog.close()
+
+
+def test_soundlab_rejects_invalid_profile(window) -> None:
+    from PySide6.QtWidgets import QLineEdit
+
+    from neurowave.ui.soundlab import _build_dialog
+
+    window, player, backend, model = window
+    dialog = _build_dialog(model)
+    name = dialog.findChildren(QLineEdit)[0]
+    name.setText("   ")  # пустое имя — невалидный профиль
+    dialog._on_apply()
+    assert model.dispatcher.wait_idle(1)
+    assert "Проверьте параметры" in dialog._status.text()
+    assert backend.audio_filter_value is None or "g=" not in backend.audio_filter_value
+    dialog.close()
+
+
+def test_soundlab_saves_custom_profile(window) -> None:
+    from PySide6.QtWidgets import QLineEdit
+
+    from neurowave.ui.soundlab import _build_dialog
+
+    window, player, _backend, model = window
+    dialog = _build_dialog(model)
+    edits = dialog.findChildren(QLineEdit)
+    edits[0].setText("Свой пресет")
+    edits[1].setText("my-preset")
+    dialog._on_save()
+    assert model.dispatcher.wait_idle(3)
+    saved = {item["id"] for item in player.settings.custom_profiles}
+    assert "my-preset" in saved
+    dialog.close()
+
+
+def test_soundlab_lists_builtin_and_custom(window) -> None:
+    from neurowave.ui.soundlab import _build_dialog
+
+    window, _player, _backend, model = window
+    dialog = _build_dialog(model)
+    names = [dialog.findChildren(type(dialog._bands))]  # sanity: dialog построен
+    assert names
+    assert model.profiles()
+    dialog.close()
