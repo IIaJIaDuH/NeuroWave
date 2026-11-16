@@ -52,6 +52,7 @@
 - [ADR-0002: Python-ядро как первый срез](docs/decisions/0002-python-core-prototype.md)
 - [ADR-0003: Основа интерфейса](docs/decisions/0003-ui-foundation.md)
 - [ADR-0004: Провайдеры музыки](docs/decisions/0004-multi-provider.md)
+- [ADR-0005: Аудиодвижок](docs/decisions/0005-audio-engine.md) — mpv + IPC + lavfi, альтернативы и условия пересмотра
 - [Smoke-тест Sprint 1 на Mint](docs/SMOKE-SPRINT1.md)
 
 ## Текущее состояние
