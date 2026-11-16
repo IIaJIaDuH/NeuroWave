@@ -485,8 +485,14 @@ def _print_account(
     if account.login:
         print(f"Логин: {account.login}")
     if subscription:
-        plus = {True: "активна", False: "не активна", None: "неизвестно"}[account.plus]
-        print(f"Подписка {subscription}: {plus}")
+        # Значение приходит из адаптера как bool|None; любой другой тип — «неизвестно».
+        if account.plus is True:
+            state = "активна"
+        elif account.plus is False:
+            state = "не активна"
+        else:
+            state = "неизвестно"
+        print(f"Подписка {subscription}: {state}")
     if not account.service_available:
         print(
             unavailable_hint
