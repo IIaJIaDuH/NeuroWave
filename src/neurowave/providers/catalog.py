@@ -12,19 +12,6 @@ from .base import AuthKind, Capability, ProviderInfo
 
 PLANNED: tuple[ProviderInfo, ...] = (
     ProviderInfo(
-        id="soundcloud",
-        title="SoundCloud",
-        capabilities=frozenset({Capability.CATALOG, Capability.PLAYLISTS, Capability.DIRECT_STREAM}),
-        auth=AuthKind.API_TOKEN,
-        implemented=False,
-        summary="Официальный API отдаёт поток для доступных треков; ключ требует Artist Pro",
-        notes=(
-            "Реально подключаемый кандидат №1: поддерживаемый стриминг. Требует "
-            "атрибуции автора и запрещает постоянное офлайн-кеширование — кеш "
-            "провайдера придётся отключать."
-        ),
-    ),
-    ProviderInfo(
         id="spotify",
         title="Spotify",
         capabilities=frozenset(

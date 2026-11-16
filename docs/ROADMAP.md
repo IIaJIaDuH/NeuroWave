@@ -29,7 +29,7 @@
 - [x] Квалифицированные ID `provider:track_id` в треках, истории, кеше и снимке очереди, миграция SQLite v1→v2 и маршрутизация `stream_url`/feedback по провайдеру — гейт из [ADR-0004](decisions/0004-multi-provider.md) закрыт.
 - [x] Локальные файлы (`--provider local`, папка `local_music_dir`): без аккаунта, DRM и кеша.
 - [ ] MPD как внешняя библиотека (локальный провайдер уже читает файлы с диска).
-- [ ] SoundCloud — единственный крупный сервис с официальным потоком; без офлайн-кеша.
+- [x] SoundCloud (`--provider soundcloud`): поиск и поток `playable`-треков, ключ через `login --token`, атрибуция автора, кеш отключён; превью и `blocked` в очередь не попадают.
 - [ ] Spotify только как «пульт» (каталог + Spotify Connect), если будет доступ к Web API.
 - [ ] VK, Deezer, TIDAL, Apple Music, YouTube Music — только при появлении официальной потоковой поддержки.
 

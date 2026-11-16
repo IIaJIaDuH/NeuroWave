@@ -65,6 +65,15 @@ def test_local_provider_is_implemented_without_account() -> None:
     assert spec.login is None  # входить некуда
 
 
+def test_soundcloud_provider_requires_app_key() -> None:
+    spec = get_spec("soundcloud")
+    assert spec.info.auth is AuthKind.API_TOKEN
+    assert spec.info.cache_allowed is False
+    assert spec.info.supports(Capability.DIRECT_STREAM)
+    assert spec.info.supports(Capability.CATALOG)
+    assert spec.login is None  # ключ вводится через login --token
+
+
 def test_yandex_keeps_cache_allowed() -> None:
     assert get_spec("yandex").info.cache_allowed is True
 
@@ -90,12 +99,12 @@ def test_planned_catalogue_is_honest_about_playback() -> None:
     by_id = {info.id: info for info in planned()}
     assert "yandex" not in by_id  # реализованные не попадают в «не подключённые»
     assert "local" not in by_id  # локальные файлы уже подключены
-    assert {"spotify", "vk", "soundcloud"} <= set(by_id)
+    assert "soundcloud" not in by_id  # поток уже реализован
+    assert {"spotify", "vk", "deezer", "tidal", "youtube-music"} <= set(by_id)
 
     assert by_id["spotify"].plays_in_mpv is False
     assert by_id["spotify"].supports(Capability.DELEGATED_PLAYBACK)
     assert by_id["vk"].capabilities == frozenset()
-    assert by_id["soundcloud"].plays_in_mpv is True
     for info in by_id.values():
         assert info.implemented is False
         assert info.summary, f"у {info.id} нет описания"
@@ -182,7 +191,7 @@ def test_providers_command_lists_connected_and_planned(tmp_path, capsys) -> None
     data = json.loads(capsys.readouterr().out)
     assert data["current"] == "yandex"
     ids = {row["id"] for row in data["connected"]}
-    assert ids == {"yandex", "local"}
+    assert ids == {"yandex", "local", "soundcloud"}
     planned_ids = {row["id"] for row in data["not_connected"]}
     assert {"spotify", "vk"} <= planned_ids
     yandex = next(row for row in data["connected"] if row["id"] == "yandex")
@@ -191,6 +200,10 @@ def test_providers_command_lists_connected_and_planned(tmp_path, capsys) -> None
     local = next(row for row in data["connected"] if row["id"] == "local")
     assert local["auth"] == "none"
     assert local["cache_allowed"] is False
+    soundcloud = next(row for row in data["connected"] if row["id"] == "soundcloud")
+    assert soundcloud["auth"] == "api_token"
+    assert soundcloud["cache_allowed"] is False
+    assert soundcloud["plays_in_mpv"] is True
 
 
 def test_providers_command_human_output(tmp_path, capsys) -> None:

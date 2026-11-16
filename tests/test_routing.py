@@ -201,12 +201,7 @@ def test_player_plays_local_file_through_router(tmp_path) -> None:
 
 def test_player_without_router_still_uses_single_adapter(tmp_path) -> None:
     """Старый путь (один адаптер) не сломан — CLI его больше не использует."""
-    yandex = FakeAdapter("yandex")
-
-    class Single(FakeAdapter):
-        pass
-
-    adapter = Single("yandex")
+    adapter = FakeAdapter("yandex")
     player = PlayerService(adapter=adapter, backend=NullBackend(), settings=Settings(), prefetch=False)
     try:
         player.start_wave()

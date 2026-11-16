@@ -36,6 +36,7 @@ class Track:
     available: bool = True
     liked: bool = False
     provider: str | None = None
+    url: str | None = None  # страница трека у провайдера (атрибуция)
 
     @property
     def key(self) -> str:
@@ -74,6 +75,7 @@ class Track:
             "available": self.available,
             "liked": self.liked,
             "provider": self.provider,
+            "url": self.url,
         }
 
     @classmethod
@@ -87,6 +89,7 @@ class Track:
             available=bool(data.get("available", True)),
             liked=bool(data.get("liked", False)),
             provider=data.get("provider") or None,
+            url=data.get("url") or None,
         )
 
 
@@ -164,13 +167,17 @@ class RepeatMode(str, Enum):
 
 
 def unique_tracks(tracks: Iterable[Track]) -> tuple[Track, ...]:
-    """Убрать повторы по id, сохранив порядок (защита очереди от дублей)."""
+    """Убрать повторы по ключу ``provider:track_id``, сохранив порядок.
+
+    Сырой ``id`` не годится: «123» у двух провайдеров — разные треки.
+    """
     seen: set[str] = set()
     result: list[Track] = []
     for track in tracks:
-        if track.id in seen:
+        key = track.key
+        if key in seen:
             continue
-        seen.add(track.id)
+        seen.add(key)
         result.append(track)
     return tuple(result)
 

@@ -20,6 +20,7 @@ from typing import Any, Iterable
 from ..errors import NeuroWaveError
 from .base import ProviderContext, ProviderInfo, ProviderSpec
 from .local import LOCAL_SPEC
+from .soundcloud import SOUNDCLOUD_SPEC
 from .yandex import YANDEX_SPEC
 
 ENTRY_POINT_GROUP = "neurowave.providers"
@@ -137,3 +138,4 @@ class ProviderNotImplemented(NeuroWaveError):
 # Встроенные провайдеры.
 register(YANDEX_SPEC)
 register(LOCAL_SPEC)
+register(SOUNDCLOUD_SPEC)

@@ -20,6 +20,7 @@ PlayerService ── Queue ── PlayerStateMachine
         ├── ProviderRouter ── выбор адаптера по track.provider (`provider:track_id`)
         ├── YandexMusicAdapter ── OAuth Device Flow, поиск, волна, ссылки на поток
         ├── LocalMusicAdapter ── файлы из local_music_dir, без сети и кеша
+        ├── SoundCloudAdapter ── поиск и поток playable-треков, без кеша
         ├── MediaCache ── лимит 2 ГБ, LRU, TTL 7 дней, предзагрузка
         └── AudioBackend ── mpv (JSON IPC) | null (тесты и диагностика)
 ```
@@ -97,17 +98,22 @@ neurowave wave              # «Моя волна», управление из �
 |---|---|---|---|
 | `yandex` | `CATALOG`, `LIBRARY`, `PLAYLISTS`, `PERSONAL_RADIO`, `DIRECT_STREAM` | OAuth Device Flow | да |
 | `local` | `CATALOG`, `DIRECT_STREAM`, `SHUFFLE_LIBRARY` | не требуется | нет |
+| `soundcloud` | `CATALOG`, `DIRECT_STREAM` | API-ключ (`login --token`) | нет |
 
 ```bash
 neurowave providers                    # что подключено и что умеет
 neurowave --json providers             # то же машиночитаемо
 neurowave --provider yandex wave       # провайдер на сессию
 neurowave --provider local wave        # случайная выборка, не персональный поток
+neurowave --provider soundcloud login --token <client_id>   # ключ приложения
+neurowave --provider soundcloud play "запрос"               # поток playable-треков в mpv
 ```
 
 Выбор провайдера хранится в `config.json` (`provider`, по умолчанию `yandex`).
 Токен у каждого провайдера свой: запись keyring `<provider>-oauth` или файл
 `token.<provider>` с правами 0600 (для Яндекса — исторические имена);
+провайдерам с `AuthKind.API_TOKEN` ключ передаётся через `login --token`
+(в вывод не попадает);
 провайдерам с `AuthKind.NONE` токен не нужен, и `login` так и говорит.
 
 ### Квалифицированные ID
@@ -130,6 +136,23 @@ neurowave --provider local wave        # случайная выборка, не
 нет намеренно: «волна» — случайная выборка, CLI предупреждает об этом.
 `library`, `like` и `playlists` возвращают понятный отказ «не поддерживает»,
 а не пустой список. Кеш и предзагрузка отключены: файл уже на диске.
+
+### SoundCloud
+
+`SoundCloudAdapter` подключён ровно в границах API: поиск и поток для
+`playable`-треков. Ключ приложения или пользовательский access token
+сохраняется тем же `TokenStore` (`neurowave login --token <ключ>`); access
+token отправляется заголовком `Authorization: OAuth`, client_id — параметром
+`client_id`. Сеть инкапсулирована в `soundcloud/client.py` на стандартной
+библиотеке; транспорт, сон и повторы инъектируются, поэтому тесты не ходят в
+интернет.
+
+Что явно не делается: превью и `blocked` треки не попадают в очередь (30 секунд
+— не трек), `stream_url` перепроверяет доступность перед выдачей ссылки,
+`library`/`playlists`/`wave` отвечают «не поддерживает», а кеш и предзагрузка
+отключены (`cache_allowed=False`) — постоянное хранение запрещено условиями.
+Атрибуция обязательна: исполнитель берётся из `user.username`, страница трека
+лежит в `Track.url` и печатается в `search` и при воспроизведении.
 
 Сторонние провайдеры подключаются без правки ядра — entry points группы
 `neurowave.providers`, возвращающие `ProviderSpec`:
@@ -205,8 +228,8 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 Не реализовано и не заявлено работающим:
 
 - полноценный Qt-интерфейс, темы, мини-плеер, визуализация;
-- адаптеры SoundCloud/Spotify/VK и др. — только реестр и контракт
-  возможностей (локальные файлы и Яндекс уже реализованы);
+- адаптеры Spotify/VK/Deezer/TIDAL и др. — только реестр и контракт
+  возможностей (Яндекс, локальные файлы и SoundCloud уже реализованы);
 - Qt-интерфейс как основной экран, глобальные горячие клавиши, автозапуск;
 - Pure/Enhanced DSP, эквалайзер, лимитер, пресеты устройств, FFT;
 - тексты песен, подкасты, Ynison;
@@ -215,7 +238,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 159 unit-тестов ядра, интеграций и провайдеров,
+Проверено в этом окружении: 181 unit-тест ядра, интеграций и провайдеров,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
 импорт и сборка пакета, работа MPRIS на отдельном сессионном шине
@@ -228,13 +251,15 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 159 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
+python -m pytest        # 181 тест: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
 на `NullBackend`, кеш — на временных каталогах и подменяемых часах.
 Миграция SQLite проверяется на настоящей базе схемы v1, локальный провайдер —
-на временной папке с файлами (без `mutagen` работает резервный путь метаданных).
+на временной папке с файлами (без `mutagen` работает резервный путь метаданных),
+SoundCloud — на фейковом транспорте: поиск, отбрасывание превью, отказы
+`401/403/429/5xx`, адрес CDN и отключённый кеш.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика
 тестируется на заглушке, а `tests/test_integrations_optional.py` отдельными
 процессами проверяет, что импорт не тянет `dbus-next`/`PySide6` и что
@@ -250,9 +275,9 @@ python -m pytest        # 159 тестов: очередь, состояния, 
    же процессе, мост `PlayerBridge`; критерий пересмотра — замер PSS на Mint.
 3. MPRIS + трей: реализованы (`neurowave wave --mpris`, `neurowave tray`),
    ядро не менялось; осталось проверить на живом рабочем столе Mint.
-4. Провайдеры: гейт из ADR-0004 закрыт (квалифицированные ID, миграция,
-   маршрутизация), локальные файлы подключены; следующий — SoundCloud
-   (официальный поток, без офлайн-кеша).
+4. Провайдеры: гейт из ADR-0004 закрыт, локальные файлы и SoundCloud
+   подключены; следующий — Spotify только как «пульт» (каталог + Connect), если
+   будет доступ к Web API.
 5. Sound Lab: Pure/Enhanced поверх `mpv`-фильтров, отдельные пресеты для
    Bluetooth и HDMI.
 6. Только после этого — ИИ-диджей как отдельный процесс с валидируемыми

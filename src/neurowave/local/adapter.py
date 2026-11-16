@@ -255,7 +255,4 @@ class LocalMusicAdapter:
         return False
 
     def _inside_root(self, candidate: Path) -> bool:
-        try:
-            return candidate.is_relative_to(self._root)
-        except AttributeError:  # pragma: no cover - Python < 3.9
-            return str(candidate).startswith(f"{self._root}{Path('/')}")
+        return candidate.is_relative_to(self._root)

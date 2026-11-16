@@ -40,6 +40,7 @@ from .state import PlayerStatus
 from .storage import Database, MediaCache, TokenStore
 
 DEFAULT_SEARCH_LIMIT = 20
+API_HOSTS = {"yandex": "api.music.yandex.net", "soundcloud": "api.soundcloud.com"}
 
 
 @dataclass
@@ -82,7 +83,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="машиночитаемый вывод")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("login", help="вход через OAuth Device Flow")
+    login = sub.add_parser("login", help="вход: OAuth Device Flow или API-ключ провайдера")
+    login.add_argument(
+        "--token",
+        metavar="KEY",
+        help="API-ключ провайдера (SoundCloud: client_id или access token)",
+    )
     sub.add_parser("logout", help="удалить сохранённый токен")
     sub.add_parser("me", help="аккаунт и статус подписки")
 
@@ -250,9 +256,12 @@ def _require_token(ctx: Context) -> None:
     if info.auth is AuthKind.NONE:
         return
     if not getattr(ctx.adapter, "token", None):
-        raise AuthError(
-            f"Требуется вход в {info.title}. Выполните: neurowave login"
+        hint = (
+            "neurowave login --token <ключ>"
+            if info.auth is AuthKind.API_TOKEN
+            else "neurowave login"
         )
+        raise AuthError(f"Требуется вход в {info.title}. Выполните: {hint}")
 
 
 def _require_capability(ctx: Context, capability: Capability) -> None:
@@ -274,6 +283,8 @@ def _console_listener(event: str, payload: dict[str, Any]) -> None:
             suffix = f" [{quality.label()}]" if quality else ""
             origin = " (кеш)" if payload.get("from_cache") else ""
             print(f"▶ {track.label} — {track.duration_text}{suffix}{origin}", flush=True)
+            if track.url:
+                print(f"   Источник: {track.url}", flush=True)
     elif event in {"paused", "resumed", "stopped"}:
         print({"paused": "⏸ пауза", "resumed": "▶ продолжаем", "stopped": "■ остановлено"}[event], flush=True)
     elif event == "error":
@@ -288,10 +299,26 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
     if spec.info.auth is AuthKind.NONE:
         print(f"Вход не требуется: «{spec.info.title}» работает с локальными файлами.")
         return 0
+    if args.token:
+        if spec.info.auth is not AuthKind.API_TOKEN:
+            raise AuthError(
+                f"«{spec.info.title}» не принимает ключ вручную: выполните "
+                "интерактивный вход neurowave login."
+            )
+        token = args.token.strip()
+        if not token:
+            raise AuthError("Ключ пустой")
+        ctx.tokens.save(token)
+        ctx.adapter = create(
+            spec, ProviderContext(token=token, paths=ctx.paths, settings=ctx.settings)
+        )
+        print(f"Ключ сохранён ({spec.info.title}). Хранилище: {ctx.tokens.backend}.")
+        print('Проверка ключа — первый запрос, например: neurowave search "запрос"')
+        return 0
     if spec.login is None:
         raise ProviderNotImplemented(
-            f"Вход для «{spec.info.title}» пока не поддержан: провайдеру нужен "
-            "API-токен, а не интерактивный вход."
+            f"Вход для «{spec.info.title}» не поддержан: провайдеру нужен API-ключ, "
+            "а не интерактивный вход. Передайте его: neurowave login --token <ключ>"
         )
 
     def on_code(url: str, code: str) -> None:
@@ -377,6 +404,8 @@ def _cmd_search(args: argparse.Namespace, ctx: Context) -> int:
         print("Треки не найдены.")
     for index, track in enumerate(results.tracks, start=1):
         print(f"{index:2d}. {track.label} — {track.duration_text}  id={track.id}")
+        if track.url:
+            print(f"    Источник: {track.url}")
     if results.artists:
         print("\nИсполнители: " + ", ".join(ref.name for ref in results.artists))
     if results.albums:
@@ -501,7 +530,9 @@ def _cmd_play(args: argparse.Namespace, ctx: Context) -> int:
         raise PlayerError("Укажите поисковый запрос или --id")
     if args.track_id:
         # Проверяем доступность по ID через поиск ссылки на поток.
-        track = Track(id=str(args.track_id), title=f"Трек {args.track_id}")
+        track = Track(
+            id=str(args.track_id), title=f"Трек {args.track_id}", provider=ctx.provider
+        )
         return _play_session(args, ctx, lambda player: player.play_track(track))
     results = ctx.adapter.search(args.query, limit=args.limit)
     if not results.tracks:
@@ -832,7 +863,8 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
         )
 
     if needs_auth:
-        network_ok, network_note = _probe_network()
+        host = API_HOSTS.get(provider_id, "api.music.yandex.net")
+        network_ok, network_note = _probe_network(host)
         checks.append(("Сеть до API", network_ok, network_note))
     else:
         checks.append(("Сеть", True, "не требуется — файлы на диске"))
