@@ -308,3 +308,36 @@ def test_safe_boost_is_gain_inside_graph_before_limiter(tmp_path: Path) -> None:
     peak = max(abs(sample) for sample in samples)
     assert sum(1 for sample in samples if abs(sample) >= 0.999) == 0
     assert 20 * math.log10(peak) == pytest.approx(-3.0, abs=0.35)
+
+
+def test_real_mpv_lists_and_switches_audio_device(tmp_path: Path) -> None:
+    """Список устройств настоящего mpv и переключение без остановки звука.
+
+    Тест требует живого звукового сервера (pactl + sink по умолчанию): в CI
+    без PipeWire/PulseAudio он пропускается, потому что mpv с реальным AO
+    там запустить нельзя, а `--ao=null` не показывает настоящие устройства.
+    """
+    from neurowave.audio.devices import probe_default_sink
+
+    if probe_default_sink() is None:
+        pytest.skip("нет звукового сервера: нечего переключать")
+
+    backend = MpvBackend(extra_args=["--volume=6"])
+    audio = make_wav(tmp_path / "tone-device.wav", 8.0)
+    try:
+        backend.load(str(audio))
+        devices = backend.audio_devices()
+        assert any(item.get("name") == "auto" for item in devices)
+        candidates = [item["name"] for item in devices if item.get("name") != "auto"]
+        if not candidates:
+            pytest.skip("в окружении нет реальных аудиовыходов кроме auto")
+        assert wait_until(lambda: backend.position_ms() > 200, timeout=8.0)
+        target = candidates[0]
+        backend.set_audio_device(target)
+        assert backend.audio_device() == target
+        before = backend.position_ms()
+        assert wait_until(lambda: backend.position_ms() > before, timeout=8.0), (
+            "переключение выхода не должно останавливать воспроизведение"
+        )
+    finally:
+        backend.shutdown()

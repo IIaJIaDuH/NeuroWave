@@ -19,6 +19,13 @@ from typing import Any, Sequence
 
 from . import __version__
 from .audio import MpvBackend, NullBackend
+from .audio.devices import (
+    build_outputs,
+    describe_kind,
+    probe_default_sink,
+    probe_mpv_devices,
+    probe_sinks,
+)
 from .audio.dsp_graph import build_filter_graph, describe_profile
 from .audio.dsp_profiles import BUILTIN_PROFILES, DspError, get_profile, resolve_profile
 from .config import ConfigStore, Paths, Settings
@@ -162,6 +169,9 @@ def build_parser() -> argparse.ArgumentParser:
     sound.add_argument("--enhanced", action="store_true", help="вернуть обработку (Enhanced)")
     sound.add_argument("--graph", action="store_true", help="показать lavfi-граф профиля")
 
+    output = sub.add_parser("output", help="аудиовыходы: Bluetooth/HDMI, кодек, выбор")
+    output.add_argument("--set", dest="set_id", help="id выхода из списка (auto — системный выбор)")
+
     sub.add_parser("status", help="состояние конфигурации и локальных данных")
     sub.add_parser("doctor", help="диагностика окружения (без токенов)")
     sub.add_parser("providers", help="провайдеры музыки: что подключено и что умеет")
@@ -244,6 +254,7 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
             "unlike": _cmd_unlike,
             "status": _cmd_status,
             "sound": _cmd_sound,
+            "output": _cmd_output,
             "wave": _cmd_wave,
             "play": _cmd_play,
             "playlist": _cmd_playlist,
@@ -679,6 +690,54 @@ def _cmd_unlike(args: argparse.Namespace, ctx: Context) -> int:
     return 0 if ok else 1
 
 
+def _cmd_output(args: argparse.Namespace, ctx: Context) -> int:
+    """Показать выходы и, при желании, выбрать один. Систему не переключаем."""
+    devices = probe_mpv_devices(ctx.settings.audio_backend)
+    outputs = build_outputs(
+        devices, probe_sinks(), ctx.settings.audio_output or None, probe_default_sink()
+    )
+    if args.set_id:
+        known = {output.id for output in outputs}
+        if args.set_id not in known:
+            print(f"Нет такого аудиовыхода: {args.set_id}", file=sys.stderr)
+            print("Доступны: " + ", ".join(sorted(known)), file=sys.stderr)
+            return 2
+        ctx.settings.audio_output = args.set_id
+        ConfigStore(ctx.paths).save(ctx.settings)
+        outputs = build_outputs(devices, probe_sinks(), args.set_id, probe_default_sink())
+    if args.json:
+        data = {
+            "selected": ctx.settings.audio_output or "auto",
+            "outputs": [output.to_dict() for output in outputs],
+        }
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        return 0
+    if not outputs:
+        print("mpv не найден или не отдал список устройств. Проверьте: neurowave doctor")
+        return 1
+    for output in outputs:
+        mark = "*" if output.current else " "
+        extra = []
+        if output.kind != "other":
+            extra.append(describe_kind(output.kind))
+        if output.codec:
+            extra.append(output.codec.upper())
+        if output.profile:
+            extra.append(output.profile)
+        suffix = f"  [{', '.join(extra)}]" if extra else ""
+        print(f"{mark} {output.name}{suffix}\n    id={output.id}")
+    auto = next((output for output in outputs if output.via_auto), None)
+    if args.set_id:
+        print(f"Выбрано: {args.set_id} — применится при следующем воспроизведении.")
+    elif ctx.settings.audio_output:
+        print(f"Сохранённый выбор: {ctx.settings.audio_output}")
+    elif auto is not None:
+        print(f"Выбор: auto → {auto.name}")
+    else:
+        print("Выбор: auto (системный маршрут PipeWire)")
+    return 0
+
+
 def _cmd_sound(args: argparse.Namespace, ctx: Context) -> int:
     """Показать или выбрать профиль. Работающий mpv не трогаем из другого процесса."""
     if args.pure and args.enhanced:
@@ -747,6 +806,7 @@ def _cmd_status(args: argparse.Namespace, ctx: Context) -> int:
             "backend": ctx.tokens.backend,
         },
         "backend": ctx.settings.audio_backend,
+        "audio_output": ctx.settings.audio_output or "auto",
         "volume": ctx.settings.volume,
         "volume_effective": ctx.settings.effective_volume(),
         "cache": {
@@ -770,7 +830,10 @@ def _cmd_status(args: argparse.Namespace, ctx: Context) -> int:
         )
     else:
         print("Токен: не требуется")
-    print(f"Аудиовыход: {ctx.settings.audio_backend}, громкость {ctx.settings.effective_volume()}%")
+    print(
+        f"Аудиовыход: {ctx.settings.audio_backend} "
+        f"({ctx.settings.audio_output or 'auto'}), громкость {ctx.settings.effective_volume()}%"
+    )
     if ctx.settings.volume_limited():
         print(
             f"Ограничение: в настройках {ctx.settings.volume}%, применяется "

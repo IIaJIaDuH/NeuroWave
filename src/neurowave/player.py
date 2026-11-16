@@ -14,6 +14,7 @@ from typing import Any, Callable, Iterable, Protocol
 
 from .audio.backend import AudioBackend
 from .audio.dsp_controller import DspController, DspStatus
+from .audio.devices import AudioOutput, build_outputs, classify, probe_default_sink, probe_sinks
 from .audio.dsp_profiles import AudioProfile, resolve_profile
 from .config import SAFE_VOLUME, Settings
 from .domain import Quality, RepeatMode, StreamInfo, Track
@@ -216,6 +217,69 @@ class PlayerService:
         # mpv ещё не запущен: не поднимаем процесс ради фильтра.
         return DspStatus(profile=chosen, mode=chosen.mode, graph=None, confirmed=False)
 
+    # --- аудиовыход ---------------------------------------------------
+    def outputs(self) -> list[AudioOutput]:
+        """Выходы с типами и кодеками; без запущенного mpv — только настройка."""
+        running = bool(getattr(self.backend, "is_running", False))
+        devices = self.backend.audio_devices() if running else []
+        current = self.backend.audio_device() if running else None
+        return build_outputs(
+            devices, probe_sinks(), current or (self.settings.audio_output or None), probe_default_sink()
+        )
+
+    def set_output(self, device_id: str) -> AudioOutput:
+        """Выбрать выход. Несуществующий id отвергается до отправки в mpv.
+
+        mpv молча принимает любой id и продолжает играть «в никуда», поэтому
+        проверка по списку обязательна — иначе пользователь думает, что звук
+        переключился.
+        """
+        device_id = (device_id or "auto").strip()
+        running = bool(getattr(self.backend, "is_running", False))
+        available = self.backend.audio_devices() if running else []
+        known = {str(item.get("name")) for item in available if isinstance(item, dict)}
+        if known and device_id not in known:
+            options = ", ".join(sorted(known))
+            raise PlayerError(f"Нет такого аудиовыхода: {device_id}. Доступны: {options}")
+        previous = self.settings.audio_output
+        self.settings.audio_output = device_id
+        if self.store is not None:
+            self.store.set_setting("audio_output", device_id)
+        if not running:
+            return AudioOutput(id=device_id, name=device_id, kind=classify(device_id), current=True)
+        try:
+            self.backend.set_audio_device(device_id)
+            actual = self.backend.audio_device()
+            if actual is not None and actual != device_id:
+                raise PlayerError(f"mpv оставил другой выход: {actual}")
+        except PlayerError:
+            self.settings.audio_output = previous
+            if previous:
+                try:
+                    self.backend.set_audio_device(previous)
+                except PlayerError:
+                    pass
+            raise
+        chosen = next((item for item in self.outputs() if item.id == device_id), None)
+        output = chosen or AudioOutput(id=device_id, name=device_id, kind=classify(device_id), current=True)
+        self._emit("output", output=output.to_dict())
+        return output
+
+    def _sync_output(self) -> None:
+        """Применить сохранённый выход. Исчезнувшее устройство не ломает звук."""
+        desired = (self.settings.audio_output or "").strip()
+        if not desired or desired == "auto":
+            return
+        if self.backend.audio_device() == desired:
+            return
+        known = {str(item.get("name")) for item in self.backend.audio_devices() if isinstance(item, dict)}
+        if desired not in known:
+            return
+        try:
+            self.backend.set_audio_device(desired)
+        except PlayerError:
+            pass
+
     def set_dsp_mode(self, mode: str) -> DspStatus:
         from .audio.dsp_profiles import DspMode
 
@@ -255,8 +319,9 @@ class PlayerService:
         quality = self._current_quality  # снимок: диспетчер может уже уйти вперёд
         self.backend.load(url)
         self.backend.set_volume(self._apply_volume_policy())
-        # Фильтры живут в mpv между треками, поэтому sync() обычно no-op.
+        # Фильтры и выход живут в mpv между треками, поэтому обычно no-op.
         self.dsp.sync()
+        self._sync_output()
         self.backend.play()
         self.state.transition(PlayerStatus.PLAYING)
         self.state.clear_overlay(Overlay.TRACK_UNAVAILABLE)

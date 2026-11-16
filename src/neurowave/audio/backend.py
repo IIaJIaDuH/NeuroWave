@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Callable, Protocol, runtime_checkable
+from typing import Any, Callable, Protocol, runtime_checkable
 
 EndHandler = Callable[[str], None]
 
@@ -22,6 +22,9 @@ class AudioBackend(Protocol):
     def is_playing(self) -> bool: ...
     def set_audio_filter(self, graph: str) -> None: ...
     def audio_filter(self) -> str | None: ...
+    def audio_devices(self) -> list[dict[str, Any]]: ...
+    def audio_device(self) -> str | None: ...
+    def set_audio_device(self, device_id: str) -> None: ...
     def shutdown(self) -> None: ...
 
 
@@ -37,6 +40,7 @@ class NullBackend:
         self.loaded_url: str | None = None
         self.volume = 100
         self.audio_filter_value: str | None = None
+        self.audio_device_value: str = "auto"
         self._playing = False
         self._position = 0
         self._started_at: float | None = None
@@ -88,6 +92,16 @@ class NullBackend:
     def set_audio_filter(self, graph: str) -> None:
         self.calls.append(("af", graph))
         self.audio_filter_value = graph or None
+
+    def audio_devices(self) -> list[dict[str, Any]]:
+        return [{"name": "auto", "description": "Autoselect device"}]
+
+    def audio_device(self) -> str | None:
+        return self.audio_device_value
+
+    def set_audio_device(self, device_id: str) -> None:
+        self.calls.append(("device", device_id))
+        self.audio_device_value = device_id
 
     def audio_filter(self) -> str | None:
         return self.audio_filter_value

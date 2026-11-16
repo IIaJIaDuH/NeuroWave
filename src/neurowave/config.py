@@ -83,6 +83,8 @@ class Settings:
     autoplay_wave_feedback: bool = True
     #: id выбранного профиля DSP; сами профили живут в audio/dsp_profiles.py.
     dsp_profile: str = "flat"
+    #: id аудиовыхода mpv; пусто — авто (системный выбор PipeWire).
+    audio_output: str = ""
     # Ставится в True только когда в цепи есть проверенный лимитер (PR-04).
     # До этого громкость выше SAFE_VOLUME не применяется.
     boost_verified: bool = False
