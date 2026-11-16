@@ -400,7 +400,8 @@ grep -il 'client_id\|OAuth ' ~/nw-smoke/*.log
 это и проверяем.
 
 ```bash
-neurowave --provider spotify login --token <access token>
+neurowave --provider spotify login --token <access token> \
+  --refresh-token <refresh token> --client-id <client_id>
 neurowave --provider spotify doctor
 neurowave --provider spotify me
 neurowave --provider spotify search "daft punk" --limit 5
@@ -421,8 +422,15 @@ neurowave --provider spotify cache info
 «не поддерживает: поток в mpv», а `cache info` — `0 файлов`. Локальный `mpv`
 в этот момент не запускается (`pgrep -af mpv` пуст).
 
+Проверка обновления токена (refresh token): подождать истечения access token
+(час) или выполнить ту же команду через час — она должна пройти без нового
+входа. Признак ротации — в файле `token.spotify` появилось новое значение,
+а значения токенов в лог не попали.
+
 Если устройств нет — открыть Spotify на телефоне/ПК и повторить; если `403` —
-проверить Premium и scopes токена. Это ожидаемые сообщения, а не дефект.
+проверить Premium и scopes токена. Если `Ошибка: Токен Spotify истёк или
+отозван, обновление не настроено` — вход был без `--refresh-token
+--client-id`; переделать вход с ними. Это ожидаемые сообщения, а не дефект.
 
 ---
 

@@ -91,7 +91,19 @@ def build_parser() -> argparse.ArgumentParser:
     login.add_argument(
         "--token",
         metavar="KEY",
-        help="API-ключ провайдера (SoundCloud: client_id или access token)",
+        help="API-ключ провайдера (SoundCloud: client_id/access token; Spotify: access token)",
+    )
+    login.add_argument(
+        "--refresh-token",
+        dest="refresh_token",
+        metavar="TOKEN",
+        help="Spotify: refresh token, чтобы пульт переживал истечение access token",
+    )
+    login.add_argument(
+        "--client-id",
+        dest="client_id",
+        metavar="ID",
+        help="Spotify: client_id приложения, нужен вместе с refresh token",
     )
     sub.add_parser("logout", help="удалить сохранённый токен")
     sub.add_parser("me", help="аккаунт и статус подписки")
@@ -211,7 +223,24 @@ def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
         }
         return handlers[args.command](args, ctx)
     finally:
+        if args.command not in {"login", "logout"}:
+            _persist_refreshed_token(ctx)
         ctx.db.close()
+
+
+def _persist_refreshed_token(ctx: Context) -> None:
+    """Сохранить ротированные credentials, если провайдер их обновляет."""
+    storage_token = getattr(ctx.adapter, "storage_token", None)
+    if not callable(storage_token):
+        return
+    try:
+        current = storage_token()
+    except NeuroWaveError:
+        return
+    if not current:
+        return
+    if ctx.tokens.load() != current:
+        ctx.tokens.save(current)
 
 
 # --- контекст ----------------------------------------------------------
@@ -324,8 +353,22 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
         token = args.token.strip()
         if not token:
             raise AuthError("Ключ пустой")
+        stored_token = token
+        if args.refresh_token or args.client_id:
+            if spec.info.id != "spotify":
+                raise AuthError(
+                    "--refresh-token и --client-id поддержаны только для Spotify"
+                )
+            from .spotify.auth import SpotifyCredentials
+
+            stored_token = SpotifyCredentials(
+                access_token=token,
+                refresh_token=(args.refresh_token or "").strip() or None,
+                client_id=(args.client_id or "").strip() or None,
+            ).to_storage()
         adapter = create(
-            spec, ProviderContext(token=token, paths=ctx.paths, settings=ctx.settings)
+            spec,
+            ProviderContext(token=stored_token, paths=ctx.paths, settings=ctx.settings),
         )
         verify = getattr(adapter, "verify", None)
         if verify is not None:
@@ -339,9 +382,14 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
                     file=sys.stderr,
                     flush=True,
                 )
-        ctx.tokens.save(token)
+        ctx.tokens.save(stored_token)
         ctx.adapter = adapter
         print(f"Ключ сохранён ({spec.info.title}). Хранилище: {ctx.tokens.backend}.")
+        if args.refresh_token and args.client_id:
+            print(
+                "Обновление токена настроено: при истечении access token будет "
+                "использован refresh token."
+            )
         return 0
     if spec.login is None:
         raise ProviderNotImplemented(

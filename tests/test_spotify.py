@@ -6,13 +6,14 @@ import json
 
 import pytest
 
-from neurowave.config import Settings
+from neurowave.config import Paths, Settings
 from neurowave.domain import SearchResults, Track
 from neurowave.errors import ApiError, AuthError, SubscriptionRequired
 from neurowave.providers.base import AuthKind, Capability
 from neurowave.providers.registry import ProviderNotImplemented, get_spec
 from neurowave.providers.router import ProviderRouter
 from neurowave.spotify import HttpResponse, SpotifyAdapter, SpotifyClient, SpotifyDevice
+from neurowave.spotify.auth import SpotifyCredentials
 
 TRACK = {
     "id": "tr-1",
@@ -138,6 +139,137 @@ def test_client_error_message_from_body_is_used() -> None:
     with pytest.raises(ApiError) as exc:
         make_client(FakeTransport([response])).pause()
     assert "Player command failed" in str(exc.value)
+
+
+# --- токены: хранение и обновление --------------------------------------
+def test_credentials_plain_token_stays_plain() -> None:
+    credentials = SpotifyCredentials.from_storage("plain-access")
+    assert credentials.access_token == "plain-access"
+    assert credentials.can_refresh is False
+    assert credentials.to_storage() == "plain-access"
+
+
+def test_credentials_json_roundtrip_and_broken_json() -> None:
+    credentials = SpotifyCredentials(
+        access_token="a", refresh_token="r", client_id="c", expires_at=123.0
+    )
+    restored = SpotifyCredentials.from_storage(credentials.to_storage())
+    assert restored == credentials
+    assert restored.can_refresh is True
+    broken = '{"access_token": }'
+    assert SpotifyCredentials.from_storage(broken).access_token == broken
+
+
+def test_expiring_token_is_refreshed_before_request() -> None:
+    now = 1000.0
+    credentials = SpotifyCredentials(
+        access_token="old", refresh_token="ref", client_id="cid", expires_at=now + 5
+    )
+    transport = FakeTransport(
+        [
+            make_response({"access_token": "new", "expires_in": 3600}),
+            make_response({"id": "u1"}),
+        ]
+    )
+    client = SpotifyClient(
+        credentials=credentials, transport=transport, clock=lambda: now
+    )
+    client.verify()
+
+    method, url, headers, body = transport.calls[0]
+    assert method == "POST"
+    assert url == "https://accounts.spotify.com/api/token"
+    form = dict(item.split("=") for item in body.decode().split("&"))
+    assert form == {
+        "grant_type": "refresh_token",
+        "refresh_token": "ref",
+        "client_id": "cid",
+    }
+    assert transport.calls[1][2]["Authorization"] == "Bearer new"
+    assert credentials.access_token == "new"
+    assert credentials.expires_at == now + 3600
+    assert json.loads(client.storage_token())["access_token"] == "new"
+
+
+def test_401_refreshes_once_and_retries_request() -> None:
+    credentials = SpotifyCredentials(access_token="stale", refresh_token="ref", client_id="cid")
+    transport = FakeTransport(
+        [
+            make_response({"error": {"message": "The access token expired"}}, status=401),
+            make_response({"access_token": "fresh", "expires_in": 3600}),
+            make_response({"devices": []}),
+        ]
+    )
+    client = SpotifyClient(credentials=credentials, transport=transport, clock=lambda: 0.0)
+    assert client.devices() == []
+    assert "accounts.spotify.com" in transport.calls[1][1]
+    assert transport.calls[2][2]["Authorization"] == "Bearer fresh"
+
+
+def test_rotated_refresh_token_is_kept() -> None:
+    credentials = SpotifyCredentials(access_token="old", refresh_token="ref", client_id="cid")
+    transport = FakeTransport(
+        [make_response({"access_token": "new", "refresh_token": "ref-2", "expires_in": 3600})]
+    )
+    client = SpotifyClient(credentials=credentials, transport=transport, clock=lambda: 0.0)
+    client._refresh()
+    assert credentials.refresh_token == "ref-2"
+    stored = json.loads(client.storage_token())
+    assert stored["refresh_token"] == "ref-2"
+
+
+def test_expired_token_without_refresh_explains_how_to_fix() -> None:
+    transport = FakeTransport([make_response({}, status=401)])
+    client = SpotifyClient(token="stale", transport=transport)
+    with pytest.raises(AuthError) as exc:
+        client.devices()
+    message = str(exc.value)
+    assert "истёк" in message
+    assert "--refresh-token" in message
+    assert "stale" not in message  # токен не утекает в текст
+
+
+def test_locally_expired_token_is_refreshed_before_any_request() -> None:
+    credentials = SpotifyCredentials(
+        access_token="old", refresh_token="ref", client_id="cid", expires_at=500.0
+    )
+    transport = FakeTransport([make_response({"access_token": "new", "expires_in": 60})])
+    client = SpotifyClient(
+        credentials=credentials, transport=transport, clock=lambda: 1000.0
+    )
+    assert client.devices() == []  # ответ фейка без ключа "devices"
+    assert len(transport.calls) == 2
+    assert transport.calls[0][1].startswith("https://accounts.spotify.com")
+    assert transport.calls[1][1].endswith("/me/player/devices")
+    assert transport.calls[1][2]["Authorization"] == "Bearer new"
+
+
+def test_expired_without_refresh_fails_without_network() -> None:
+    credentials = SpotifyCredentials(access_token="old", expires_at=500.0)
+    transport = FakeTransport([make_response({})])
+    client = SpotifyClient(credentials=credentials, transport=transport, clock=lambda: 1000.0)
+    with pytest.raises(AuthError) as exc:
+        client.devices()
+    assert "обновление не настроено" in str(exc.value)
+    assert transport.calls == []
+
+
+def test_failed_refresh_is_auth_error_not_silence() -> None:
+    credentials = SpotifyCredentials(access_token="old", refresh_token="ref", client_id="cid")
+    transport = FakeTransport([make_response({"error": "invalid_grant"}, status=400)])
+    client = SpotifyClient(credentials=credentials, transport=transport, clock=lambda: 0.0)
+    with pytest.raises(AuthError) as exc:
+        client._refresh()
+    assert "Не удалось обновить токен" in str(exc.value)
+
+
+def test_adapter_exposes_storage_token_for_persistence() -> None:
+    plain = SpotifyAdapter(client=SpotifyClient(token="plain", transport=FakeTransport([])))
+    assert plain.storage_token() == "plain"
+
+    credentials = SpotifyCredentials(access_token="a", refresh_token="r", client_id="c")
+    adapter = SpotifyAdapter(client=SpotifyClient(credentials=credentials, transport=FakeTransport([])))
+    assert json.loads(adapter.storage_token())["refresh_token"] == "r"
 
 
 # --- адаптер ------------------------------------------------------------
@@ -277,6 +409,70 @@ def patch_spotify(monkeypatch, devices=None, results=None):
         SpotifyAdapter, "remote_previous", lambda self: calls.append(("previous",))
     )
     return calls
+
+
+def test_cli_spotify_login_with_refresh_token_stores_credentials(
+    tmp_path, capsys, monkeypatch
+) -> None:
+    from neurowave.cli import main
+    from neurowave.storage import TokenStore
+
+    monkeypatch.setattr(TokenStore, "_import_keyring", staticmethod(lambda: None))
+    patch_spotify(monkeypatch)  # verify без сети
+    home = tmp_path / "home"
+    code = main(
+        [
+            "--home", str(home),
+            "--provider", "spotify",
+            "login", "--token", "access-1",
+            "--refresh-token", "refresh-1",
+            "--client-id", "client-1",
+        ]
+    )
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "Обновление токена настроено" in out
+    assert "refresh-1" not in out  # значения токенов не печатаются
+
+    stored = TokenStore(Paths.resolve({"NEUROWAVE_HOME": str(home)}), provider="spotify")
+    data = json.loads(stored.load())
+    assert data["access_token"] == "access-1"
+    assert data["refresh_token"] == "refresh-1"
+    assert data["client_id"] == "client-1"
+
+
+def test_cli_refresh_flags_are_spotify_only(tmp_path, capsys) -> None:
+    from neurowave.cli import main
+
+    code = main(
+        [
+            "--home", str(tmp_path / "home"),
+            "--provider", "soundcloud",
+            "login", "--token", "k", "--refresh-token", "r", "--client-id", "c",
+        ]
+    )
+    assert code == 2
+    assert "только для Spotify" in capsys.readouterr().err
+
+
+def test_persist_refreshed_token_saves_only_changes(tmp_path, monkeypatch) -> None:
+    from types import SimpleNamespace
+
+    from neurowave import cli
+    from neurowave.config import Paths
+    from neurowave.storage import TokenStore
+
+    monkeypatch.setattr(TokenStore, "_import_keyring", staticmethod(lambda: None))
+    store = TokenStore(Paths.resolve({"NEUROWAVE_HOME": str(tmp_path)}).ensure(), provider="spotify")
+    store.save("old")
+
+    adapter = SimpleNamespace(storage_token=lambda: "new")
+    cli._persist_refreshed_token(SimpleNamespace(adapter=adapter, tokens=store))
+    assert store.load() == "new"
+
+    # Провайдер без ротации ничего не пишет и не падает.
+    cli._persist_refreshed_token(SimpleNamespace(adapter=object(), tokens=store))
+    assert store.load() == "new"
 
 
 def login(home: str) -> int:

@@ -175,7 +175,8 @@ play` для Spotify отвечает «не поддерживает: пото�
 входа.
 
 ```bash
-neurowave --provider spotify login --token <access token>
+neurowave --provider spotify login --token <access token> \
+  --refresh-token <refresh token> --client-id <client_id>
 neurowave --provider spotify devices
 neurowave --provider spotify connect "Living Room"
 neurowave --provider spotify remote play "запрос"     # или --uri spotify:track:…
@@ -183,10 +184,24 @@ neurowave --provider spotify remote pause|next|previous
 ```
 
 Токен проверяется запросом `/me` при входе; `403` переводится в понятное
-требование Premium, `404` — в «нет активного устройства». `me` показывает`
+требование Premium, `404` — в «нет активного устройства». `me` показывает
 подписку Premium, если сервис вернул `product=premium`. Кеша нет
 (`cache_allowed=False`): хранить нечего, звук остаётся в Spotify. Сеть
 изолирована в `spotify/client.py`, транспорт подменяется в тестах.
+
+**Жизнь токена.** С `--refresh-token` и `--client-id` credentials лежат в
+одном JSON-слоте `TokenStore` (`spotify/auth.py`, плоский токен тоже читается —
+старые входы не ломаются). Клиент обновляет access token заранее по
+`expires_at` и один раз по `401`, затем повторяет исходный запрос; новый
+`refresh_token` и срок сохраняются, а CLI после команды записывает обновлённые
+credentials обратно. Если обновление не настроено или refresh отклонён, ошибка
+называет причину и точную команду входа: «Токен Spotify истёк или отозван,
+обновление не настроено. Выполните вход заново: neurowave login --token …
+--refresh-token … --client-id …».
+
+Плоский access token без refresh остаётся рабочим, но живёт час — при
+истечении `play`/`devices` попросят войти заново, а не покажут «неизвестную
+ошибку».
 
 Сторонние провайдеры подключаются без правки ядра — entry points группы
 `neurowave.providers`, возвращающие `ProviderSpec`:
@@ -273,7 +288,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 214 unit-тестов ядра, интеграций и провайдеров,
+Проверено в этом окружении: 227 unit-тестов ядра, интеграций и провайдеров,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
 импорт и сборка пакета, работа MPRIS на отдельном сессионном шине
@@ -286,7 +301,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 214 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
+python -m pytest        # 227 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -295,7 +310,8 @@ python -m pytest        # 214 тестов: очередь, состояния, 
 на временной папке с файлами (без `mutagen` работает резервный путь метаданных),
 SoundCloud — на фейковом транспорте: поиск, отбрасывание превью, отказы
 `401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
-тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока.
+тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока,
+обновление по `expires_at` и `401`, ротация refresh token и запись credentials.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика
 тестируется на заглушке, а `tests/test_integrations_optional.py` отдельными
 процессами проверяет, что импорт не тянет `dbus-next`/`PySide6` и что

@@ -20,7 +20,7 @@
   атрибуция автора и отключённый кеш; ключ — `login --token`;
 - Spotify как «пульт» (`--provider spotify`): каталог и Spotify Connect —
   `devices`, `connect`, `remote play|pause|next|previous`; поток остаётся в
-  приложении Spotify, кеша нет;
+  приложении Spotify, кеша нет; токен обновляется по refresh token;
 - квалифицированные ID `provider:track_id` в очереди, истории и кеше;
 - MPRIS и системный трей: пауза, next/prev и качество источника из панели,
   `playerctl` и медиа-клавиш, без окна.
@@ -72,6 +72,8 @@ neurowave --provider soundcloud login --token <client_id>  # ключ SoundCloud
 neurowave --provider soundcloud play "запрос"              # поток в mpv
 neurowave --provider spotify devices                     # устройства Spotify Connect
 neurowave --provider spotify remote play "запрос"         # играть на устройстве Spotify
+neurowave --provider spotify login --token <access> \
+  --refresh-token <refresh> --client-id <id>            # чтобы пульт не отваливался
 neurowave tray          # волна + значок в трее + MPRIS: pip install -e '.[desktop]'
 ./packaging/install-desktop.sh   # ярлык в меню и на рабочем столе
 ```

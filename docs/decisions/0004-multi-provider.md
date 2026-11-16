@@ -164,6 +164,10 @@ Spotify и других». Ядро до сих пор жёстко создав
 * токен — OAuth access token (`AuthKind.API_TOKEN`, `login --token`),
   проверяется запросом `/me` при входе; Premium нужен для управления и
   распознаётся в `me` по полю `product`;
+* `login --token … --refresh-token … --client-id …` включает обновление:
+  access token обновляется заранее (по `expires_at`) и по `401`, новый
+  refresh token сохраняется в `TokenStore`. Без refresh token истечение даёт
+  понятную ошибку с командой повторного входа, а не молчаливый отказ;
 * кеша нет (`cache_allowed=False`) — кешировать нечего, поток остаётся в
   Spotify; `403` объясняется требованием Premium, `404` — отсутствием
   активного устройства;

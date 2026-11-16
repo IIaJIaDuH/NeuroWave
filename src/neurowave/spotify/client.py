@@ -20,8 +20,14 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping
 
 from ..errors import ApiError, AuthError, NetworkError, SubscriptionRequired
+from .auth import SpotifyCredentials
 
 API_ROOT = "https://api.spotify.com/v1"
+TOKEN_URL = "https://accounts.spotify.com/api/token"
+REFRESH_HINT = (
+    "Выполните вход заново: neurowave login --token <access token> "
+    "--refresh-token <refresh token> --client-id <client_id>"
+)
 USER_AGENT = "NeuroWave/0.1 (+https://github.com/IIaJIaDuH/NeuroWave)"
 PREMIUM_HINT = (
     "Spotify: управление воспроизведением требует Premium и активного устройства. "
@@ -104,29 +110,48 @@ class SpotifyClient:
     def __init__(
         self,
         token: str | None = None,
+        credentials: SpotifyCredentials | None = None,
+        refresh_token: str | None = None,
+        client_id: str | None = None,
         transport: Any | None = None,
         timeout: float = 10.0,
         retries: int = 3,
         backoff: float = 0.5,
         sleep: Callable[[float], None] = time.sleep,
+        clock: Callable[[], float] = time.time,
         rng: random.Random | None = None,
         api_root: str = API_ROOT,
+        token_url: str = TOKEN_URL,
     ):
-        self._token = (token or "").strip() or None
+        self._credentials = credentials or SpotifyCredentials.from_storage(token)
+        if refresh_token:
+            self._credentials.refresh_token = refresh_token.strip() or None
+        if client_id:
+            self._credentials.client_id = client_id.strip() or None
         self._transport = transport or UrllibTransport()
         self._timeout = max(1.0, float(timeout))
         self._retries = max(1, int(retries))
         self._backoff = max(0.0, float(backoff))
         self._sleep = sleep
+        self._clock = clock
         self._rng = rng or random.Random()
         self._api_root = api_root.rstrip("/")
+        self._token_url = token_url
 
     @property
     def token(self) -> str | None:
-        return self._token
+        return self._credentials.access_token or None
+
+    @property
+    def credentials(self) -> SpotifyCredentials:
+        return self._credentials
+
+    def storage_token(self) -> str:
+        """Сериализованное состояние для `TokenStore` (токены не печатать)."""
+        return self._credentials.to_storage()
 
     def set_token(self, token: str | None) -> None:
-        self._token = (token or "").strip() or None
+        self._credentials = SpotifyCredentials.from_storage(token)
 
     # --- чтение -------------------------------------------------------
     def me(self) -> dict[str, Any]:
@@ -134,7 +159,7 @@ class SpotifyClient:
         return payload if isinstance(payload, dict) else {}
 
     def verify(self) -> None:
-        """Проверить токен дешёвым запросом при входе."""
+        """Проверить токен дешёвым запросом при входе (с обновлением, если нужно)."""
         self.me()
 
     def search_tracks(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
@@ -191,12 +216,13 @@ class SpotifyClient:
         return f"{self._api_root}{path}" + (f"?{query}" if query else "")
 
     def _headers(self) -> dict[str, str]:
-        if not self._token:
+        access = self._credentials.access_token
+        if not access:
             raise AuthError(
                 "Нет токена Spotify. Выполните: neurowave login --token <access token>"
             )
         return {
-            "Authorization": f"Bearer {self._token}",
+            "Authorization": f"Bearer {access}",
             "Accept": "application/json",
             "Content-Type": "application/json",
             "User-Agent": USER_AGENT,
@@ -209,15 +235,22 @@ class SpotifyClient:
         params: Mapping[str, Any] | None = None,
         payload: Mapping[str, Any] | None = None,
     ) -> Any:
-        headers = self._headers()
+        self._ensure_token()
         url = self._url(path, params)
         body = json.dumps(payload).encode("utf-8") if payload is not None else None
+        refreshed = False
         for attempt in range(1, self._retries + 1):
+            headers = self._headers()
             response = self._transport.request(method, url, headers, body, self._timeout)
             if 200 <= response.status < 300:
                 return response.json()
             if response.status == 401:
-                raise AuthError("Spotify отклонил токен: выполните вход заново")
+                # Один раз пробуем обновить токен и повторить тот же запрос.
+                if not refreshed and self._credentials.can_refresh and attempt < self._retries:
+                    self._refresh()
+                    refreshed = True
+                    continue
+                raise self._expired_error()
             if response.status == 403:
                 raise SubscriptionRequired(
                     _error_message(response) or PREMIUM_HINT
@@ -235,3 +268,69 @@ class SpotifyClient:
                 f"Spotify вернул {response.status}" + (f": {message}" if message else "")
             )
         raise ApiError("Spotify: запрос не выполнен")
+
+    # --- токен --------------------------------------------------------
+    def _ensure_token(self) -> None:
+        """Заранее обновить истекающий access token, если есть refresh token."""
+        credentials = self._credentials
+        if credentials.access_token and not credentials.expired(self._clock()):
+            return
+        if credentials.can_refresh:
+            self._refresh()
+            return
+        if credentials.access_token:
+            raise AuthError(
+                "Access token Spotify истёк или скоро истечёт, а обновление не "
+                f"настроено. {REFRESH_HINT}"
+            )
+        raise AuthError(
+            "Нет токена Spotify. Выполните: neurowave login --token <access token>"
+        )
+
+    def _expired_error(self) -> AuthError:
+        if self._credentials.can_refresh:
+            return AuthError(
+                "Spotify отклонил токен даже после обновления: refresh token "
+                f"отозван или неверен. {REFRESH_HINT}"
+            )
+        return AuthError(
+            "Токен Spotify истёк или отозван, обновление не настроено. "
+            f"{REFRESH_HINT}"
+        )
+
+    def _refresh(self) -> None:
+        """Обменять refresh token на новый access token (`accounts.spotify.com`)."""
+        credentials = self._credentials
+        if not credentials.can_refresh:
+            raise AuthError(
+                "Для обновления токена Spotify нужны refresh token и client_id. "
+                f"{REFRESH_HINT}"
+            )
+        body = urllib.parse.urlencode(
+            {
+                "grant_type": "refresh_token",
+                "refresh_token": credentials.refresh_token or "",
+                "client_id": credentials.client_id or "",
+            }
+        ).encode("utf-8")
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+            "User-Agent": USER_AGENT,
+        }
+        response = self._transport.request(
+            "POST", self._token_url, headers, body, self._timeout
+        )
+        payload = response.json() if response.status == 200 else None
+        if not isinstance(payload, dict) or not payload.get("access_token"):
+            raise AuthError(
+                "Не удалось обновить токен Spotify: проверьте refresh token и "
+                f"client_id. {REFRESH_HINT}"
+            )
+        credentials.access_token = str(payload["access_token"])
+        rotated = payload.get("refresh_token")
+        if rotated:
+            credentials.refresh_token = str(rotated)
+        expires_in = payload.get("expires_in")
+        if isinstance(expires_in, (int, float)):
+            credentials.expires_at = self._clock() + float(expires_in)

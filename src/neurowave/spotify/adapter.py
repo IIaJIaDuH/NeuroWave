@@ -39,6 +39,11 @@ class SpotifyAdapter:
     def token(self) -> str | None:
         return getattr(self._client, "token", None)
 
+    def storage_token(self) -> str:
+        """Текущие credentials для сохранения после обновления токена."""
+        storage = getattr(self._client, "storage_token", None)
+        return storage() if callable(storage) else (self.token or "")
+
     def verify(self) -> None:
         """Токен проверяется при входе, а не на первом поиске."""
         self._client.verify()
