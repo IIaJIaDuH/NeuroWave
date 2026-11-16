@@ -7,10 +7,13 @@
 
 Поведение задаётся аргументом ``--fake-plan=…``:
 
-* ``idle``    — просто отвечает на команды, событий не шлёт;
-* ``eof``     — после ``loadfile`` через 0.1 с приходит ``end-file``/eof;
-* ``error``   — то же, но с причиной ``error``;
-* ``eof-late``— ``end-file``/eof приходит через 4 с (дольше таймаута команд).
+* ``idle``      — просто отвечает на команды, событий не шлёт;
+* ``eof``       — после ``loadfile`` через 0.1 с приходит ``end-file``/eof;
+* ``error``     — то же, но с причиной ``error``;
+* ``eof-late``  — ``end-file``/eof приходит через 4 с (дольше таймаута команд);
+* ``eof-stale`` — ``end-file`` приходит с id *предыдущей* загрузки;
+* ``deny-af``   — команда ``af`` отклоняется ошибкой;
+* ``deny-loadfile`` — ``loadfile`` отклоняется ошибкой.
 """
 
 from __future__ import annotations
@@ -21,11 +24,15 @@ import socket
 import sys
 import threading
 
+# plan -> (задержка, причина end-file, чей id подставить)
 PLANS = {
-    "idle": (None, None),
-    "eof": (0.1, "eof"),
-    "error": (0.1, "error"),
-    "eof-late": (4.0, "eof"),
+    "idle": (None, None, None),
+    "eof": (0.1, "eof", "current"),
+    "error": (0.1, "error", "current"),
+    "eof-late": (4.0, "eof", "current"),
+    "eof-stale": (0.1, "eof", "previous"),
+    "deny-af": (None, None, None),
+    "deny-loadfile": (None, None, None),
 }
 
 
@@ -44,7 +51,7 @@ def main() -> int:
     server, plan = _parse(sys.argv)
     if not server:
         return 2
-    delay, reason = PLANS.get(plan, (None, None))
+    delay, reason, entry_source = PLANS.get(plan, (None, None, None))
 
     listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
@@ -55,7 +62,13 @@ def main() -> int:
     listener.listen(1)
     conn, _ = listener.accept()
 
-    state = {"loaded": False, "quitting": False}
+    state = {
+        "loaded": False,
+        "quitting": False,
+        "entry": 0,
+        "previous_entry": 0,
+        "af": "",
+    }
     send_lock = threading.Lock()
 
     def send(payload: dict) -> None:
@@ -78,7 +91,12 @@ def main() -> int:
 
         def worker() -> None:
             threading.Event().wait(delay)
-            send({"event": "end-file", "reason": reason})
+            entry = (
+                state["entry"]
+                if entry_source == "current"
+                else state["previous_entry"]
+            )
+            send({"event": "end-file", "reason": reason, "playlist_entry_id": entry})
 
         threading.Thread(target=worker, daemon=True).start()
 
@@ -107,12 +125,36 @@ def main() -> int:
                     reply(request_id, 1.0 if state["loaded"] else None)
                 elif prop == "idle-active":
                     reply(request_id, not state["loaded"])
+                elif prop == "af":
+                    reply(request_id, [state["af"]] if state["af"] else [])
+                elif prop == "playlist/0/id":
+                    if state["entry"]:
+                        reply(request_id, state["entry"])
+                    else:
+                        send({"request_id": request_id, "error": "property not found"})
                 else:
                     reply(request_id, None)
             elif name == "loadfile":
-                state["loaded"] = True
-                reply(request_id)
-                schedule_end()
+                if plan == "deny-loadfile":
+                    send({"request_id": request_id, "error": "loading failed"})
+                else:
+                    state["previous_entry"] = state["entry"]
+                    state["entry"] += 1
+                    state["loaded"] = True
+                    send(
+                        {
+                            "request_id": request_id,
+                            "error": "success",
+                            "data": {"playlist_entry_id": state["entry"]},
+                        }
+                    )
+                    schedule_end()
+            elif name == "af":
+                if plan == "deny-af":
+                    send({"request_id": request_id, "error": "error running command"})
+                else:
+                    state["af"] = str(command[2]) if len(command) > 2 else ""
+                    reply(request_id)
             elif name == "stop":
                 state["loaded"] = False
                 reply(request_id)

@@ -141,7 +141,9 @@ class PlayerTarget:
             status=player.state.status,
             track=player.current_track,
             quality=player.current_quality,
-            volume_percent=player.volume,
+            # Панель должна показывать фактический уровень, а не запрошенный:
+            # при ограничении громкости 130 % реально играет 100 %.
+            volume_percent=getattr(player, "applied_volume", player.volume),
             position_us=max(0, position),
         )
 

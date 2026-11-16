@@ -13,7 +13,7 @@ import time
 from typing import Any, Callable, Iterable, Protocol
 
 from .audio.backend import AudioBackend
-from .config import Settings
+from .config import SAFE_VOLUME, Settings
 from .domain import Quality, RepeatMode, StreamInfo, Track
 from .errors import NeuroWaveError, PlayerError, TrackUnavailable
 from .queue import Queue
@@ -73,8 +73,9 @@ class PlayerService:
         self._current_history_id: int | None = None
         self._current_quality: Quality | None = None
         self._started_at: float | None = None
+        self._boost_notice_shown = False
         backend.on_end = self._handle_end
-        backend.set_volume(self.settings.volume)
+        self.backend.set_volume(self._apply_volume_policy())
 
     # --- свойства -----------------------------------------------------
     @property
@@ -87,7 +88,13 @@ class PlayerService:
 
     @property
     def volume(self) -> int:
+        """Запрошенная пользователем громкость (может быть больше применяемой)."""
         return self.settings.volume
+
+    @property
+    def applied_volume(self) -> int:
+        """Фактически применяемая громкость с учётом политики безопасности."""
+        return self.settings.effective_volume()
 
     def add_listener(self, listener: EventListener) -> None:
         self._listener = listener
@@ -139,13 +146,32 @@ class PlayerService:
         return self.state.status
 
     def set_volume(self, volume: int) -> int:
-        value = self.settings.clamp_volume(volume)
-        self.settings.volume = value
-        self.backend.set_volume(value)
+        requested = self.settings.clamp_volume(volume)
+        self.settings.volume = requested
+        applied = self._apply_volume_policy()
+        self.backend.set_volume(applied)
         if self.store is not None:
-            self.store.set_setting("volume", value)
-        self._emit("volume", volume=value)
-        return value
+            self.store.set_setting("volume", requested)
+        self._emit("volume", volume=applied, requested=requested)
+        return applied
+
+    def _apply_volume_policy(self) -> int:
+        """Вернуть безопасную громкость и один раз предупредить об ограничении.
+
+        Пока в цепи нет проверенного лимитера, усиление выше 100 % не
+        применяется: запись в настройках сохраняется, но фактический уровень
+        ограничивается и пользователь узнаёт причину.
+        """
+        applied = self.settings.effective_volume()
+        if applied != int(self.settings.volume) and not self._boost_notice_shown:
+            self._boost_notice_shown = True
+            self._emit(
+                "volume_limited",
+                requested=int(self.settings.volume),
+                applied=applied,
+                limit=SAFE_VOLUME,
+            )
+        return applied
 
     def seek(self, position_ms: int) -> None:
         self.backend.seek(position_ms)
@@ -196,7 +222,7 @@ class PlayerService:
         url, from_cache = self._resolve_url(track)
         quality = self._current_quality  # снимок: диспетчер может уже уйти вперёд
         self.backend.load(url)
-        self.backend.set_volume(self.settings.volume)
+        self.backend.set_volume(self._apply_volume_policy())
         self.backend.play()
         self.state.transition(PlayerStatus.PLAYING)
         self.state.clear_overlay(Overlay.TRACK_UNAVAILABLE)

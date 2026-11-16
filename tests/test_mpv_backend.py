@@ -16,6 +16,7 @@ from pathlib import Path
 import pytest
 
 from neurowave.audio.mpv import COMMAND_TIMEOUT, MpvBackend
+from neurowave.errors import PlayerError
 
 
 @pytest.fixture
@@ -116,4 +117,86 @@ def test_shutdown_stops_process_and_removes_socket(fake_mpv, tmp_path) -> None:
 
     assert backend.is_running is False
     assert process is not None and process.poll() is not None
+    assert not socket_path.exists()
+
+
+def test_mpv_error_reply_is_raised_and_recorded(fake_mpv, tmp_path) -> None:
+    """Отказ mpv — это ошибка состояния, а не тихий no-op.
+
+    На живом mpv 0.42 `af set` с неизвестным фильтром возвращает
+    ``error running command``; раньше ответ никто не проверял, и Enhanced
+    мог считаться включённым при пустой цепи.
+    """
+    backend = _backend(fake_mpv, tmp_path, "deny-af")
+    try:
+        with pytest.raises(PlayerError) as exc:
+            backend.set_audio_filter("lavfi=[no_such_filter=1]")
+        assert "af" in str(exc.value) and "error running command" in str(exc.value)
+        assert backend.last_error == "error running command"
+        assert backend.audio_filter() is None  # фильтр действительно не встал
+    finally:
+        backend.shutdown()
+
+
+def test_loadfile_error_is_raised(fake_mpv, tmp_path) -> None:
+    backend = _backend(fake_mpv, tmp_path, "deny-loadfile")
+    try:
+        with pytest.raises(PlayerError) as exc:
+            backend.load("fake://broken")
+        assert "loadfile" in str(exc.value)
+        assert backend.last_error == "loading failed"
+        assert backend.is_running is True  # сессия жива, можно продолжать
+    finally:
+        backend.shutdown()
+
+
+def test_stale_end_file_does_not_advance_queue(fake_mpv, tmp_path) -> None:
+    """end-file предыдущей загрузки после ручного next не должен двигать очередь."""
+    received: list[str] = []
+    backend = _backend(fake_mpv, tmp_path, "eof-stale", on_end=received.append)
+    try:
+        backend.start()
+        backend.load("fake://first")
+        assert backend._entry_id == 1
+        time.sleep(0.5)  # событие с id 0 уже пришло, но относится к прошлому
+        assert received == []
+    finally:
+        backend.shutdown()
+
+
+def test_audio_filter_reports_actual_graph(fake_mpv, tmp_path) -> None:
+    backend = _backend(fake_mpv, tmp_path, "idle")
+    try:
+        backend.start()
+        assert backend.audio_filter() is None
+        graph = "lavfi=[equalizer=f=1000:t=q:w=1:g=3]"
+        backend.set_audio_filter(graph)
+        assert backend.audio_filter() == graph
+    finally:
+        backend.shutdown()
+
+
+def test_snapshot_state_exposes_mpv_facts(fake_mpv, tmp_path) -> None:
+    """Диагностика должна опираться на свойства mpv, а не на наши ожидания."""
+    backend = _backend(fake_mpv, tmp_path, "idle")
+    try:
+        backend.start()
+        backend.load("fake://track")
+        snapshot = backend.snapshot_state()
+        assert snapshot["running"] is True
+        assert snapshot["entry_id"] == 1
+        assert snapshot["af"] is None
+        assert snapshot["volume"] is None  # двойник его не отдаёт — не выдумываем
+    finally:
+        backend.shutdown()
+
+
+def test_backend_survives_failed_command(fake_mpv, tmp_path) -> None:
+    backend = _backend(fake_mpv, tmp_path, "deny-af")
+    backend.start()
+    socket_path = backend._socket_path
+    with pytest.raises(PlayerError):
+        backend.set_audio_filter("lavfi=[bogus]")
+    assert backend.position_ms() == 0  # следующая команда работает
+    backend.shutdown()
     assert not socket_path.exists()
