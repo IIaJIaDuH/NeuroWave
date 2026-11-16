@@ -1,0 +1,249 @@
+"""Аудиовыход через mpv (JSON IPC).
+
+mpv декодирует поток и отдаёт звук в PipeWire/PulseAudio, приложение лишь
+управляет воспроизведением. Аудиопоток не зависит от сети, UI и ИИ.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import socket
+import subprocess
+import tempfile
+import threading
+import time
+from pathlib import Path
+from typing import Any, Callable
+
+from ..errors import PlayerError
+from .backend import EndHandler
+
+CONNECT_TIMEOUT = 5.0
+COMMAND_TIMEOUT = 3.0
+
+
+class MpvBackend:
+    def __init__(
+        self,
+        on_end: EndHandler | None = None,
+        binary: str = "mpv",
+        socket_path: Path | str | None = None,
+        extra_args: list[str] | None = None,
+        start_timeout: float = CONNECT_TIMEOUT,
+    ):
+        self.on_end = on_end
+        self._binary = binary
+        self._socket_path = Path(
+            socket_path
+            or Path(tempfile.gettempdir()) / f"neurowave-mpv-{os.getpid()}.sock"
+        )
+        self._extra_args = list(extra_args or [])
+        self._start_timeout = start_timeout
+        self._process: subprocess.Popen[bytes] | None = None
+        self._socket: socket.socket | None = None
+        self._reader: threading.Thread | None = None
+        self._write_lock = threading.Lock()
+        self._pending: dict[int, tuple[threading.Event, dict[str, Any]]] = {}
+        self._request_id = 0
+        self._closing = False
+
+    # --- жизненный цикл ----------------------------------------------
+    @property
+    def is_running(self) -> bool:
+        return self._process is not None and self._process.poll() is None
+
+    def start(self) -> None:
+        if self.is_running:
+            return
+        if shutil.which(self._binary) is None:
+            raise PlayerError(
+                f"mpv не найден ({self._binary}). Установите mpv: sudo apt install mpv"
+            )
+        try:
+            self._socket_path.unlink()
+        except OSError:
+            pass
+        args = [
+            self._binary,
+            "--no-video",
+            "--idle=yes",
+            "--no-terminal",
+            "--really-quiet",
+            "--cache=yes",
+            f"--input-ipc-server={self._socket_path}",
+            *self._extra_args,
+        ]
+        self._process = subprocess.Popen(  # noqa: S603
+            args,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            stdin=subprocess.DEVNULL,
+        )
+        deadline = time.monotonic() + self._start_timeout
+        while time.monotonic() < deadline:
+            if self._socket_path.exists():
+                try:
+                    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                    sock.settimeout(COMMAND_TIMEOUT)
+                    sock.connect(str(self._socket_path))
+                    self._socket = sock
+                    break
+                except OSError:
+                    sock.close()
+            if self._process.poll() is not None:
+                raise PlayerError("mpv завершился сразу после запуска")
+            time.sleep(0.05)
+        if self._socket is None:
+            self.shutdown()
+            raise PlayerError("Не удалось подключиться к mpv IPC")
+        self._closing = False
+        self._reader = threading.Thread(target=self._read_loop, daemon=True)
+        self._reader.start()
+
+    def shutdown(self) -> None:
+        self._closing = True
+        try:
+            if self._socket is not None:
+                self._send({"command": ["quit"]})
+        except Exception:
+            pass
+        for sock in (self._socket,):
+            if sock is not None:
+                try:
+                    sock.close()
+                except OSError:
+                    pass
+        self._socket = None
+        if self._process is not None:
+            try:
+                self._process.terminate()
+                self._process.wait(timeout=3)
+            except Exception:
+                try:
+                    self._process.kill()
+                except Exception:
+                    pass
+        self._process = None
+        if self._reader is not None and self._reader.is_alive():
+            self._reader.join(timeout=1)
+        self._reader = None
+        try:
+            self._socket_path.unlink()
+        except OSError:
+            pass
+
+    # --- команды ------------------------------------------------------
+    def load(self, url: str, start_ms: int = 0) -> None:
+        self.start()
+        self._command("loadfile", url, "replace")
+        if start_ms > 0:
+            self.seek(start_ms)
+
+    def play(self) -> None:
+        self._set_property("pause", False)
+
+    def pause(self) -> None:
+        self._set_property("pause", True)
+
+    def stop(self) -> None:
+        if self.is_running:
+            self._command("stop")
+
+    def set_volume(self, volume: int) -> None:
+        self._set_property("volume", max(0, min(130, int(volume))))
+
+    def seek(self, position_ms: int) -> None:
+        self._command("seek", max(0.0, position_ms / 1000.0), "absolute")
+
+    def position_ms(self) -> int:
+        value = self._get_property("time-pos")
+        try:
+            return int(float(value) * 1000)
+        except (TypeError, ValueError):
+            return 0
+
+    def is_playing(self) -> bool:
+        if not self.is_running:
+            return False
+        pause = self._get_property("pause")
+        return pause is False and self.position_ms() >= 0
+
+    # --- IPC ----------------------------------------------------------
+    def _set_property(self, name: str, value: Any) -> None:
+        self._command("set_property", name, value)
+
+    def _get_property(self, name: str) -> Any:
+        reply = self._command("get_property", name)
+        if not reply or reply.get("error") != "success":
+            return None
+        return reply.get("data")
+
+    def _command(self, *args: Any) -> dict[str, Any] | None:
+        self.start() if self._socket is None and not self._closing else None
+        if self._socket is None:
+            raise PlayerError("mpv IPC недоступен")
+        request_id = self._send({"command": list(args)})
+        event, box = self._pending[request_id]
+        if not event.wait(COMMAND_TIMEOUT):
+            self._pending.pop(request_id, None)
+            raise PlayerError(f"mpv не ответил на команду {args[0]}")
+        self._pending.pop(request_id, None)
+        return box.get("reply")
+
+    def _send(self, payload: dict[str, Any]) -> int:
+        with self._write_lock:
+            self._request_id += 1
+            request_id = self._request_id
+            payload = dict(payload, request_id=request_id)
+            if payload.get("command") != ["quit"]:
+                self._pending[request_id] = (threading.Event(), {})
+            assert self._socket is not None
+            data = (json.dumps(payload) + "\n").encode("utf-8")
+            self._socket.sendall(data)
+        return request_id
+
+    def _read_loop(self) -> None:
+        buffer = b""
+        sock = self._socket
+        if sock is None:
+            return
+        while not self._closing:
+            try:
+                chunk = sock.recv(65536)
+            except (OSError, socket.timeout):
+                break
+            if not chunk:
+                break
+            buffer += chunk
+            while b"\n" in buffer:
+                line, buffer = buffer.split(b"\n", 1)
+                if not line.strip():
+                    continue
+                try:
+                    message = json.loads(line.decode("utf-8", "replace"))
+                except json.JSONDecodeError:
+                    continue
+                self._handle_message(message)
+
+    def _handle_message(self, message: dict[str, Any]) -> None:
+        if "event" in message:
+            if message["event"] == "end-file":
+                reason = str(message.get("reason", "eof"))
+                handler: Callable[[str], None] | None = self.on_end
+                if handler is not None and reason in {"eof", "error"}:
+                    try:
+                        handler(reason)
+                    except Exception:
+                        pass
+            return
+        request_id = message.get("request_id")
+        if request_id is None:
+            return
+        pending = self._pending.get(request_id)
+        if pending is None:
+            return
+        event, box = pending
+        box["reply"] = message
+        event.set()
