@@ -18,6 +18,10 @@
 | BRAND-05 | Опциональный изолированный per-app beat visualizer | Нет global monitor; audio remains real-time; measured latency + perf |
 | BRAND-06 | Packaging + legal / name migration (если подтверждено) | Trademark/name review, compatibility aliases/migrations, no broken CLI/config |
 
+## Отложено: характер и реплики Franky
+
+Идея музыкального критика с саркастическими комментариями, частотой реплик, опциональной памятью пользователя, анимацией эмоций и LLM/TTS записана в [FRANKY-PERSONALITY-BACKLOG.md](FRANKY-PERSONALITY-BACKLOG.md). **Никакого runtime-кода до стабилизации beta.** По умолчанию комментарии и анализ вкусов выключены; Franky не управляет плеером.
+
 ## Что одобрено / что требует решения
 
 **Зафиксировано владельцем:** название идеи «Neyrowave — DJ Franky», Франкенштейн в модных DJ-очках и наушниках, качающий головой в такт басу и биту.
