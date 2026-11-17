@@ -56,6 +56,7 @@
 - [BRAND-BOOK.md](BRAND-BOOK.md) — система бренда, типографика, палитра, тон.
 - [MASCOT-DESIGN-BRIEF.md](MASCOT-DESIGN-BRIEF.md) — подробное ТЗ художнику, иконка, список ассетов и ревью.
 - [BEAT-ANIMATION-SPEC.md](BEAT-ANIMATION-SPEC.md) — как заставить Franky качать головой под настоящий beat без задержки звука.
+- [FRANKY-PERSONALITY-BACKLOG.md](FRANKY-PERSONALITY-BACKLOG.md) — **отложенная задумка**: вкусы, сарказм, контекстные реплики, локальная память и опциональные LLM/TTS.
 - [DELIVERY.md](DELIVERY.md) — этапы, защита daily-driver и готовность к релизу.
 
 **Статус сейчас:** канонический рисунок v1 сохранён в Библиотеке владельца; **в git ещё нет бинарного изображения**. Нет SVG, Lottie, GIF, анимационного кода, зависимости или rename. Runtime-изменения — только отдельный PR после стабилизации.
