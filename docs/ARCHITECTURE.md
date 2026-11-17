@@ -2,11 +2,11 @@
 
 Аудиодвижок выбран отдельным решением — [ADR-0005](decisions/0005-audio-engine.md):
 внешний `mpv` + JSON IPC + граф `lavfi`. Остальные границы (провайдеры, UI,
-хранение) описаны ниже; GUI ещё не реализован.
+хранение) описаны ниже. **Базовый Qt Widgets GUI уже реализован** (`ui/app.py`, `ui/viewmodel.py`, `ui/soundlab.py`); дальше требуется полевой UX-smoke и стабилизация.
 
 ```mermaid
 flowchart TB
-  UI[Qt Widgets UI / трей] --> BR[PlayerBridge: только сигналы и команды]
+  UI[Qt Widgets UI / трей] --> BR[PlayerViewModel: очередь событий / команды]
   CLI[CLI / MPRIS / медиа-клавиши] --> DISP[Диспетчер команд плеера]
   BR --> DISP
   DISP --> CORE[PlayerService + Queue + State machine]
@@ -17,9 +17,9 @@ flowchart TB
   MPV --> DSP[Pure: обход наших фильтров / Enhanced: lavfi]
   DSP --> PW[PipeWire / WirePlumber]
   PW --> OUT[Bluetooth / HDMI / системный sink]
-  PW -. tap только своего sink (PoC пройден) .-> TAP[PCM capture worker]
-  TAP --> FFT[FFT + сглаживание]
-  FFT --> UI
+  PW -. PoC собственного sink, без захвата чужих потоков .-> TAP[PCM tap: измерен, FFT не реализован]
+  TAP -. будущая опция .-> FFT[FFT + сглаживание: backlog]
+  FFT -. будущая опция .-> UI
   DISP -. валидированные команды .-> AI[AI DJ sidecar]
 ```
 
@@ -49,9 +49,8 @@ flowchart TB
    по списку mpv до отправки: mpv молча принимает несуществующий id.
 7. **Storage:** SQLite для метаданных и истории, ограниченный кеш, секреты в
    keyring с изоляцией по профилю.
-8. **AI Sidecar:** отдельный необязательный процесс через валидированный RPC,
-   разрешённый набор действий, подтверждение опасных операций.
-9. **Music Studio:** отдельный GPU-процесс, не загружается при прослушивании.
+8. **AI Sidecar (не реализовано):** запланированный отдельный необязательный процесс через валидированный RPC, разрешённый набор действий и подтверждение опасных операций.
+9. **Music Studio (не реализовано):** планируемый отдельный GPU-процесс, который не должен загружаться при прослушивании.
 
 ## Контракты, которые нельзя нарушать
 
@@ -66,15 +65,12 @@ flowchart TB
 * PCM tap и FFT — подписчики со своим жизненным циклом: их сбой или задержка
   не имеют права останавливать звук.
 
-## Кандидаты на основу (отложено до beta)
+## Сравнение с альтернативами (ограниченный полевой тест выполнен)
 
 - [CloudMus](https://github.com/cloudmus/cloudmus) — C++/Qt, mpv.
 - [YaMusic](https://github.com/andfriden/YaMusic) — Qt/QML, GPL-3.0.
 
-Обе программы на целевой машине не запускались: сравнение перенесено на этап
-beta (см. [ADR-0005](decisions/0005-audio-engine.md) и [ROADMAP](ROADMAP.md)).
-Отказ от собственной C++-реализации обосновывается замерами
-([SPRINT0-MEASUREMENTS.md](SPRINT0-MEASUREMENTS.md)), а не вкусом.
+Обе программы были запущены и измерены по старту, PSS, CPU и локальному FLAC; **авторизация и streaming с реальным аккаунтом в сторонних клиентах не проверялись**. См. [COMPARISON-CLOUDMUS-YAMUSIC.md](COMPARISON-CLOUDMUS-YAMUSIC.md). Решение о собственном Qt/UI и mpv основано на [ADR-0005](decisions/0005-audio-engine.md) и [фактических измерениях](SPRINT0-MEASUREMENTS.md), а не обещании превосходства по любому сценарию.
 
 ## Строгие принципы
 
