@@ -355,15 +355,18 @@ def test_read_only_target_is_reported(usb, library, monkeypatch):
 
 
 def test_t011_unplugged_device_stops_before_writing(usb, library):
+    """USB-FIX-03: пропавший том — ошибка до первого байта, а не отчёт."""
+
     source = audio(library / "one.mp3")
     writer, service, _ = writer_for(usb)
     service.remove("/org/freedesktop/UDisks2/block_devices/sdb1")
 
-    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+    with pytest.raises(ExportError) as caught:
+        writer.write(make_plan([make_item()]), [make_asset(source)])
 
-    assert report.items[0].error == "device_unverified"
-    assert report.status is ExportStatus.FAILED
+    assert caught.value.code is ExportErrorCode.DEVICE
     assert music_files(usb) == []
+    assert not (usb / SUB).exists()
     assert (usb / "sentinel.txt").exists()
 
 
@@ -680,3 +683,246 @@ def test_broken_progress_observer_does_not_break_write(usb, library):
 
     assert report.status is ExportStatus.COMPLETE
     assert len(music_files(usb)) == 1
+
+
+# --- USB-FIX-01: чужой плейлист не перезаписывается -----------------------
+
+
+def test_usb_fix01_foreign_playlist_is_not_overwritten(usb, library):
+    source = audio(library / "one.mp3")
+    folder = usb / SUB
+    folder.mkdir(parents=True)
+    foreign = folder / "playlist.m3u8"
+    original = "#EXTM3U\nпользовательский плейлист\n"
+    foreign.write_text(original, encoding="utf-8")
+    writer, _, _ = writer_for(usb)
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert report.status is ExportStatus.COMPLETE
+    assert report.playlist_path == ""
+    assert "не принадлежит" in report.playlist_error
+    assert foreign.read_text(encoding="utf-8") == original
+    assert len(music_files(usb)) == 1
+
+
+def test_usb_fix01_playlist_symlink_is_refused(usb, library, tmp_path):
+    source = audio(library / "one.mp3")
+    folder = usb / SUB
+    folder.mkdir(parents=True)
+    victim = tmp_path / "victim.m3u8"
+    victim.write_text("не трогать", encoding="utf-8")
+    (folder / "playlist.m3u8").symlink_to(victim)
+    writer, _, _ = writer_for(usb)
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert report.playlist_path == ""
+    assert report.playlist_error
+    assert victim.read_text(encoding="utf-8") == "не трогать"
+    assert not (folder / "playlist.m3u8").is_symlink() or (folder / "playlist.m3u8").readlink() == victim
+
+
+def test_usb_fix01_own_playlist_is_updated_after_resume(usb, library):
+    source = audio(library / "one.mp3", b"one")
+    writer, _, _ = writer_for(usb)
+    first = writer.write(make_plan([make_item()]), [make_asset(source)])
+    assert first.playlist_path == f"{SUB}/playlist.m3u8"
+    assert manifest_of(usb)["playlist"] == "playlist.m3u8"
+
+    second = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert second.playlist_error == ""
+    assert second.playlist_path == f"{SUB}/playlist.m3u8"
+    assert "001 - Artist - Song 1.mp3" in (usb / SUB / "playlist.m3u8").read_text(
+        encoding="utf-8"
+    )
+
+
+def test_usb_fix01_concurrent_playlist_creation_is_not_clobbered(usb, library, monkeypatch):
+    source = audio(library / "one.mp3")
+    folder = usb / SUB
+    folder.mkdir(parents=True)
+    playlist = folder / "playlist.m3u8"
+    writer, _, _ = writer_for(usb)
+    real_commit = writer_mod._commit
+
+    def commit_with_race(dir_fd, temporary, name, destination):
+        if name == "playlist.m3u8" and not playlist.exists():
+            playlist.write_text("чужой", encoding="utf-8")
+        return real_commit(dir_fd, temporary, name, destination)
+
+    monkeypatch.setattr(writer_mod, "_commit", commit_with_race)
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert report.playlist_path == ""
+    assert report.playlist_error
+    assert playlist.read_text(encoding="utf-8") == "чужой"
+
+
+# --- USB-FIX-02: атомарный no-replace -------------------------------------
+
+
+def _dir_fd(path: Path) -> int:
+    return os.open(path, os.O_RDONLY | os.O_DIRECTORY)
+
+
+def test_usb_fix02_link_fallback_uses_noreplace(tmp_path, monkeypatch):
+    folder = tmp_path / "usb"
+    folder.mkdir()
+    temporary = folder / ".tmp-track"
+    temporary.write_bytes(b"payload")
+    fd = _dir_fd(folder)
+    monkeypatch.setattr(
+        writer_mod.os, "link", lambda *a, **k: (_ for _ in ()).throw(OSError(errno.EPERM, "no"))
+    )
+    try:
+        writer_mod._commit(fd, temporary.name, "track.mp3", "track.mp3")
+    finally:
+        os.close(fd)
+
+    assert (folder / "track.mp3").read_bytes() == b"payload"
+    assert not temporary.exists()
+
+
+@pytest.mark.parametrize("race_errno", [errno.EEXIST])
+def test_usb_fix02_fallback_refuses_race_without_clobber(tmp_path, monkeypatch, race_errno):
+    folder = tmp_path / "usb"
+    folder.mkdir()
+    existing = folder / "track.mp3"
+    existing.write_bytes("ценный файл".encode("utf-8"))
+    temporary = folder / ".tmp-track"
+    temporary.write_bytes("новый".encode("utf-8"))
+    fd = _dir_fd(folder)
+    monkeypatch.setattr(
+        writer_mod.os, "link", lambda *a, **k: (_ for _ in ()).throw(OSError(errno.EPERM, "no"))
+    )
+
+    def racy(syscall_no, dir_fd, source, name):
+        return -1, race_errno
+
+    monkeypatch.setattr(writer_mod, "_renameat2_call", racy)
+    try:
+        with pytest.raises(ExportError) as caught:
+            writer_mod._commit(fd, temporary.name, "track.mp3", "track.mp3")
+    finally:
+        os.close(fd)
+
+    assert caught.value.code is ExportErrorCode.EXISTS
+    assert existing.read_bytes() == "ценный файл".encode("utf-8")
+
+
+@pytest.mark.parametrize("unsupported", [errno.EINVAL, errno.ENOSYS, errno.EOPNOTSUPP])
+def test_usb_fix02_fail_closed_without_support(tmp_path, monkeypatch, unsupported):
+    folder = tmp_path / "usb"
+    folder.mkdir()
+    temporary = folder / ".tmp-track"
+    temporary.write_bytes(b"payload")
+    fd = _dir_fd(folder)
+    monkeypatch.setattr(
+        writer_mod.os, "link", lambda *a, **k: (_ for _ in ()).throw(OSError(errno.EPERM, "no"))
+    )
+    monkeypatch.setattr(
+        writer_mod, "_renameat2_call", lambda *a, **k: (-1, unsupported)
+    )
+    try:
+        with pytest.raises(ExportError) as caught:
+            writer_mod._commit(fd, temporary.name, "track.mp3", "track.mp3")
+    finally:
+        os.close(fd)
+
+    assert caught.value.code is ExportErrorCode.NO_ATOMIC_REPLACE
+    assert not (folder / "track.mp3").exists()
+    assert temporary.read_bytes() == b"payload"
+
+
+def test_usb_fix02_unknown_architecture_is_fail_closed(tmp_path, monkeypatch):
+    folder = tmp_path / "usb"
+    folder.mkdir()
+    temporary = folder / ".tmp-track"
+    temporary.write_bytes(b"payload")
+    fd = _dir_fd(folder)
+    monkeypatch.setattr(writer_mod.platform, "machine", lambda: "mips")
+    try:
+        with pytest.raises(ExportError) as caught:
+            writer_mod._rename_noreplace(fd, temporary.name, "track.mp3", "track.mp3")
+    finally:
+        os.close(fd)
+
+    assert caught.value.code is ExportErrorCode.NO_ATOMIC_REPLACE
+    assert not (folder / "track.mp3").exists()
+
+
+def test_usb_fix02_writer_aborts_when_fs_cannot_guarantee_noreplace(usb, library, monkeypatch):
+    source = audio(library / "one.mp3")
+    writer, _, _ = writer_for(usb)
+    monkeypatch.setattr(
+        writer_mod.os, "link", lambda *a, **k: (_ for _ in ()).throw(OSError(errno.EPERM, "no"))
+    )
+    monkeypatch.setattr(
+        writer_mod, "_renameat2_call", lambda *a, **k: (-1, errno.EINVAL)
+    )
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert report.status is ExportStatus.FAILED
+    assert report.items[0].error == "no_atomic_replace"
+    assert music_files(usb) == []
+
+
+# --- USB-FIX-03: проверка тома до побочных эффектов -----------------------
+
+
+def test_usb_fix03_unmounted_mountpoint_blocks_writes(usb, library):
+    source = audio(library / "one.mp3")
+    writer, service, device = writer_for(usb)
+    service.unmount(device.udisks_object_path)
+
+    with pytest.raises(ExportError) as caught:
+        writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert caught.value.code is ExportErrorCode.DEVICE
+    assert not (usb / SUB).exists()
+    assert music_files(usb) == []
+
+
+def test_usb_fix03_swapped_mountpoint_blocks_writes(usb, library, tmp_path):
+    source = audio(library / "one.mp3")
+    other = tmp_path / "host-dir"
+    other.mkdir()
+    device = identity_for(usb)
+    service = FakeUsbDeviceService([device])
+    writer = SafeWriter(other, device_service=service, expected_device=device)
+
+    with pytest.raises(ExportError) as caught:
+        writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert caught.value.code is ExportErrorCode.DEVICE
+    assert list(other.iterdir()) == []
+
+
+def test_usb_fix03_manifest_and_playlist_are_written_only_after_check(usb, library):
+    """Проверка устройства стоит до mkdir и manifest, а не только до аудио."""
+
+    source = audio(library / "one.mp3")
+    writer, service, device = writer_for(usb)
+    service.unmount(device.udisks_object_path)
+
+    with pytest.raises(ExportError):
+        writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert not (usb / SUB).exists()
+    assert not (usb / SUB / MANIFEST_NAME).exists()
+
+
+# --- пустой план ----------------------------------------------------------
+
+
+def test_empty_plan_is_not_reported_as_complete(usb, library):
+    writer, _, _ = writer_for(usb)
+
+    report = writer.write(make_plan([]), [])
+
+    assert report.status is ExportStatus.FAILED
+    assert report.playlist_path == ""

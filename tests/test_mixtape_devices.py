@@ -22,7 +22,13 @@ from neurowave.mixtape.devices import (
     identities_from_objects,
     identities_match,
 )
-from neurowave.mixtape.devices.udisks2 import BLOCK_IFACE, DRIVE_IFACE, FILESYSTEM_IFACE
+from neurowave.mixtape.devices import udisks2 as udisks2_mod
+from neurowave.mixtape.devices.udisks2 import (
+    BLOCK_IFACE,
+    DRIVE_IFACE,
+    FILESYSTEM_IFACE,
+    mountinfo_entries,
+)
 
 OBJECT = "/org/freedesktop/UDisks2/block_devices/sdb1"
 
@@ -440,3 +446,92 @@ def test_missing_uuid_does_not_prevent_match():
     current = identity(filesystem_uuid=None, drive_id=None)
 
     assert identities_match(expected, current) is True
+
+
+# --- USB-FIX-03: mountpoint подтверждается, а не предполагается ----------
+
+
+def test_mountinfo_entries_decodes_escapes_and_fstype():
+    text = (
+        "36 35 98:0 / /media/user/USB\\040Stick rw,noatime master:1 - vfat /dev/sdb1 rw\n"
+        "40 35 8:1 / /home rw,relatime - ext4 /dev/sda1 rw\n"
+        "битая строка без разделителя\n"
+    )
+
+    entries = mountinfo_entries(text)
+
+    assert entries["/media/user/USB Stick"] == "vfat"
+    assert entries["/home"] == "ext4"
+    assert len(entries) == 2
+
+
+def test_udisks2_assert_mountpoint_rejects_unmounted_path(tmp_path, monkeypatch):
+    mountpoint = tmp_path / "USB"
+    mountpoint.mkdir()
+    objects = managed(mount=mountpoint.as_posix())
+    [device] = identities_from_objects(objects)
+    service = service_for(objects)
+    mountinfo = tmp_path / "mountinfo"
+    mountinfo.write_text("", encoding="utf-8")
+    monkeypatch.setattr(udisks2_mod, "MOUNTINFO_PATH", str(mountinfo))
+
+    with pytest.raises(UsbDeviceError) as caught:
+        service.assert_mountpoint(device)
+
+    assert caught.value.code is DeviceErrorCode.UNVERIFIED
+
+
+def test_udisks2_assert_mountpoint_accepts_listed_mount(tmp_path, monkeypatch):
+    mountpoint = tmp_path / "USB"
+    mountpoint.mkdir()
+    objects = managed(mount=mountpoint.as_posix())
+    [device] = identities_from_objects(objects)
+    service = service_for(objects)
+    mountinfo = tmp_path / "mountinfo"
+    mountinfo.write_text(
+        f"36 35 8:17 / {mountpoint.as_posix()} rw - vfat /dev/sdb1 rw\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(udisks2_mod, "MOUNTINFO_PATH", str(mountinfo))
+
+    assert service.assert_mountpoint(device).mountpoint == mountpoint
+
+
+def test_udisks2_assert_mountpoint_rejects_filesystem_mismatch(tmp_path, monkeypatch):
+    mountpoint = tmp_path / "USB"
+    mountpoint.mkdir()
+    objects = managed(mount=mountpoint.as_posix())
+    [device] = identities_from_objects(objects)
+    service = service_for(objects)
+    mountinfo = tmp_path / "mountinfo"
+    mountinfo.write_text(
+        f"36 35 8:17 / {mountpoint.as_posix()} rw - ext4 /dev/sda1 rw\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(udisks2_mod, "MOUNTINFO_PATH", str(mountinfo))
+
+    with pytest.raises(UsbDeviceError):
+        service.assert_mountpoint(device)
+
+
+def test_fake_device_reports_lost_mountpoint(tmp_path):
+    device = DeviceIdentity(
+        udisks_object_path=OBJECT,
+        block_device="/dev/sdb1",
+        mountpoint=tmp_path / "USB",
+        filesystem_type="vfat",
+        filesystem_uuid="1234-ABCD",
+        drive_id="USB_Stick",
+        removable=True,
+        writable=True,
+        capacity_bytes=16_000_000_000,
+        free_bytes=8_000_000_000,
+    )
+    service = FakeUsbDeviceService([device])
+    assert service.assert_mountpoint(device) == device
+
+    service.unmount(OBJECT)
+
+    with pytest.raises(UsbDeviceError) as caught:
+        service.assert_mountpoint(device)
+    assert caught.value.code is DeviceErrorCode.CHANGED

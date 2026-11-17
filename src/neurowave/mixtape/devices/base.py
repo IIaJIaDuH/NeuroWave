@@ -37,6 +37,15 @@ class UsbDeviceService(Protocol):
 
     def revalidate(self, expected: DeviceIdentity) -> DeviceIdentity: ...
 
+    def assert_mountpoint(self, expected: DeviceIdentity) -> DeviceIdentity:
+        """Убедиться, что ожидаемый том всё ещё смонтирован в своём mountpoint.
+
+        ``revalidate`` подтверждает саму флешку, а этот вызов — что каталог, в
+        который собирается писать writer, остаётся её точкой монтирования, а не
+        обычным каталогом на системном диске. Вызывается до первого ``mkdir``.
+        """
+        ...
+
     def safely_eject(self, expected: DeviceIdentity) -> DeviceIdentity: ...
 
 

@@ -25,6 +25,8 @@ class ExportErrorCode(str, Enum):
     TRANSCODE_UNAVAILABLE = "transcode_unavailable"
     TRANSCODE_FAILED = "transcode_failed"
     PROBE_FAILED = "probe_failed"
+    PLAYLIST_EXISTS = "playlist_exists"
+    NO_ATOMIC_REPLACE = "no_atomic_replace"
 
 
 class ExportError(Exception):

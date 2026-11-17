@@ -20,6 +20,8 @@ class FakeUsbDeviceService:
             device.udisks_object_path: device for device in devices
         }
         self.ejected: list[str] = []
+        # Тесты могут «размонтировать» том, оставив каталог на месте.
+        self.mounted: dict[str, bool] = {key: True for key in self._devices}
 
     @property
     def devices(self) -> tuple[DeviceIdentity, ...]:
@@ -58,8 +60,28 @@ class FakeUsbDeviceService:
             )
         return current
 
+    def assert_mountpoint(self, expected: DeviceIdentity) -> DeviceIdentity:
+        """Подтвердить, что путь тома всё ещё его точка монтирования."""
+
+        current = self.revalidate(expected)
+        if not self.mounted.get(current.udisks_object_path, True):
+            raise UsbDeviceError(
+                DeviceErrorCode.CHANGED,
+                "Точка монтирования пропала: запись на хостовый диск запрещена",
+            )
+        return current
+
+    def mount(self, object_path: str) -> None:
+        self.mounted[object_path] = True
+
+    def unmount(self, object_path: str) -> None:
+        """Том «отключён»: каталог остался, но identity больше не доверяется."""
+
+        self.mounted[object_path] = False
+
     def safely_eject(self, expected: DeviceIdentity) -> DeviceIdentity:
         current = self.revalidate(expected)
         self.ejected.append(current.udisks_object_path)
         self.remove(current.udisks_object_path)
+        self.mounted.pop(current.udisks_object_path, None)
         return current

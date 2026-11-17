@@ -159,6 +159,23 @@ class UDisks2DeviceService:
             )
         return current
 
+    def assert_mountpoint(self, expected: DeviceIdentity) -> DeviceIdentity:
+        """Том смонтирован именно туда, куда собирается писать writer.
+
+        ``revalidate`` подтверждает флешку, а этот вызов — что каталог всё ещё
+        её точка монтирования (а не оставшийся каталог на системном диске).
+        Проверка идёт по ``/proc/self/mountinfo``, без записи и без ``/dev``.
+        """
+
+        current = self.revalidate(expected)
+        mountpoint = Path(current.mountpoint)
+        if not _mountpoint_listed(mountpoint, current.filesystem_type):
+            raise UsbDeviceError(
+                DeviceErrorCode.UNVERIFIED,
+                f"Том не смонтирован в {mountpoint}: запись запрещена",
+            )
+        return current
+
     def safely_eject(self, expected: DeviceIdentity) -> DeviceIdentity:
         current = self.revalidate(expected)
         try:
@@ -228,6 +245,51 @@ async def _unmount_object(object_path: str) -> None:
         await filesystem.call_unmount({})
     finally:
         bus.disconnect()
+
+
+MOUNTINFO_PATH = "/proc/self/mountinfo"
+_OCTAL_ESCAPES = {"\\040": " ", "\\011": "\t", "\\012": "\n", "\\134": "\\"}
+
+
+def mountinfo_entries(text: str) -> dict[str, str]:
+    """Разобрать mountinfo в «mount point → fstype» без syscalls."""
+
+    entries: dict[str, str] = {}
+    for line in text.splitlines():
+        head, separator, tail = line.partition(" - ")
+        if not separator:
+            continue
+        fields = head.split(" ")
+        after = tail.split(" ")
+        if len(fields) < 5 or not after:
+            continue
+        mountpoint = fields[4]
+        for raw, decoded in _OCTAL_ESCAPES.items():
+            mountpoint = mountpoint.replace(raw, decoded)
+        entries[mountpoint] = after[0]
+    return entries
+
+
+def _mountpoint_listed(mountpoint: Path, filesystem_type: str = "") -> bool:
+    try:
+        text = Path(MOUNTINFO_PATH).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        # Нет mountinfo — нечем доказать, что это съёмный том: fail-closed.
+        return False
+    target = Path(mountpoint).resolve()
+    entries = mountinfo_entries(text)
+    filesystem = (filesystem_type or "").strip().lower()
+    for mountpath, fstype in entries.items():
+        try:
+            same = Path(mountpath) == target or Path(mountpath).resolve() == target
+        except OSError:
+            same = False
+        if not same:
+            continue
+        if filesystem and fstype.lower() != filesystem:
+            continue
+        return True
+    return False
 
 
 def _free_bytes(mountpoint: Path) -> int:

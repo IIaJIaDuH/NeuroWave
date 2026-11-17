@@ -13,9 +13,11 @@ Writer не форматирует и не монтирует носитель �
 
 from __future__ import annotations
 
+import ctypes
 import errno
 import hashlib
 import os
+import platform
 import secrets
 from dataclasses import dataclass
 from enum import Enum
@@ -49,7 +51,26 @@ _ABORT_CODES = {
     ExportErrorCode.READ_ONLY,
     ExportErrorCode.IO,
     ExportErrorCode.DEVICE,
+    # Файловая система не даёт атомарного no-replace: продолжать нельзя.
+    ExportErrorCode.NO_ATOMIC_REPLACE,
 }
+
+# renameat2(2) с RENAME_NOREPLACE: атомарный no-clobber там, где hardlink
+# недоступен (FAT32/exFAT и т.п.). Номера системных вызовов на поддерживаемых
+# архитектурах; на неизвестной архитектуре writer отказывается писать.
+_RENAME_NOREPLACE = 1
+_RENAMEAT2_SYSCALL = {
+    "x86_64": 316,
+    "amd64": 316,
+    "aarch64": 276,
+    "arm64": 276,
+    "armv7l": 382,
+    "i386": 353,
+    "i686": 353,
+    "ppc64le": 357,
+    "s390x": 347,
+}
+_LIBC = ctypes.CDLL(None, use_errno=True)
 
 
 class ItemStatus(str, Enum):
@@ -196,6 +217,11 @@ class SafeWriter:
         resume: bool = True,
         progress: ProgressSink | None = None,
     ) -> ExportReport:
+        # USB-FIX-03: ни одного побочного эффекта до перепроверки тома.
+        # Иначе при выдернутой флешке каталог на системном диске остался бы
+        # доступен, и writer создал бы там подкаталог и manifest.
+        self._ensure_device()
+        self._assert_mountpoint()
         target = self._target.resolve()
         if not target.is_dir():
             raise ExportError(ExportErrorCode.TARGET_MISSING, "Целевой каталог USB не найден")
@@ -233,6 +259,10 @@ class SafeWriter:
                 )
         else:
             existing = None
+        # Владельцем playlist считаемся только тогда, когда наш manifest прямо
+        # это утверждает для текущего плана; иначе чужой файл не трогаем.
+        playlist_owned = bool(existing and existing.playlist == PLAYLIST_NAME)
+        playlist_record = PLAYLIST_NAME if playlist_owned else ""
 
         entries: dict[str, ManifestEntry] = {
             entry.track_key: entry for entry in existing.entries
@@ -288,7 +318,14 @@ class SafeWriter:
                         verified += 1
                         seen.add(report.destination.casefold())
                     entries[item.track_key] = _entry(report)
-                    self._flush(plan, subdir, entries, order, manifest_path)
+                    self._flush(
+                        plan,
+                        subdir,
+                        entries,
+                        order,
+                        manifest_path,
+                        playlist=playlist_record,
+                    )
                     if report.status is ItemStatus.CANCELLED:
                         cancelled = True
                         break
@@ -298,15 +335,26 @@ class SafeWriter:
             if verified:
                 try:
                     playlist_path, playlist_error = self._write_playlist(
-                        target_fd, subdir, plan, results
+                        target_fd, subdir, plan, results, owned=playlist_owned
                     )
                 except ExportError as error:
                     playlist_error = str(error)
+                else:
+                    if playlist_path:
+                        playlist_record = PLAYLIST_NAME
         finally:
             os.close(target_fd)
 
         status = self._status(plan, verified, cancelled, aborted)
-        self._flush(plan, subdir, entries, order, manifest_path, status=status)
+        self._flush(
+            plan,
+            subdir,
+            entries,
+            order,
+            manifest_path,
+            status=status,
+            playlist=playlist_record,
+        )
         failed = sum(1 for item in results if item.status is ItemStatus.FAILED)
         skipped = sum(1 for item in results if item.status is ItemStatus.SKIPPED)
         return ExportReport(
@@ -592,7 +640,16 @@ class SafeWriter:
         subdir: str,
         plan: MixtapePlan,
         results: Sequence[ItemReport],
+        *,
+        owned: bool,
     ) -> tuple[str, str]:
+        """Записать M3U8, не перезаписывая чужой файл.
+
+        Новый playlist создаётся атомарным no-clobber коммитом. Обновление
+        разрешено только для файла, который подтверждён нашим manifest
+        (``owned``) и не подменён между проверкой и заменой (сверка inode).
+        """
+
         by_key = {item.track_key: item for item in plan.items}
         entries: list[PlaylistEntry] = []
         for result in results:
@@ -614,11 +671,25 @@ class SafeWriter:
         text = render_m3u8(entries, subdir)
         parts = tuple(part for part in subdir.split("/") if part)
         temporary = ".neurowave-playlist-" + secrets.token_hex(8)
+        destination = f"{subdir}/{PLAYLIST_NAME}"
         try:
             dir_fd = _ensure_dir_fd(target_fd, parts)
         except OSError as error:
             raise ExportError(ExportErrorCode.PATH_ESCAPE, str(error)) from error
+        existing_identity: tuple[int, int] | None = None
         try:
+            try:
+                stat = os.lstat(PLAYLIST_NAME, dir_fd=dir_fd)
+            except FileNotFoundError:
+                stat = None
+            if stat is not None:
+                if not owned:
+                    raise ExportError(
+                        ExportErrorCode.PLAYLIST_EXISTS,
+                        f"{destination} уже существует и не принадлежит этой задаче",
+                        path=destination,
+                    )
+                existing_identity = (stat.st_dev, stat.st_ino)
             fd = os.open(
                 temporary,
                 os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
@@ -630,7 +701,35 @@ class SafeWriter:
                 os.fsync(fd)
             finally:
                 os.close(fd)
-            os.replace(temporary, PLAYLIST_NAME, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
+            if existing_identity is None:
+                try:
+                    _commit(dir_fd, temporary, PLAYLIST_NAME, destination)
+                except ExportError as error:
+                    if error.code is ExportErrorCode.EXISTS:
+                        raise ExportError(
+                            ExportErrorCode.PLAYLIST_EXISTS,
+                            f"{destination} появился во время записи: файл не тронут",
+                            path=destination,
+                        ) from error
+                    raise
+            else:
+                try:
+                    current = os.lstat(PLAYLIST_NAME, dir_fd=dir_fd)
+                except FileNotFoundError as error:
+                    raise ExportError(
+                        ExportErrorCode.PLAYLIST_EXISTS,
+                        f"{destination} исчез во время записи: обновление отменено",
+                        path=destination,
+                    ) from error
+                if (current.st_dev, current.st_ino) != existing_identity:
+                    raise ExportError(
+                        ExportErrorCode.PLAYLIST_EXISTS,
+                        f"{destination} подменён во время записи: файл не тронут",
+                        path=destination,
+                    )
+                os.replace(temporary, PLAYLIST_NAME, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
+        except ExportError:
+            raise
         except OSError as error:
             raise ExportError(ExportErrorCode.IO, f"playlist не записан: {error}") from error
         finally:
@@ -639,7 +738,7 @@ class SafeWriter:
             except OSError:
                 pass
             os.close(dir_fd)
-        return f"{subdir}/{PLAYLIST_NAME}", ""
+        return destination, ""
 
     def _verify_temp(
         self, dir_fd: int, temporary: str, size: int, digest: str, destination: str
@@ -676,6 +775,29 @@ class SafeWriter:
         except UsbDeviceError as error:
             raise ExportError(ExportErrorCode.DEVICE, str(error)) from error
 
+    def _assert_mountpoint(self) -> None:
+        """Каталог назначения — всё ещё точка монтирования подтверждённого тома."""
+
+        if self._expected is None:
+            return
+        try:
+            target = Path(self._target).resolve()
+            expected = Path(self._expected.mountpoint).resolve()
+        except OSError as error:
+            raise ExportError(ExportErrorCode.DEVICE, "Точка монтирования недоступна") from error
+        if target != expected:
+            raise ExportError(
+                ExportErrorCode.DEVICE,
+                "Точка монтирования изменилась после подтверждения тома",
+            )
+        checker = getattr(self._device, "assert_mountpoint", None)
+        if checker is None:
+            return
+        try:
+            checker(self._expected)
+        except UsbDeviceError as error:
+            raise ExportError(ExportErrorCode.DEVICE, str(error)) from error
+
     def _matches_existing(self, path: Path, entry: ManifestEntry) -> bool:
         try:
             if path.is_symlink() or not path.is_file():
@@ -707,6 +829,7 @@ class SafeWriter:
         manifest_path: Path,
         *,
         status: str = "writing",
+        playlist: str = "",
     ) -> None:
         if not path_is_within(self._target, manifest_path.parent):
             raise ExportError(ExportErrorCode.PATH_ESCAPE, "Каталог manifest подменён симлинком")
@@ -725,6 +848,7 @@ class SafeWriter:
                 status=status,
                 entries=tuple(ordered),
                 device=device_fingerprint(self._expected),
+                playlist=playlist,
             ),
         )
 
@@ -733,6 +857,9 @@ class SafeWriter:
     ) -> ExportStatus:
         if cancelled:
             return ExportStatus.CANCELLED
+        if not plan.items:
+            # 0 == 0 не означает успех: записывать было нечего.
+            return ExportStatus.FAILED
         if verified == len(plan.items):
             return ExportStatus.COMPLETE
         if verified:
@@ -761,6 +888,15 @@ def _ensure_dir_fd(root_fd: int, parts: Sequence[str]) -> int:
 
 
 def _commit(dir_fd: int, temporary: str, name: str, destination: str) -> None:
+    """Атомарно опубликовать файл без права перезаписи.
+
+    Сначала пробуем ``link`` (атомарный no-clobber на обычных ФС). Если он
+    недоступен (FAT32/exFAT, запрет hardlink), используем
+    ``renameat2(RENAME_NOREPLACE)``. Проверка «файла нет» перед ``rename``
+    больше не используется: она не атомарна. Если ФС не даёт ни одной
+    гарантии — fail-closed, а не оптимистичная перезапись.
+    """
+
     try:
         os.link(temporary, name, src_dir_fd=dir_fd, dst_dir_fd=dir_fd, follow_symlinks=False)
     except FileExistsError as error:
@@ -776,17 +912,59 @@ def _commit(dir_fd: int, temporary: str, name: str, destination: str) -> None:
             errno.EMLINK,
         ):
             raise
-        try:
-            os.lstat(name, dir_fd=dir_fd)
-        except FileNotFoundError:
-            pass
-        else:
-            raise ExportError(
-                ExportErrorCode.EXISTS, "Файл уже существует, перезапись запрещена", path=destination
-            ) from error
-        os.rename(temporary, name, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
+        _rename_noreplace(dir_fd, temporary, name, destination)
     else:
         os.unlink(temporary, dir_fd=dir_fd)
+
+
+def _rename_noreplace(dir_fd: int, temporary: str, name: str, destination: str) -> None:
+    syscall_no = _RENAMEAT2_SYSCALL.get(platform.machine().lower())
+    if syscall_no is None:
+        raise ExportError(
+            ExportErrorCode.NO_ATOMIC_REPLACE,
+            "Платформа не поддерживает атомарную запись без перезаписи",
+            path=destination,
+        )
+    result, error_number = _renameat2_call(syscall_no, dir_fd, temporary, name)
+    if result == 0:
+        return
+    if error_number == errno.EEXIST:
+        raise ExportError(
+            ExportErrorCode.EXISTS, "Файл уже существует, перезапись запрещена", path=destination
+        )
+    if error_number in (
+        errno.ENOSYS,
+        errno.EINVAL,
+        errno.EOPNOTSUPP,
+        getattr(errno, "ENOTSUP", errno.EOPNOTSUPP),
+    ):
+        raise ExportError(
+            ExportErrorCode.NO_ATOMIC_REPLACE,
+            "Файловая система не поддерживает атомарную запись без перезаписи",
+            path=destination,
+        )
+    raise OSError(error_number, os.strerror(error_number))
+
+
+def _renameat2_call(
+    syscall_no: int, dir_fd: int, temporary: str, name: str
+) -> tuple[int, int]:
+    """Вызвать ``renameat2(RENAME_NOREPLACE)``; вынесено ради тестов.
+
+    Возвращает ``(результат, errno)``: 0 — успех, иначе номер ошибки из libc.
+    """
+
+    result = _LIBC.syscall(
+        ctypes.c_long(syscall_no),
+        ctypes.c_int(dir_fd),
+        ctypes.c_char_p(temporary.encode("utf-8")),
+        ctypes.c_int(dir_fd),
+        ctypes.c_char_p(name.encode("utf-8")),
+        ctypes.c_uint(_RENAME_NOREPLACE),
+    )
+    if result == 0:
+        return 0, 0
+    return -1, ctypes.get_errno()
 
 
 def _hash_fd(fd: int) -> tuple[int, str]:

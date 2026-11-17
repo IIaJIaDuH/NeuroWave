@@ -42,6 +42,7 @@ class Manifest:
     status: str
     entries: tuple[ManifestEntry, ...]
     device: Mapping[str, Any] | None = None
+    playlist: str = ""
     schema_version: int = SCHEMA_VERSION
     updated_at: int = field(default_factory=lambda: int(time.time()))
 
@@ -54,6 +55,7 @@ class Manifest:
             "destination_subdir": self.destination_subdir,
             "device": dict(self.device) if self.device is not None else None,
             "status": self.status,
+            "playlist": self.playlist,
             "updated_at": self.updated_at,
             "entries": [
                 {
@@ -142,6 +144,7 @@ def load_manifest(path: Path) -> Manifest | None:
         status=str(data.get("status") or ""),
         entries=tuple(entries),
         device=device,
+        playlist=str(data.get("playlist") or ""),
         schema_version=SCHEMA_VERSION,
         updated_at=int(data.get("updated_at") or 0),
     )
