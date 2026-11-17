@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import errno
 import json
+import os
 import threading
 from pathlib import Path
 
@@ -283,6 +284,56 @@ def test_t010_enospc_aborts_partial_and_cleans_temp(usb, library, monkeypatch):
     assert music_files(usb) == []
     assert not list((usb / SUB).glob(".neurowave-part-*"))
     assert (usb / "sentinel.txt").read_text(encoding="utf-8") == "не трогать"
+
+
+def test_eio_aborts_partial_and_cleans_temp(usb, library, monkeypatch):
+    source = audio(library / "one.mp3")
+    writer, _, _ = writer_for(usb)
+
+    def io_error(fd, data):
+        raise OSError(errno.EIO, "Input/output error")
+
+    monkeypatch.setattr(writer_mod, "_write_bytes", io_error)
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert report.items[0].error == "io_error"
+    assert report.status is ExportStatus.FAILED
+    assert music_files(usb) == []
+    assert not list((usb / SUB).glob(".neurowave-part-*"))
+    assert (usb / "sentinel.txt").exists()
+
+
+def test_rename_race_never_overwrites_appearing_file(usb, library, monkeypatch):
+    source = audio(library / "one.mp3", b"source")
+    destination = usb / SUB / "001 - Artist - Song 1.mp3"
+    real_link = os.link
+
+    def racing_link(src, dst, *, src_dir_fd=None, dst_dir_fd=None, follow_symlinks=True):
+        fd = os.open(
+            dst,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+            0o600,
+            dir_fd=dst_dir_fd,
+        )
+        os.write(fd, b"user appeared")
+        os.close(fd)
+        return real_link(
+            src,
+            dst,
+            src_dir_fd=src_dir_fd,
+            dst_dir_fd=dst_dir_fd,
+            follow_symlinks=follow_symlinks,
+        )
+
+    writer, _, _ = writer_for(usb)
+    monkeypatch.setattr(writer_mod.os, "link", racing_link)
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert report.items[0].error == "exists"
+    assert destination.read_bytes() == b"user appeared"
+    assert not list((usb / SUB).glob(".neurowave-part-*"))
 
 
 def test_read_only_target_is_reported(usb, library, monkeypatch):

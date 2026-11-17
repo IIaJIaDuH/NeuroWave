@@ -1,6 +1,6 @@
 # USB Mixtape — реализация по PR, зависимости, чек-листы
 
-**Статус:** USB-00 — спецификация; USB-01…USB-04 (планировщик, LocalExportSource, устройства, safe writer) реализованы · 2026-11-17.  
+**Статус:** USB-00 — спецификация; USB-01…USB-05 (планировщик, источник, устройства, writer, транскод/M3U8/Car) реализованы · 2026-11-17.  
 **Ветка спецификации:** feature/usb-mixtape-spec  
 **База:** main по состоянию на SHA 1baf6de3b8d30f453c1a4feb2af30a9b2e6c13aa.  
 **Приоритет относительно NeuroWave 0.2:** дополнительная фича. Не блокирует ADR-0005, Sound Lab и Qt Desktop.
@@ -47,8 +47,14 @@ T-001…T-005). Eject и CLI — план.
 **Сделано в USB-04:** `export/` — `SafeWriter`, `manifest.py`, `filenames.py`,
 ошибки; `tests/test_mixtape_writer.py` (26 тестов, T-006…T-015 и
 T-020…T-026): streaming copy с sha256, no-clobber commit, manifest и resume,
-cancel, ENOSPC/EROFS, выдёргивание fake-устройства, отказ чужому/битому
-manifest. EIO и rename-race остаются на USB-05/08, реальная запись — USB-08.
+cancel, ENOSPC/EROFS/EIO, выдёргивание fake-устройства, rename race и отказ
+чужому/битому manifest. Реальная запись — USB-08.
+
+**Сделано в USB-05:** `export/transcoder.py` (ffmpeg/ffprobe через argv без
+shell, таймаут, внедряемый runner), `export/playlist.py` (M3U8 только по
+verified-файлам), `car.py` (нумерация, портативные имена, транслитерация);
+writer умеет TRANSCODE с проверкой формата/длительности. `tests/test_mixtape_transcode.py`
+(17 тестов на синтетическом WAV) плюс EIO/rename-race в writer-тестах.
 
 ## 2. Отдельные acceptance gates
 
@@ -85,7 +91,7 @@ manifest. EIO и rename-race остаются на USB-05/08, реальная �
 
 ### G4. Writer (после USB-04)
 
-- [ ] Тесты на symlink swap, traversal, ENOSPC, EIO, EROFS, unplug, rename races.
+- [x] Тесты на symlink swap, traversal, ENOSPC, EIO, EROFS, unplug, rename races.
 - [x] Нет записи вне одобренного target root; нет silent overwrite.
 - [x] Finished означает проверенную контрольную сумму; Partial означает неполный список.
 - [x] Repeat job не создаёт дубли, не переписывает чужой каталог.
@@ -96,10 +102,13 @@ USB-04 закрывает symlink/traversal, ENOSPC, EROFS, unplug, cancel/resum
 
 ### G5. Transcode (после USB-05)
 
-- [ ] FFmpeg доступен только при установленной разрешённой сборке; иначе disable transcode.
-- [ ] Никакого заведомого lossy→FLAC под видом Hi-Fi, MP3 320 не обещает качество источника.
-- [ ] M3U8 работает на выбранном профиле, пути относительные и проверенные.
-- [ ] Все конвертации идут ограниченными ресурсами, без shell=True.
+- [x] FFmpeg доступен только при установленной разрешённой сборке; иначе disable transcode.
+- [x] Никакого заведомого lossy→FLAC под видом Hi-Fi, MP3 320 не обещает качество источника.
+- [x] M3U8 работает на выбранном профиле, пути относительные и проверенные.
+- [x] Все конвертации идут ограниченными ресурсами, без shell=True.
+
+FFmpeg-путь проверен через внедряемый runner и fake-транскодер; реальный
+ffmpeg/ffprobe и FAT32/exFAT проверяются на аппаратном этапе USB-08.
 
 ### G6. UI и аппаратная проверка (после USB-07/08)
 

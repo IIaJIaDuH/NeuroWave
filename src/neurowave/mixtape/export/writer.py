@@ -38,7 +38,9 @@ from neurowave.mixtape.export.manifest import (
     path_is_within,
     write_manifest_atomic,
 )
-from neurowave.mixtape.models import ExportAsset, MixtapePlan, PlannedItem
+from neurowave.mixtape.export.playlist import PLAYLIST_NAME, PlaylistEntry, render_m3u8
+from neurowave.mixtape.export.transcoder import TranscoderError, TranscoderUnavailable
+from neurowave.mixtape.models import ExportAsset, ExportOperation, MixtapePlan, PlannedItem
 
 BUFFER_SIZE = 1024 * 1024
 TEMP_PREFIX = ".neurowave-part-"
@@ -84,6 +86,8 @@ class ExportReport:
     skipped_count: int
     cancelled: bool
     manifest_path: str
+    playlist_path: str = ""
+    playlist_error: str = ""
 
     @property
     def verified(self) -> tuple[ItemReport, ...]:
@@ -106,11 +110,13 @@ class SafeWriter:
         device_service: Any | None = None,
         expected_device: Any | None = None,
         buffer_size: int = BUFFER_SIZE,
+        transcoder: Any | None = None,
     ) -> None:
         self._target = Path(target).expanduser()
         self._device = device_service
         self._expected = expected_device
         self._buffer = max(1, int(buffer_size))
+        self._transcoder = transcoder
 
     def write(
         self,
@@ -173,6 +179,8 @@ class SafeWriter:
         cancelled = False
         aborted = False
 
+        playlist_path = ""
+        playlist_error = ""
         target_fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:
             if _cancelled(cancel):
@@ -204,6 +212,13 @@ class SafeWriter:
                     if error_code in _ABORT_CODES:
                         aborted = True
                         break
+            if verified:
+                try:
+                    playlist_path, playlist_error = self._write_playlist(
+                        target_fd, subdir, plan, results
+                    )
+                except ExportError as error:
+                    playlist_error = str(error)
         finally:
             os.close(target_fd)
 
@@ -220,6 +235,8 @@ class SafeWriter:
             skipped_count=skipped,
             cancelled=cancelled,
             manifest_path=str(manifest_path),
+            playlist_path=playlist_path,
+            playlist_error=playlist_error,
         )
 
     # --- один файл ----------------------------------------------------
@@ -275,7 +292,12 @@ class SafeWriter:
                     ExportErrorCode.SOURCE_MISSING, "Исходный файл пропал", path=destination
                 )
 
-            size, digest = self._copy(target_fd, destination, source, asset, cancel)
+            if item.operation is ExportOperation.TRANSCODE:
+                size, digest = self._transcode(
+                    target_fd, destination, source, asset, cancel
+                )
+            else:
+                size, digest = self._copy(target_fd, destination, source, asset, cancel)
             return (
                 ItemReport(
                     track_key=item.track_key,
@@ -375,6 +397,155 @@ class SafeWriter:
                 except OSError:
                     pass
             os.close(dir_fd)
+
+    def _transcode(
+        self,
+        target_fd: int,
+        destination: str,
+        source: Path,
+        asset: ExportAsset,
+        cancel: CancelSignal | None,
+    ) -> tuple[int, str]:
+        if self._transcoder is None or not getattr(self._transcoder, "available", False):
+            raise ExportError(
+                ExportErrorCode.TRANSCODE_UNAVAILABLE,
+                "Транскодирование недоступно: нет ffmpeg",
+                path=destination,
+            )
+        parts = tuple(destination.split("/"))
+        dir_fd = _ensure_dir_fd(target_fd, parts[:-1])
+        name = parts[-1]
+        temporary = TEMP_PREFIX + secrets.token_hex(8)
+        temporary_path = Path(self._target.resolve(), *parts[:-1], temporary)
+        fd = -1
+        committed = False
+        try:
+            if _cancelled(cancel):
+                raise _Cancelled
+            try:
+                os.lstat(name, dir_fd=dir_fd)
+            except FileNotFoundError:
+                pass
+            else:
+                raise ExportError(
+                    ExportErrorCode.EXISTS,
+                    "Файл уже существует, перезапись запрещена",
+                    path=destination,
+                )
+            try:
+                self._transcoder.transcode(
+                    source, temporary_path, target_format="mp3", bitrate_kbps=320
+                )
+            except TranscoderUnavailable as error:
+                raise ExportError(
+                    ExportErrorCode.TRANSCODE_UNAVAILABLE, str(error), path=destination
+                ) from error
+            except TranscoderError as error:
+                raise ExportError(
+                    ExportErrorCode.TRANSCODE_FAILED, str(error), path=destination
+                ) from error
+
+            fd = os.open(temporary, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=dir_fd)
+            os.fsync(fd)
+            size = os.fstat(fd).st_size
+            if size <= 0:
+                raise ExportError(
+                    ExportErrorCode.TRANSCODE_FAILED, "Транскодер создал пустой файл"
+                )
+            try:
+                info = self._transcoder.probe(temporary_path)
+            except (TranscoderError, TranscoderUnavailable) as error:
+                raise ExportError(
+                    ExportErrorCode.PROBE_FAILED,
+                    f"Не удалось проверить выход: {error}",
+                    path=destination,
+                ) from error
+            if info.media_format and "mp3" not in info.media_format:
+                raise ExportError(
+                    ExportErrorCode.PROBE_FAILED,
+                    f"Ожидался MP3, получен {info.media_format}",
+                    path=destination,
+                )
+            if asset.duration_ms and info.duration_ms:
+                tolerance = max(3_000, int(asset.duration_ms) // 20)
+                if abs(int(info.duration_ms) - int(asset.duration_ms)) > tolerance:
+                    raise ExportError(
+                        ExportErrorCode.PROBE_FAILED,
+                        "Длительность результата не совпадает с исходником",
+                        path=destination,
+                    )
+            os.lseek(fd, 0, os.SEEK_SET)
+            _, digest = _hash_fd(fd)
+            _commit(dir_fd, temporary, name, destination)
+            committed = True
+            return size, digest
+        finally:
+            if fd >= 0:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+            if not committed:
+                try:
+                    os.unlink(temporary, dir_fd=dir_fd)
+                except OSError:
+                    pass
+            os.close(dir_fd)
+
+    def _write_playlist(
+        self,
+        target_fd: int,
+        subdir: str,
+        plan: MixtapePlan,
+        results: Sequence[ItemReport],
+    ) -> tuple[str, str]:
+        by_key = {item.track_key: item for item in plan.items}
+        entries: list[PlaylistEntry] = []
+        for result in results:
+            if result.status is not ItemStatus.VERIFIED:
+                continue
+            item = by_key.get(result.track_key)
+            if item is None:
+                continue
+            entries.append(
+                PlaylistEntry(
+                    destination=result.destination,
+                    duration_ms=item.duration_ms,
+                    artist=", ".join(item.artists),
+                    title=item.title,
+                )
+            )
+        if not entries:
+            return "", ""
+        text = render_m3u8(entries, subdir)
+        parts = tuple(part for part in subdir.split("/") if part)
+        temporary = ".neurowave-playlist-" + secrets.token_hex(8)
+        try:
+            dir_fd = _ensure_dir_fd(target_fd, parts)
+        except OSError as error:
+            raise ExportError(ExportErrorCode.PATH_ESCAPE, str(error)) from error
+        try:
+            fd = os.open(
+                temporary,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                0o600,
+                dir_fd=dir_fd,
+            )
+            try:
+                _write_bytes(fd, text.encode("utf-8"))
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+            os.replace(temporary, PLAYLIST_NAME, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
+        except OSError as error:
+            raise ExportError(ExportErrorCode.IO, f"playlist не записан: {error}") from error
+        finally:
+            try:
+                os.unlink(temporary, dir_fd=dir_fd)
+            except OSError:
+                pass
+            os.close(dir_fd)
+        return f"{subdir}/{PLAYLIST_NAME}", ""
 
     def _verify_temp(
         self, dir_fd: int, temporary: str, size: int, digest: str, destination: str

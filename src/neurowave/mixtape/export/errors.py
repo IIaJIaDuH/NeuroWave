@@ -22,6 +22,9 @@ class ExportErrorCode(str, Enum):
     MANIFEST_EXISTS = "manifest_exists"
     FOREIGN_MANIFEST = "foreign_manifest"
     DEVICE = "device_unverified"
+    TRANSCODE_UNAVAILABLE = "transcode_unavailable"
+    TRANSCODE_FAILED = "transcode_failed"
+    PROBE_FAILED = "probe_failed"
 
 
 class ExportError(Exception):

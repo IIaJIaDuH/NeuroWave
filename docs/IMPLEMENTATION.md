@@ -306,9 +306,18 @@ writable, объёмы и системный флаг. `UDisks2DeviceService` с
 перезаписывается: commit через no-clobber link с fallback для FAT, иначе
 честный `exists`. `manifest.json` пишется атомарно после каждого файла и
 позволяет resume: verified-файлы перепроверяются по sha256, пропавшие —
-копируются заново, несовпавшие не затираются. Cancel, ENOSPC, EROFS и
+копируются заново, несовпавшие не затираются. Cancel, ENOSPC, EROFS, EIO и
 пропажа устройства дают `cancelled`/`partial`/`failed` без ложного complete;
 чужой или битый manifest приводит к отказу, а не к оптимистичному resume.
+
+**USB-05 — транскод, M3U8, Car.** `FfmpegTranscoder` вызывает внешние
+`ffmpeg`/`ffprobe` argv-списком без `shell=True`, URL и интерактива, с
+таймаутом; без ffmpeg writer отклоняет `TRANSCODE` (`transcode_unavailable`),
+а режим Original продолжает работать. Выход проверяется ffprobe (формат MP3 и
+длительность в допуске), затем sha256 и commit. `playlist.m3u8` пишется
+атомарно только по verified-файлам, UTF-8 и с относительными путями.
+Car-профиль: `car_filename`/`car_destination` с нумерацией `001…`, портативными
+именами и опциональной транслитерацией.
 
 ## MPRIS и системный трей
 
@@ -379,13 +388,14 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - тексты песен, подкасты, Ynison;
 - ИИ-диджей, профиль вкуса, голос, TTS, студия генерации;
 - AppImage и упаковка;
-- USB Mixtape: есть планировщик, `LocalExportSource`, UDisks2-детект и writer;
-  нет eject, транскодинга, M3U8, CLI и Qt-экрана;
+- USB Mixtape: есть планировщик, `LocalExportSource`, UDisks2-детект, writer,
+  опциональный транскод, M3U8 и Car-имена; нет eject, CLI и Qt-экрана,
+  записи тегов/обложек;
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 558 unit-тестов ядра, интеграций, провайдеров,
-планировщика, источника, устройств и writer,
+Проверено в этом окружении: 577 unit-тестов ядра, интеграций, провайдеров,
+планировщика, источника, устройств, writer и экспорта,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
 импорт и сборка пакета, работа MPRIS на отдельном сессионном шине
@@ -398,7 +408,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 558 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource и устройства
+python -m pytest        # 577 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource и устройства
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -409,13 +419,14 @@ SoundCloud — на фейковом транспорте: поиск, отбр�
 `401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
 тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока,
 обновление по `expires_at` и `401`, ротация refresh token и запись credentials.
-USB Mixtape проверяется 140 офлайн-тестами: планировщик (USB-01) — seed и
+USB Mixtape проверяется 159 офлайн-тестами: планировщик (USB-01) — seed и
 порядок кандидатов, бюджет времени и байт, dedup между провайдерами,
 shortage, права, профили и preview JSON; локальный источник (USB-02) —
 approved root, path containment, симлинки и политика `ExportRight`;
 устройства (USB-03) — T-001…T-005 на fake-сервисе и managed objects;
-writer (USB-04) — T-006…T-015 и T-020…T-026 на временном fake-USB — без
-сети и реальных носителей.
+writer (USB-04) — T-006…T-015 и T-020…T-026 на временном fake-USB;
+транскод, M3U8 и Car (USB-05) — на синтетическом WAV и внедряемом runner —
+без сети и реальных носителей.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика
 тестируется на заглушке, а `tests/test_integrations_optional.py` отдельными
 процессами проверяет, что импорт не тянет `dbus-next`/`PySide6` и что
