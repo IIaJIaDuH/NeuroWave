@@ -9,9 +9,7 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
-import os
 import sys
 from pathlib import Path
 from typing import Any, Sequence
@@ -30,7 +28,9 @@ from neurowave.mixtape.export import (
     SafeWriter,
 )
 from neurowave.mixtape.export.transcoder import FfmpegTranscoder
-from neurowave.mixtape.jobs import JobStore
+from neurowave.mixtape.export.verify import verify_job
+from neurowave.mixtape.jobs import CancelSignal as _CancelSignal
+from neurowave.mixtape.jobs import JobStore, job_record
 from neurowave.mixtape.models import PROFILES, MixtapeRequest
 from neurowave.mixtape.planner import MixtapePlanner
 from neurowave.mixtape.rights import LocalExportRights
@@ -281,7 +281,12 @@ def _cmd_export(args, *, device_service=None, transcoder=None, job_store=None) -
             },
         )
         raise
-    job = _report_job(report, identity, library)
+    job = job_record(
+        report,
+        target=str(identity.mountpoint),
+        object_path=identity.udisks_object_path,
+        library=str(library),
+    )
     store.save(job_id, job)
     payload = {
         "ok": report.status in {ExportStatus.COMPLETE, ExportStatus.PARTIAL},
@@ -336,58 +341,17 @@ def _cmd_verify(args, *, device_service=None, transcoder=None, job_store=None) -
     job = _store(job_store).load(args.job)
     if job is None:
         return _fail(args, "job_not_found", f"Задача не найдена: {args.job}")
-    status = str(job.get("status") or "")
-    target = Path(str(job.get("target") or ""))
-    items = list(job.get("items") or [])
-    mismatches: list[dict[str, str]] = []
-    checked = 0
-    for item in items:
-        destination = str(item.get("destination") or "")
-        item_status = str(item.get("status") or "")
-        if item_status != "verified":
-            mismatches.append(
-                {
-                    "destination": destination,
-                    "error": f"not_verified:{item_status or 'unknown'}",
-                }
-            )
-            continue
-        checked += 1
-        relative = Path(destination)
-        if not destination or relative.is_absolute() or ".." in relative.parts:
-            mismatches.append({"destination": destination, "error": "unsafe_path"})
-            continue
-        path = target / relative
-        try:
-            if path.is_symlink() or not path.is_file():
-                raise OSError("файл отсутствует")
-            digest = _hash_file(path)
-            if digest != item.get("sha256") or path.stat().st_size != int(
-                item.get("size_bytes") or 0
-            ):
-                mismatches.append({"destination": destination, "error": "hash_mismatch"})
-        except OSError as error:
-            mismatches.append({"destination": destination, "error": str(error)})
-    complete = status == "complete"
-    ok = complete and bool(items) and not mismatches
-    payload = {
-        "ok": ok,
-        "job": args.job,
-        "status": status,
-        "complete": complete,
-        "checked": checked,
-        "total": len(items),
-        "mismatches": mismatches,
-    }
+    report = verify_job(args.job, job)
+    payload = report.to_dict()
     lines = [
-        f"Статус задачи: {status or '—'}",
-        f"Проверено файлов: {checked} из {len(items)}",
+        f"Статус задачи: {report.status or '—'}",
+        f"Проверено файлов: {report.checked} из {report.total}",
     ]
-    if not complete:
+    if not report.complete:
         lines.append("Задача не завершена: проверка требует статус complete")
-    lines += [f"  {item['destination']}: {item['error']}" for item in mismatches]
-    lines.append("Итог: OK" if ok else "Итог: есть расхождения")
-    return _emit(args, payload, lines, code=0 if ok else 1)
+    lines += [f"  {item.destination}: {item.error}" for item in report.mismatches]
+    lines.append("Итог: OK" if report.ok else "Итог: есть расхождения")
+    return _emit(args, payload, lines, code=0 if report.ok else 1)
 
 
 def _cmd_eject(args, *, device_service=None, transcoder=None, job_store=None) -> int:
@@ -432,15 +396,6 @@ def _cmd_eject(args, *, device_service=None, transcoder=None, job_store=None) ->
 
 
 # --- вспомогательное -----------------------------------------------------
-
-
-class _CancelSignal:
-    def __init__(self, store: JobStore, job_id: str) -> None:
-        self._store = store
-        self._job_id = job_id
-
-    def is_set(self) -> bool:
-        return self._store.cancel_requested(self._job_id)
 
 
 def _request(args) -> MixtapeRequest:
@@ -505,53 +460,11 @@ def _load_plan(path: Path) -> dict[str, Any]:
     return data
 
 
-def _report_job(report: ExportReport, identity, library: Path) -> dict[str, Any]:
-    return {
-        "status": report.status.value,
-        "plan_id": report.plan_id,
-        "target": str(identity.mountpoint),
-        "object_path": identity.udisks_object_path,
-        "library": str(library),
-        "manifest": report.manifest_path,
-        "playlist": report.playlist_path,
-        "playlist_error": report.playlist_error,
-        "verified_count": report.verified_count,
-        "failed_count": report.failed_count,
-        "skipped_count": report.skipped_count,
-        "cancelled": report.cancelled,
-        "items": [
-            {
-                "track_key": item.track_key,
-                "destination": item.destination,
-                "status": item.status.value,
-                "size_bytes": item.size_bytes,
-                "sha256": item.sha256,
-                "error": item.error,
-            }
-            for item in report.items
-        ],
-    }
-
-
 def _store(job_store: JobStore | None) -> JobStore:
     if job_store is not None:
         return job_store
     root = Paths.resolve().ensure().data_dir / "mixtape" / "jobs"
     return JobStore(root)
-
-
-def _hash_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
-    try:
-        while True:
-            chunk = os.read(fd, 1024 * 1024)
-            if not chunk:
-                break
-            digest.update(chunk)
-    finally:
-        os.close(fd)
-    return digest.hexdigest()
 
 
 def _emit(args, payload: dict[str, Any], lines: Sequence[str], *, code: int = 0) -> int:

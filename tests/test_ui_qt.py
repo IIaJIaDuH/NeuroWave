@@ -208,3 +208,20 @@ def test_soundlab_lists_builtin_and_custom(window) -> None:
     assert names
     assert model.profiles()
     dialog.close()
+
+
+def test_mixtape_button_opens_screen(window, monkeypatch) -> None:
+    """Кнопка в главном окне открывает экран USB Mixtape (мост — Qt-free)."""
+    from neurowave.ui import mixtape as mixtape_ui
+
+    window, _player, _backend, _model = window
+    opened: list[object] = []
+
+    def fake_open(parent=None, bridge=None):
+        opened.append(parent)
+        return object()
+
+    monkeypatch.setattr(mixtape_ui, "open_mixtape", fake_open)
+    _button(window, "USB Mixtape").click()
+
+    assert opened

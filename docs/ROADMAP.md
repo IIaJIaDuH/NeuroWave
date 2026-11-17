@@ -123,7 +123,7 @@
 - [x] Safe writer, manifest и resume (USB-04): no-clobber, sha256, ENOSPC, cancel/resume.
 - [x] Транскод, M3U8 и Car-профиль (USB-05): опциональный ffmpeg, проверка probe, относительные пути.
 - [x] CLI headless (USB-06): devices/plan/export/status/cancel/verify/eject, JSON, отмена и явное подтверждение записи/извлечения.
-- [ ] Qt экран USB Mixtape (USB-07) без блокировки playback.
+- [x] Qt экран USB Mixtape (USB-07) без блокировки playback: `mixtape/bridge.py` (план, прогресс, отмена, eject в фоне) и `ui/mixtape.py`.
 - [ ] Аппаратная проверка USB-08: реальный UDisks2, FAT32/exFAT, unplug/ENOSPC, Linux Mint smoke.
 - [ ] Опциональные **только официально разрешённые** загрузки и AI-подбор — после отдельного review.
 

@@ -94,8 +94,77 @@ class ExportReport:
         return tuple(item for item in self.items if item.status is ItemStatus.VERIFIED)
 
 
+@dataclass(frozen=True)
+class ProgressUpdate:
+    """Снимок прогресса записи для UI: только числа, без путей за пределы USB."""
+
+    index: int
+    total: int
+    destination: str
+    bytes_done: int
+    bytes_total: int
+    items_done: int
+
+
 class CancelSignal(Protocol):
     def is_set(self) -> bool: ...
+
+
+class ProgressSink(Protocol):
+    """Наблюдатель прогресса; ошибки наблюдателя запись не прерывают."""
+
+    def __call__(self, update: ProgressUpdate) -> None: ...
+
+
+class _Meter:
+    """Считает байты и проверенные файлы, отдавая снимки наружу."""
+
+    def __init__(self, sink: ProgressSink, total: int, bytes_total: int) -> None:
+        self._sink = sink
+        self._total = total
+        self._bytes_total = max(0, int(bytes_total))
+        self._committed = 0
+        self._item_bytes = 0
+        self._items_done = 0
+        self._index = 0
+        self._destination = ""
+
+    @property
+    def bytes_done(self) -> int:
+        return self._committed + self._item_bytes
+
+    def start_item(self, index: int, destination: str) -> None:
+        self._index = int(index)
+        self._destination = destination
+        self._item_bytes = 0
+        self._emit()
+
+    def advance(self, delta: int) -> None:
+        self._item_bytes += max(0, int(delta))
+        self._emit()
+
+    def finish_item(self, report: ItemReport) -> None:
+        if report.status is ItemStatus.VERIFIED:
+            self._committed += int(report.size_bytes) or self._item_bytes
+            self._items_done += 1
+        self._item_bytes = 0
+        self._emit()
+
+    def _emit(self) -> None:
+        try:
+            self._sink(
+                ProgressUpdate(
+                    index=self._index,
+                    total=self._total,
+                    destination=self._destination,
+                    bytes_done=self.bytes_done,
+                    bytes_total=self._bytes_total,
+                    items_done=self._items_done,
+                )
+            )
+        except Exception:
+            # Наблюдатель (UI) не должен ломать запись и манифест.
+            pass
 
 
 class _Cancelled(Exception):
@@ -125,6 +194,7 @@ class SafeWriter:
         *,
         cancel: CancelSignal | None = None,
         resume: bool = True,
+        progress: ProgressSink | None = None,
     ) -> ExportReport:
         target = self._target.resolve()
         if not target.is_dir():
@@ -173,6 +243,15 @@ class SafeWriter:
             if entry.status == ItemStatus.VERIFIED.value
         }
         assets_by_id = {asset.asset_id: asset for asset in assets}
+        meter = (
+            _Meter(
+                progress,
+                len(plan.items),
+                sum(max(0, int(item.estimated_bytes)) for item in plan.items),
+            )
+            if progress is not None
+            else None
+        )
         results: list[ItemReport] = []
         order: list[str] = []
         verified = 0
@@ -186,19 +265,23 @@ class SafeWriter:
             if _cancelled(cancel):
                 cancelled = True
             else:
-                for item in plan.items:
+                for index, item in enumerate(plan.items, start=1):
                     if _cancelled(cancel):
                         cancelled = True
                         break
                     report, error_code = self._process(
                         target_fd,
+                        index,
                         item,
                         assets_by_id.get(item.source_asset_id),
                         entries,
                         seen,
                         cancel,
                         subdir,
+                        meter,
                     )
+                    if meter is not None:
+                        meter.finish_item(report)
                     results.append(report)
                     order.append(item.track_key)
                     if report.status is ItemStatus.VERIFIED:
@@ -243,17 +326,23 @@ class SafeWriter:
     def _process(
         self,
         target_fd: int,
+        index: int,
         item: PlannedItem,
         asset: ExportAsset | None,
         entries: Mapping[str, ManifestEntry],
         seen: set[str],
         cancel: CancelSignal | None,
         subdir: str,
+        meter: _Meter | None = None,
     ) -> tuple[ItemReport, ExportErrorCode | None]:
         try:
             destination = self._destination(item.destination_relative, subdir)
         except ExportError as error:
+            if meter is not None:
+                meter.start_item(index, "")
             return _failed(item, "", error.code), error.code
+        if meter is not None:
+            meter.start_item(index, destination)
 
         try:
             self._ensure_device()
@@ -297,7 +386,9 @@ class SafeWriter:
                     target_fd, destination, source, asset, cancel
                 )
             else:
-                size, digest = self._copy(target_fd, destination, source, asset, cancel)
+                size, digest = self._copy(
+                    target_fd, destination, source, asset, cancel, meter
+                )
             return (
                 ItemReport(
                     track_key=item.track_key,
@@ -331,6 +422,7 @@ class SafeWriter:
         source: Path,
         asset: ExportAsset,
         cancel: CancelSignal | None,
+        meter: _Meter | None = None,
     ) -> tuple[int, str]:
         parts = tuple(destination.split("/"))
         dir_fd = _ensure_dir_fd(target_fd, parts[:-1])
@@ -367,6 +459,8 @@ class SafeWriter:
                 _write_bytes(temp_fd, chunk)
                 hasher.update(chunk)
                 size += len(chunk)
+                if meter is not None:
+                    meter.advance(len(chunk))
             os.fsync(temp_fd)
             os.close(temp_fd)
             temp_fd = -1

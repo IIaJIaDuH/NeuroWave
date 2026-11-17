@@ -335,6 +335,21 @@ Car-профиль: `car_filename`/`car_destination` с нумерацией `00
 только после revalidate и отказывает, пока задача в статусе `running`, или
 если `--job` относится к другому object path (`target_mismatch`).
 
+**USB-07 — Qt-экран и bridge.** `mixtape/bridge.py` — Qt-независимый мост:
+неизменяемый `BridgeState` (`status`, `devices`, `selected`, `preview`,
+`progress`, `summary`, `verification`, `can_*`) и команды
+`request_plan/start_export/request_cancel/request_verify/eject`. План, запись,
+проверка и извлечение идут в отдельном потоке, поэтому GUI и mpv не
+блокируются; `SafeWriter.write(progress=...)` отдаёт байты и номер файла, а мост
+считает проценты, скорость и оценку остатка. Согласие не обходится: без отметки
+прав, подтверждения в диалоге и выбранного object path экспорт не стартует, а
+`eject` отказывает, пока worker занят или в журнале есть running-задача для этого
+тома. `ui/mixtape.py` — тонкий экран Qt Widgets (том, папка, профиль, часы,
+формат, права, таблица треков, причины пропуска, прогресс, отмена/проверка/
+извлечение) плюс кнопка «USB Mixtape» в главном окне. Общие части вынесены из
+CLI: `export/verify.py` (правило «только complete») и `jobs.job_record`/
+`jobs.CancelSignal`.
+
 ## MPRIS и системный трей
 
 Ядро о D-Bus и Qt не знает: интеграции живут в `src/neurowave/integrations`
@@ -405,12 +420,12 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - ИИ-диджей, профиль вкуса, голос, TTS, студия генерации;
 - AppImage и упаковка;
 - USB Mixtape: есть планировщик, `LocalExportSource`, UDisks2-детект, writer,
-  опциональный транскод, M3U8, Car-имена и headless CLI; нет Qt-экрана,
-  записи тегов/обложек и аппаратной проверки;
+  опциональный транскод, M3U8, Car-имена, headless CLI, Qt-экран и bridge;
+  нет записи тегов/обложек и аппаратной проверки;
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 603 unit-теста ядра, интеграций, провайдеров,
+Проверено в этом окружении: 623 офлайн-теста ядра, интеграций, провайдеров,
 планировщика, источника, устройств, writer и экспорта,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
@@ -424,7 +439,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 603 теста: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства и mixtape CLI
+python -m pytest        # 623 теста: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства, mixtape CLI и bridge (с PySide6 — 639)
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -435,7 +450,7 @@ SoundCloud — на фейковом транспорте: поиск, отбр�
 `401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
 тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока,
 обновление по `expires_at` и `401`, ротация refresh token и запись credentials.
-USB Mixtape проверяется 186 офлайн-тестами: планировщик (USB-01) — seed и
+USB Mixtape проверяется 210 офлайн-тестами: планировщик (USB-01) — seed и
 порядок кандидатов, бюджет времени и байт, dedup между провайдерами,
 shortage, права, профили и preview JSON; локальный источник (USB-02) —
 approved root, path containment, симлинки и политика `ExportRight`;
@@ -445,7 +460,10 @@ writer (USB-04) — T-006…T-015 и T-020…T-026 на временном fake-
 CLI (USB-06) — devices/plan/export/status/cancel/verify/eject на fake-USB,
 временной библиотеке и локальном журнале, включая отказ без подтверждения,
 требование статуса `complete` в `verify` и привязку `eject --job` к object path —
-без сети и реальных носителей.
+без сети и реальных носителей; bridge (USB-07) — план, прогресс, отмена,
+`plan_changed`, verify и eject в фоновом потоке без Qt; экран (USB-07) —
+offscreen-тесты Qt на fake-USB (том, треки, причины пропуска, прогресс,
+кнопки) без реальной записи.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика
 тестируется на заглушке, а `tests/test_integrations_optional.py` отдельными
 процессами проверяет, что импорт не тянет `dbus-next`/`PySide6` и что

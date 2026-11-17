@@ -9,11 +9,18 @@ from neurowave.mixtape.export.manifest import (
     load_manifest,
     write_manifest_atomic,
 )
+from neurowave.mixtape.export.verify import (
+    VerificationReport,
+    VerifyMismatch,
+    hash_file,
+    verify_job,
+)
 from neurowave.mixtape.export.writer import (
     ExportReport,
     ExportStatus,
     ItemReport,
     ItemStatus,
+    ProgressUpdate,
     SafeWriter,
 )
 
@@ -28,7 +35,12 @@ __all__ = [
     "ItemStatus",
     "Manifest",
     "ManifestEntry",
+    "ProgressUpdate",
     "SafeWriter",
+    "VerificationReport",
+    "VerifyMismatch",
+    "hash_file",
+    "verify_job",
     "load_manifest",
     "write_manifest_atomic",
 ]

@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from neurowave.config import atomic_write_json
+from neurowave.mixtape.export.writer import ExportReport
 
 JOB_SCHEMA_VERSION = 1
 MAX_JOB_BYTES = 1_048_576
@@ -90,3 +91,50 @@ class JobStore:
             self._cancel_path(job_id).unlink(missing_ok=True)
         except (OSError, ValueError):
             pass
+
+
+class CancelSignal:
+    """Флаг отмены задачи, который читает writer между чанками."""
+
+    def __init__(self, store: JobStore, job_id: str) -> None:
+        self._store = store
+        self._job_id = job_id
+
+    def is_set(self) -> bool:
+        return self._store.cancel_requested(self._job_id)
+
+
+def job_record(
+    report: ExportReport,
+    *,
+    target: str,
+    object_path: str,
+    library: str,
+) -> dict[str, Any]:
+    """Запись журнала по отчёту writer'а (общая для CLI и GUI)."""
+
+    return {
+        "status": report.status.value,
+        "plan_id": report.plan_id,
+        "target": str(target),
+        "object_path": str(object_path),
+        "library": str(library),
+        "manifest": report.manifest_path,
+        "playlist": report.playlist_path,
+        "playlist_error": report.playlist_error,
+        "verified_count": report.verified_count,
+        "failed_count": report.failed_count,
+        "skipped_count": report.skipped_count,
+        "cancelled": report.cancelled,
+        "items": [
+            {
+                "track_key": item.track_key,
+                "destination": item.destination,
+                "status": item.status.value,
+                "size_bytes": item.size_bytes,
+                "sha256": item.sha256,
+                "error": item.error,
+            }
+            for item in report.items
+        ],
+    }

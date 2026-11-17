@@ -641,3 +641,42 @@ def test_t021_foreign_files_are_never_deleted(usb, library):
     assert report.status is ExportStatus.COMPLETE
     assert foreign.read_bytes() == b"user music"
     assert (usb / "sentinel.txt").exists()
+
+
+# --- прогресс для UI ------------------------------------------------------
+
+
+def test_progress_reports_bytes_and_items(usb, library):
+    first = audio(library / "one.mp3", b"x" * 4096)
+    second = audio(library / "two.mp3", b"y" * 2048)
+    writer, _, _ = writer_for(usb)
+    updates = []
+
+    report = writer.write(
+        make_plan([make_item(1), make_item(2)]),
+        [make_asset(first, 1), make_asset(second, 2)],
+        progress=updates.append,
+    )
+
+    assert report.status is ExportStatus.COMPLETE
+    assert updates
+    assert updates[-1].items_done == 2
+    assert updates[-1].index == 2
+    assert updates[-1].bytes_done == 4096 + 2048
+    assert updates[-1].total == 2
+    assert updates[-1].destination.endswith(".mp3")
+    sizes = [update.bytes_done for update in updates]
+    assert sizes == sorted(sizes)
+
+
+def test_broken_progress_observer_does_not_break_write(usb, library):
+    source = audio(library / "one.mp3")
+    writer, _, _ = writer_for(usb)
+
+    def boom(_update):
+        raise RuntimeError("наблюдатель упал")
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)], progress=boom)
+
+    assert report.status is ExportStatus.COMPLETE
+    assert len(music_files(usb)) == 1
