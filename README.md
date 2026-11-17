@@ -80,7 +80,8 @@
 ```bash
 sudo apt install mpv
 python3 -m venv .venv && . .venv/bin/activate
-pip install -e .
+pip install -e .                  # headless без тяжёлых GUI-зависимостей
+pip install -e '.[desktop,local]'  # опционально: Qt-окно, MPRIS/keyring, теги TinyTag
 neurowave doctor        # проверка окружения (без токенов)
 neurowave login         # вход в свой аккаунт через браузер
 neurowave wave          # «Моя волна» в терминале
