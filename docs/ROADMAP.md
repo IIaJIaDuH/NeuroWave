@@ -113,12 +113,13 @@
 
 ## Опциональная фича: USB Mixtape
 
-**Статус: USB-00 — спецификация; USB-01 (офлайн-планировщик) реализован; остальное — план.** Не блокирует Sound Lab, GUI и ближайший релиз.
+**Статус: USB-00 — спецификация; USB-01 (планировщик) и USB-02 (LocalExportSource + права) реализованы; остальное — план.** Не блокирует Sound Lab, GUI и ближайший релиз.
 
 - [x] Подготовлены [ТЗ, архитектура и безопасность](features/usb-mixtape/README.md) как предложение к ревью.
 - [ ] Принять [ADR-0007](decisions/0007-usb-mixtape.md): независимый модуль, только разрешённые аудиофайлы.
 - [x] Офлайн-планировщик USB-01: неизменяемые модели, дедупликация, бюджет времени/байт, shortage, профили, preview JSON.
-- [ ] LocalExportSource и политика прав (USB-02, без LLM и стриминговых загрузок).
+- [x] LocalExportSource и политика прав (USB-02): approved root, path containment, `ExportRight`.
+- [ ] UDisks2 device detection и fake USB device (USB-03).
 - [ ] Safe UDisks2 device detection и USB writer с checksum, resume, no-clobber.
 - [ ] CLI, профили автомагнитол, MP3/Original/FLAC-only и M3U8.
 - [ ] Qt экран, аппаратный Linux Mint smoke, тесты unplug/ENOSPC/path traversal.

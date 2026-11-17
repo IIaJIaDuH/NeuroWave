@@ -22,6 +22,15 @@ class RightsStatus(str, Enum):
     UNKNOWN = "unknown"
 
 
+@dataclass(frozen=True)
+class ExportRight:
+    """Решение политики прав: статус плюс основание для manifest/preview."""
+
+    status: RightsStatus
+    basis: str = "unknown"
+    detail: str = ""
+
+
 class ExportOperation(str, Enum):
     COPY = "copy"
     TRANSCODE = "transcode"
@@ -60,6 +69,7 @@ class ExportAsset:
     media_format: str
     size_bytes: int
     rights: RightsStatus = RightsStatus.UNKNOWN
+    rights_basis: str = ""
     duration_ms: int | None = None
     lossless: bool = False
     local_path: Path | None = None

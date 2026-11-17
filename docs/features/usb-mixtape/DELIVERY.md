@@ -1,6 +1,6 @@
 # USB Mixtape — реализация по PR, зависимости, чек-листы
 
-**Статус:** USB-00 — спецификация; USB-01 (модели + планировщик) реализован · 2026-11-17.  
+**Статус:** USB-00 — спецификация; USB-01 (планировщик) и USB-02 (LocalExportSource + права) реализованы · 2026-11-17.  
 **Ветка спецификации:** feature/usb-mixtape-spec  
 **База:** main по состоянию на SHA 1baf6de3b8d30f453c1a4feb2af30a9b2e6c13aa.  
 **Приоритет относительно NeuroWave 0.2:** дополнительная фича. Не блокирует ADR-0005, Sound Lab и Qt Desktop.
@@ -31,8 +31,13 @@
 
 **Сделано в USB-01:** `src/neurowave/mixtape` — неизменяемые модели,
 matcher, протокол `ExportSource` и `MixtapePlanner`; `tests/test_mixtape_planner.py`
-(47 тестов). Файловых, сетевых и USB-операций в модуле нет; `LocalExportSource`
-и всё, что ниже по таблице, остаётся планом.
+(47 тестов). Файловых, сетевых и USB-операций в модуле нет.
+
+**Сделано в USB-02:** `sources/local.py` (`LocalExportSource`) и `rights.py`
+(`LocalExportRights`, `ExportRight`); `tests/test_mixtape_local_source.py`
+(32 теста). Экспорт возможен только из approved root и только после явного
+подтверждения прав; абсолютные пути, `..`, NUL, скрытые сегменты, симлинки
+наружу и stream-only провайдеры отклоняются. UDisks2, writer и CLI — план.
 
 ## 2. Отдельные acceptance gates
 
@@ -49,10 +54,13 @@ matcher, протокол `ExportSource` и `MixtapePlanner`; `tests/test_mixtap
 
 ### G2. Резолвинг файлов (после USB-02)
 
-- [ ] На каждый файл в плане есть ExportAsset с разрешённым provenance и фактическим локальным доступом.
-- [ ] Любой stream_url, Spotify Connect и MediaCache — не основание на экспорт.
-- [ ] При неполной библиотеке система честно показывает shortage.
-- [ ] Источник может ошибаться/пропасть без потери корректной части плана.
+- [x] На каждый файл в плане есть ExportAsset с разрешённым provenance и фактическим локальным доступом.
+- [x] Любой stream_url, Spotify Connect и MediaCache — не основание на экспорт.
+- [x] При неполной библиотеке система честно показывает shortage.
+- [x] Источник может ошибаться/пропасть без потери корректной части плана.
+
+Все четыре пункта закрыты офлайн-тестами USB-02: approved root, политика
+`ExportRight`, path containment и интеграция с планировщиком.
 
 ### G3. USB Device (после USB-03)
 
