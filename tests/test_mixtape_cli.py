@@ -456,7 +456,7 @@ def test_export_marks_job_failed_on_writer_error(
     def boom(*args, **kwargs):
         raise ExportError(ExportErrorCode.ENOSPC, "нет места")
 
-    monkeypatch.setattr("neurowave.mixtape.cli.SafeWriter.write", boom)
+    monkeypatch.setattr("neurowave.mixtape.service.SafeWriter.write", boom)
     code, data, _ = call(export_args(plan_file), capsys, service=service, store=store)
 
     assert code == 2

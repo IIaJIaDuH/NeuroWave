@@ -69,7 +69,10 @@ GUI. `verify` возвращает `ok=true` только для статуса 
 (27 офлайн-тестов на fake-USB и временной библиотеке). Реальная запись и
 живой UDisks2 — USB-08.
 
-**Сделано в USB-07:** `mixtape/bridge.py` — Qt-независимый мост: список томов,
+**Сделано в USB-07:** `mixtape/service.py` — один путь плана и записи для CLI и
+GUI (`plan/export/verify/eject_target`, коды `library_missing`,
+`rights_not_confirmed`, `plan_changed`, `target_not_found`), поэтому логика
+больше не дублируется. `mixtape/bridge.py` — Qt-независимый мост: список томов,
 preview (треки, байты, причины пропуска), экспорт/отмена/verify/eject в фоновом
 потоке, снимки `BridgeState` для окна. `ui/mixtape.py` — экран Qt Widgets
 (устройство, папка, профиль, часы, формат, права, таблица треков, прогресс,
@@ -79,8 +82,11 @@ preview (треки, байты, причины пропуска), экспор�
 файлов для процентов/скорости/ETA без блокировки GUI. Согласие не обходится:
 без `--confirm`-эквивалента (диалог подтверждения), прав и выбранного object
 path запись не стартует; `eject` возможен только когда worker свободен.
-Тесты: `tests/test_mixtape_bridge.py` (18 офлайн, без Qt) и
-`tests/test_ui_mixtape.py` (6 offscreen Qt), плюс прогресс writer'а (2).
+Тесты: `tests/test_mixtape_service.py` (10 — общий сервис),
+`tests/test_mixtape_bridge.py` (18 офлайн, без Qt) и `tests/test_ui_mixtape.py`
+(6 offscreen Qt), плюс прогресс writer'а (2). Без PySide6 или без системных
+библиотек Qt-файлы помечаются skipped (`tests/conftest.require_qt`), а не
+падают ошибкой сбора.
 Снимок и проценты проверены на fake-USB; живой UDisks2/ffmpeg и физическая
 запись — USB-08.
 

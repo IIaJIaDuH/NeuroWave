@@ -20,6 +20,7 @@ from neurowave.mixtape.export.writer import (
     ExportStatus,
     ItemReport,
     ItemStatus,
+    ProgressSink,
     ProgressUpdate,
     SafeWriter,
 )
@@ -35,6 +36,7 @@ __all__ = [
     "ItemStatus",
     "Manifest",
     "ManifestEntry",
+    "ProgressSink",
     "ProgressUpdate",
     "SafeWriter",
     "VerificationReport",

@@ -18,7 +18,9 @@ import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-pytest.importorskip("PySide6.QtWidgets", reason="нет PySide6")
+from tests.conftest import require_qt  # noqa: E402
+
+require_qt()
 
 from neurowave.mixtape.bridge import MixtapeBridge  # noqa: E402
 from neurowave.mixtape.devices import FakeUsbDeviceService  # noqa: E402

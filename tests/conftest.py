@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
@@ -10,6 +11,21 @@ from neurowave.config import Settings
 from neurowave.domain import Quality, SearchResults, StreamInfo, Track
 from neurowave.errors import TrackUnavailable
 from neurowave.player import PlayerService
+
+
+def require_qt() -> None:
+    """Пропустить модуль, если PySide6 или системные библиотеки недоступны.
+
+    Установленный пакет без libxkbcommon/libEGL и т.п. валит импорт на уровне
+    ``.so``: это ограничение окружения, а не ошибка сбора тестов, поэтому
+    вызывать нужно на уровне модуля — pytest отметит его skipped.
+    """
+
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    try:
+        import PySide6.QtWidgets  # noqa: F401
+    except Exception as exc:  # нет пакета или нет нужных системных библиотек
+        pytest.skip(f"Qt недоступен: {type(exc).__name__}: {exc}", allow_module_level=True)
 
 
 def make_track(number: int, **overrides) -> Track:

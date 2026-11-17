@@ -51,6 +51,7 @@ src/neurowave/mixtape/
     transcoder.py          # optional external ffmpeg, bounded workers
     manifest.py           # schema and JSON persistence
     verify.py             # sha256 of destination and task-level completeness
+  service.py              # единственный план/запись/verify для CLI и GUI
   bridge.py               # Qt-free bridge: preview, progress, cancel, eject
   jobs.py                 # job journal 0600 and cancel marker
   errors.py                # stable error codes
@@ -249,7 +250,7 @@ score = 3*user_liked + log1p(play_count) + 1*recentness
 
 - D-Bus UDisks2 как основной API Linux. libudev/pyudev допустим только как вспомогательный сигнал, не как основание для записи.
 - FFmpeg внешний подпроцесс с ограничением аргументов, timeout, kill на cancel, **без shell=True**, никаких URL в команды MVP.
-- CLI и Qt идут через один планировщик, сервис устройств и `SafeWriter`; `mixtape/bridge.py` выносит план/запись/проверку/eject в фоновый поток и отдаёт окну снимок состояния — никаких двух алгоритмов записи и блокировки GUI.
+- CLI и Qt идут через один `MixtapeService` (план, сверка `plan_id`, запись, verify); `mixtape/bridge.py` выносит эти вызовы в фоновый поток и отдаёт окну снимок состояния — никаких двух алгоритмов записи и блокировки GUI.
 - Отдельная очередь задач не нужна MVP; **одна активная запись**, остальные показывать busy.
 - Первоначальное хранение собственного журнала в JSON достаточно; SQLite migration для фичи **не нужна** без доказанной необходимости.
 

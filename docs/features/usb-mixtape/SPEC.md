@@ -118,7 +118,10 @@ neurowave mixtape eject --target <udisks-object-id> --confirm
 
 ## 5a. Qt-экран и мост (USB-07)
 
-Экран `ui/mixtape.py` — тонкий слой над Qt-независимым `mixtape/bridge.py`, так
+План и запись живут в одном `mixtape/service.py` (`plan/export/verify`,
+коды `library_missing`, `rights_not_confirmed`, `plan_changed`,
+`target_not_found`): CLI и GUI вызывают его, а не свои копии шагов. Экран
+`ui/mixtape.py` — тонкий слой над Qt-независимым `mixtape/bridge.py`, так
 что та же логика работает без PySide6 и проверяется обычными тестами. Мост
 отдаёт неизменяемый снимок (`status`, `devices`, `preview`, `progress`,
 `summary`, `verification`, `can_*`) и выполняет план/запись/проверку/извлечение

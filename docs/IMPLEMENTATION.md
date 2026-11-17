@@ -335,7 +335,12 @@ Car-профиль: `car_filename`/`car_destination` с нумерацией `00
 только после revalidate и отказывает, пока задача в статусе `running`, или
 если `--job` относится к другому object path (`target_mismatch`).
 
-**USB-07 — Qt-экран и bridge.** `mixtape/bridge.py` — Qt-независимый мост:
+**USB-07 — общий сервис, Qt-экран и bridge.** `mixtape/service.py` — единственный
+путь плана и записи для CLI и GUI: `plan()` (библиотека → `PlanBuild` с
+кандидатами, разрешёнными файлами и `MixtapePlan`), `export()` (сверка
+`plan_id`, revalidate тома, журнал, `SafeWriter`, отчёт) и `verify()`; отказы
+кодируются `MixtapeServiceError` (`library_missing`, `rights_not_confirmed`,
+`plan_changed`, `target_not_found`, `job_not_found`). `mixtape/bridge.py` — Qt-независимый мост:
 неизменяемый `BridgeState` (`status`, `devices`, `selected`, `preview`,
 `progress`, `summary`, `verification`, `can_*`) и команды
 `request_plan/start_export/request_cancel/request_verify/eject`. План, запись,
@@ -347,8 +352,8 @@ Car-профиль: `car_filename`/`car_destination` с нумерацией `00
 тома. `ui/mixtape.py` — тонкий экран Qt Widgets (том, папка, профиль, часы,
 формат, права, таблица треков, причины пропуска, прогресс, отмена/проверка/
 извлечение) плюс кнопка «USB Mixtape» в главном окне. Общие части вынесены из
-CLI: `export/verify.py` (правило «только complete») и `jobs.job_record`/
-`jobs.CancelSignal`.
+CLI: `export/verify.py` (правило «только complete»), `jobs.job_record`/
+`jobs.CancelSignal` и `service.MixtapeService` (план/запись/verify целиком).
 
 ## MPRIS и системный трей
 
@@ -425,7 +430,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 623 офлайн-теста ядра, интеграций, провайдеров,
+Проверено в этом окружении: 633 офлайн-теста ядра, интеграций, провайдеров,
 планировщика, источника, устройств, writer и экспорта,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
@@ -439,7 +444,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 623 теста: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства, mixtape CLI и bridge (с PySide6 — 639)
+python -m pytest        # 633 теста: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства, mixtape CLI, service и bridge (с PySide6 — 649)
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -450,7 +455,7 @@ SoundCloud — на фейковом транспорте: поиск, отбр�
 `401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
 тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока,
 обновление по `expires_at` и `401`, ротация refresh token и запись credentials.
-USB Mixtape проверяется 210 офлайн-тестами: планировщик (USB-01) — seed и
+USB Mixtape проверяется 216 офлайн-тестами: планировщик (USB-01) — seed и
 порядок кандидатов, бюджет времени и байт, dedup между провайдерами,
 shortage, права, профили и preview JSON; локальный источник (USB-02) —
 approved root, path containment, симлинки и политика `ExportRight`;
@@ -460,8 +465,8 @@ writer (USB-04) — T-006…T-015 и T-020…T-026 на временном fake-
 CLI (USB-06) — devices/plan/export/status/cancel/verify/eject на fake-USB,
 временной библиотеке и локальном журнале, включая отказ без подтверждения,
 требование статуса `complete` в `verify` и привязку `eject --job` к object path —
-без сети и реальных носителей; bridge (USB-07) — план, прогресс, отмена,
-`plan_changed`, verify и eject в фоновом потоке без Qt; экран (USB-07) —
+без сети и реальных носителей; service (USB-07) — общий план/запись/verify для CLI и GUI; bridge (USB-07) —
+план, прогресс, отмена, `plan_changed`, verify и eject в фоновом потоке без Qt; экран (USB-07) —
 offscreen-тесты Qt на fake-USB (том, треки, причины пропуска, прогресс,
 кнопки) без реальной записи.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика

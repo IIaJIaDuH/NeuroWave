@@ -15,26 +15,17 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from neurowave.config import Paths, atomic_write_json
-from neurowave.local import LocalMusicAdapter, default_root
+from neurowave.local import default_root
 from neurowave.mixtape.devices import (
     UDisks2DeviceService,
     UsbDeviceError,
 )
 from neurowave.mixtape.errors import MixtapeError
-from neurowave.mixtape.export import (
-    ExportError,
-    ExportReport,
-    ExportStatus,
-    SafeWriter,
-)
-from neurowave.mixtape.export.transcoder import FfmpegTranscoder
-from neurowave.mixtape.export.verify import verify_job
+from neurowave.mixtape.export import ExportError, ExportStatus
 from neurowave.mixtape.jobs import CancelSignal as _CancelSignal
-from neurowave.mixtape.jobs import JobStore, job_record
+from neurowave.mixtape.jobs import JobStore
 from neurowave.mixtape.models import PROFILES, MixtapeRequest
-from neurowave.mixtape.planner import MixtapePlanner
-from neurowave.mixtape.rights import LocalExportRights
-from neurowave.mixtape.sources.local import LocalExportSource
+from neurowave.mixtape.service import MixtapeService
 
 PLAN_SCHEMA_VERSION = 1
 MAX_PLAN_BYTES = 1_048_576
@@ -166,13 +157,13 @@ def _cmd_devices(args, *, device_service=None, transcoder=None, job_store=None) 
 
 def _cmd_plan(args, *, device_service=None, transcoder=None, job_store=None) -> int:
     library = Path(args.library).expanduser() if args.library else default_root()
-    if not library.is_dir():
-        return _fail(args, "library_missing", f"Папка музыки не найдена: {library}")
-    tracks = LocalMusicAdapter(library).tracks()
     confirmed = bool(getattr(args, "confirm_local_rights", False))
-    source = LocalExportSource(library, rights=LocalExportRights(confirmed=confirmed))
     request = _request(args)
-    plan = MixtapePlanner([source]).plan(request, tracks)
+    build = _service(device_service, transcoder, job_store).plan(
+        library, request, rights_confirmed=confirmed
+    )
+    tracks = build.tracks
+    plan = build.plan
     payload: dict[str, Any] = {
         "ok": True,
         "library": str(library.resolve()),
@@ -219,75 +210,17 @@ def _cmd_export(args, *, device_service=None, transcoder=None, job_store=None) -
             "План создан без --confirm-local-rights: перепланируйте и подтвердите права",
         )
     library = Path(str(saved["library"]))
-    if not library.is_dir():
-        return _fail(args, "library_missing", f"Папка музыки не найдена: {library}")
     request = _request_from_saved(saved)
-    tracks = LocalMusicAdapter(library).tracks()
-    source = LocalExportSource(library, rights=LocalExportRights(confirmed=True))
-    plan = MixtapePlanner([source]).plan(request, tracks)
-    if plan.plan_id != saved.get("plan_id"):
-        return _fail(
-            args,
-            "plan_changed",
-            "Библиотека изменилась после плана: постройте новый план и подтвердите его",
-        )
-
-    service = device_service or UDisks2DeviceService()
-    devices = service.list_removable_writable_filesystems()
-    identity = next(
-        (device for device in devices if device.udisks_object_path == args.target), None
+    service = _service(device_service, transcoder, job_store)
+    build = service.plan(library, request, rights_confirmed=True)
+    outcome = service.export(
+        build,
+        object_path=args.target,
+        expected_plan_id=str(saved.get("plan_id") or ""),
     )
-    if identity is None:
-        return _fail(
-            args, "target_not_found", "Выбранный USB-том не найден среди writable-томов"
-        )
-    identity = service.revalidate(identity)
-
-    store = _store(job_store)
-    job_id = plan.plan_id
-    store.clear_cancel(job_id)
-    store.save(
-        job_id,
-        {
-            "status": "running",
-            "plan_id": plan.plan_id,
-            "target": str(identity.mountpoint),
-            "object_path": identity.udisks_object_path,
-            "library": str(library),
-        },
-    )
-    writer = SafeWriter(
-        identity.mountpoint,
-        device_service=service,
-        expected_device=identity,
-        transcoder=transcoder if transcoder is not None else FfmpegTranscoder(),
-    )
-    try:
-        report = writer.write(
-            plan,
-            source.list_eligible(tracks),
-            cancel=_CancelSignal(store, job_id),
-        )
-    except (ExportError, OSError, UsbDeviceError) as error:
-        store.save(
-            job_id,
-            {
-                "status": "failed",
-                "plan_id": plan.plan_id,
-                "target": str(identity.mountpoint),
-                "object_path": identity.udisks_object_path,
-                "library": str(library),
-                "error": str(error),
-            },
-        )
-        raise
-    job = job_record(
-        report,
-        target=str(identity.mountpoint),
-        object_path=identity.udisks_object_path,
-        library=str(library),
-    )
-    store.save(job_id, job)
+    report = outcome.report
+    job_id = outcome.job_id
+    job = dict(outcome.record)
     payload = {
         "ok": report.status in {ExportStatus.COMPLETE, ExportStatus.PARTIAL},
         "job": job_id,
@@ -338,10 +271,7 @@ def _cmd_cancel(args, *, device_service=None, transcoder=None, job_store=None) -
 
 
 def _cmd_verify(args, *, device_service=None, transcoder=None, job_store=None) -> int:
-    job = _store(job_store).load(args.job)
-    if job is None:
-        return _fail(args, "job_not_found", f"Задача не найдена: {args.job}")
-    report = verify_job(args.job, job)
+    report = _service(device_service, transcoder, job_store).verify(args.job)
     payload = report.to_dict()
     lines = [
         f"Статус задачи: {report.status or '—'}",
@@ -379,15 +309,7 @@ def _cmd_eject(args, *, device_service=None, transcoder=None, job_store=None) ->
                     "job_running",
                     f"Задача {job_id} ещё пишет: извлечение запрещено",
                 )
-    service = device_service or UDisks2DeviceService()
-    devices = service.list_removable_writable_filesystems()
-    identity = next(
-        (device for device in devices if device.udisks_object_path == args.target), None
-    )
-    if identity is None:
-        return _fail(args, "target_not_found", "Выбранный USB-том не найден")
-    identity = service.revalidate(identity)
-    service.safely_eject(identity)
+    identity = _service(device_service, transcoder, job_store).eject_target(args.target)
     return _emit(
         args,
         {"ok": True, "object_path": identity.udisks_object_path, "ejected": True},
@@ -458,6 +380,18 @@ def _load_plan(path: Path) -> dict[str, Any]:
     if not isinstance(data.get("plan_id"), str) or not data["plan_id"]:
         raise ValueError("В плане нет plan_id")
     return data
+
+
+def _service(
+    device_service: Any | None = None,
+    transcoder: Any | None = None,
+    job_store: JobStore | None = None,
+) -> MixtapeService:
+    """Сервис плана/записи — тот же, что использует Qt-мост."""
+
+    return MixtapeService(
+        device_service=device_service, transcoder=transcoder, job_store=job_store
+    )
 
 
 def _store(job_store: JobStore | None) -> JobStore:

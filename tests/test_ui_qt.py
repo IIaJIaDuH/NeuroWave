@@ -14,7 +14,9 @@ import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-PySide6 = pytest.importorskip("PySide6.QtWidgets", reason="нет PySide6")
+from tests.conftest import require_qt  # noqa: E402
+
+require_qt()
 
 from neurowave.audio import NullBackend  # noqa: E402
 from neurowave.config import Settings  # noqa: E402

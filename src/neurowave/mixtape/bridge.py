@@ -22,24 +22,18 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable
 
-from neurowave.config import Paths
-from neurowave.local import LocalMusicAdapter, default_root
-from neurowave.mixtape.devices import UDisks2DeviceService, UsbDeviceError
+from neurowave.local import default_root
+from neurowave.mixtape.devices import UsbDeviceError
 from neurowave.mixtape.errors import MixtapeError
 from neurowave.mixtape.export import (
     ExportError,
     ExportStatus,
     ProgressUpdate,
-    SafeWriter,
     VerificationReport,
-    verify_job,
 )
-from neurowave.mixtape.export.transcoder import FfmpegTranscoder
-from neurowave.mixtape.jobs import CancelSignal, JobStore, job_record
+from neurowave.mixtape.jobs import JobStore
 from neurowave.mixtape.models import MixtapePlan, MixtapeRequest
-from neurowave.mixtape.planner import MixtapePlanner
-from neurowave.mixtape.rights import LocalExportRights
-from neurowave.mixtape.sources.local import LocalExportSource
+from neurowave.mixtape.service import MixtapeService, MixtapeServiceError
 
 MAX_SKIPPED_IN_PREVIEW = 200
 
@@ -340,11 +334,13 @@ class MixtapeBridge:
         track_source: Callable[[Path], Any] | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
-        self._device_service = device_service
-        self._transcoder = transcoder
-        self._job_store = job_store
+        self._mixtape = MixtapeService(
+            device_service=device_service,
+            transcoder=transcoder,
+            job_store=job_store,
+            track_source=track_source,
+        )
         self._library = Path(library).expanduser() if library else default_root()
-        self._track_source = track_source or (lambda root: LocalMusicAdapter(root))
         self._clock = clock
         self._lock = threading.RLock()
         self._worker: threading.Thread | None = None
@@ -409,16 +405,15 @@ class MixtapeBridge:
         with self._lock:
             self._closed = True
             job_id = self._job_id if self._status is BridgeStatus.EXPORTING else ""
-            store = self._store()
         if job_id:
-            store.request_cancel(job_id)
+            self._mixtape.job_store.request_cancel(job_id)
         self.wait(5.0)
 
     # --- устройства -----------------------------------------------------
     def refresh_devices(self) -> tuple[DeviceView, ...]:
         """Список writable-томов; ошибка сервиса остаётся в снимке."""
 
-        service = self._service()
+        service = self._mixtape.device_service
         with self._lock:
             if self._busy():
                 return self._devices
@@ -513,14 +508,13 @@ class MixtapeBridge:
 
     def _run_plan(self, root: Path, request: MixtapeRequest, rights: bool) -> None:
         try:
-            tracks = self._track_source(root).tracks()
-            source = LocalExportSource(root, rights=LocalExportRights(confirmed=rights))
-            plan = MixtapePlanner([source]).plan(request, tracks)
+            build = self._mixtape.plan(root, request, rights_confirmed=rights)
         except (MixtapeError, OSError, ValueError) as error:
             with self._lock:
                 self._status = BridgeStatus.FAILED
-                self._fail(error, "library_invalid" if not root.is_dir() else "plan_failed")
+                self._fail(error, getattr(error, "code", "plan_failed") or "plan_failed")
             return
+        plan = build.plan
         with self._lock:
             self._preview = _preview(plan, rights)
             self._status = BridgeStatus.PLANNED
@@ -586,107 +580,44 @@ class MixtapeBridge:
         expected_plan_id: str,
         object_path: str,
     ) -> None:
-        if not root.is_dir():
-            self._abort_export(
-                MixtapeError(f"Папка музыки не найдена: {root}"), "library_missing"
-            )
-            return
         try:
-            tracks = self._track_source(root).tracks()
-            source = LocalExportSource(root, rights=LocalExportRights(confirmed=True))
-            plan = MixtapePlanner([source]).plan(request, tracks)
-        except (MixtapeError, OSError, ValueError) as error:
-            self._abort_export(error, "plan_failed")
-            return
-        if plan.plan_id != expected_plan_id:
-            self._abort_export(
-                MixtapeError("Библиотека изменилась после плана: постройте новый план"),
-                "plan_changed",
-            )
-            return
-        service = self._service()
-        try:
-            devices = service.list_removable_writable_filesystems()
-            identity = next(
-                (item for item in devices if item.udisks_object_path == object_path), None
-            )
-            if identity is None:
-                raise MixtapeError("Выбранный USB-том не найден")
-            identity = service.revalidate(identity)
-        except (UsbDeviceError, MixtapeError, OSError) as error:
-            self._abort_export(error, getattr(getattr(error, "code", None), "value", "target_not_found"))
-            return
-
-        store = self._store()
-        job_id = plan.plan_id
-        with self._lock:
-            self._job_id = job_id
-        store.clear_cancel(job_id)
-        store.save(
-            job_id,
-            {
-                "status": "running",
-                "plan_id": plan.plan_id,
-                "target": str(identity.mountpoint),
-                "object_path": identity.udisks_object_path,
-                "library": str(root),
-            },
-        )
-        writer = SafeWriter(
-            identity.mountpoint,
-            device_service=service,
-            expected_device=identity,
-            transcoder=self._transcoder if self._transcoder is not None else FfmpegTranscoder(),
-        )
-        try:
-            report = writer.write(
-                plan,
-                source.list_eligible(tracks),
-                cancel=CancelSignal(store, job_id),
+            build = self._mixtape.plan(root, request, rights_confirmed=True)
+            outcome = self._mixtape.export(
+                build,
+                object_path=object_path,
+                expected_plan_id=expected_plan_id,
                 progress=self._on_progress,
+                on_job_started=self._set_job_id,
             )
-        except (ExportError, UsbDeviceError, OSError) as error:
-            store.save(
-                job_id,
-                {
-                    "status": "failed",
-                    "plan_id": plan.plan_id,
-                    "target": str(identity.mountpoint),
-                    "object_path": identity.udisks_object_path,
-                    "library": str(root),
-                    "error": str(error),
-                },
-            )
-            self._abort_export(error, getattr(getattr(error, "code", None), "value", "export_failed"))
+        except (MixtapeError, ExportError, UsbDeviceError, OSError, ValueError) as error:
+            code = getattr(error, "code", None)
+            code = getattr(code, "value", code) or "export_failed"
+            self._abort_export(error, str(code))
             return
 
-        record = job_record(
-            report,
-            target=str(identity.mountpoint),
-            object_path=identity.udisks_object_path,
-            library=str(root),
-        )
-        store.save(job_id, record)
+        report = outcome.report
+        record = dict(outcome.record)
+        plan_items = len(build.plan.items)
         summary = ExportSummary(
-            job_id=job_id,
+            job_id=outcome.job_id,
             status=report.status.value,
             verified=report.verified_count,
             failed=report.failed_count,
             skipped=report.skipped_count,
-            target=str(identity.mountpoint),
+            target=str(outcome.identity.mountpoint),
             playlist=report.playlist_path,
             playlist_error=report.playlist_error,
         )
         with self._lock:
             self._summary = summary
             done = sum(int(item.get("size_bytes") or 0) for item in record["items"])
-            total = max(done, int(plan.estimated_bytes), 1)
+            total = max(done, int(build.plan.estimated_bytes), 1)
             self._progress = ExportProgress(
                 percent=round(min(1.0, done / total) * 100.0, 1),
                 bytes_done=done,
                 bytes_total=total,
                 items_done=report.verified_count,
-                items_total=len(plan.items),
+                items_total=plan_items,
                 current="",
                 speed_bps=self._speed(),
                 eta_s=0.0,
@@ -697,10 +628,16 @@ class MixtapeBridge:
                 else BridgeStatus.DONE
             )
             self._message = (
-                f"Записано файлов: {report.verified_count} из {len(plan.items)}"
+                f"Записано файлов: {report.verified_count} из {plan_items}"
                 + (" · отменено" if summary.status == ExportStatus.CANCELLED.value else "")
             )
             self._clear_error()
+
+    def _set_job_id(self, job_id: str) -> None:
+        """Сервис сообщает id задачи до начала записи — для кнопки «Отмена»."""
+
+        with self._lock:
+            self._job_id = job_id
 
     def request_cancel(self) -> bool:
         with self._lock:
@@ -708,7 +645,7 @@ class MixtapeBridge:
                 return False
             job_id = self._job_id
             self._message = "Отмена запрошена: writer остановится между чанками"
-        self._store().request_cancel(job_id)
+        self._mixtape.job_store.request_cancel(job_id)
         return True
 
     def _on_progress(self, update: ProgressUpdate) -> None:
@@ -759,21 +696,18 @@ class MixtapeBridge:
             return True
 
     def _run_verify(self, job_id: str) -> None:
-        store = self._store()
         try:
-            job = store.load(job_id)
+            report = self._mixtape.verify(job_id)
+        except MixtapeServiceError as error:
+            with self._lock:
+                self._status = BridgeStatus.FAILED
+                self._fail(error, error.code)
+            return
         except ValueError as error:
             with self._lock:
                 self._status = BridgeStatus.FAILED
                 self._fail(error, "job_corrupt")
             return
-        if job is None:
-            with self._lock:
-                self._status = BridgeStatus.FAILED
-                self._error_code = "job_not_found"
-                self._error = f"Задача не найдена: {job_id}"
-            return
-        report = verify_job(job_id, job)
         with self._lock:
             self._verification = report
             self._status = BridgeStatus.VERIFIED if report.ok else BridgeStatus.FAILED
@@ -807,14 +741,14 @@ class MixtapeBridge:
                 self._error_code = "target_not_found"
                 self._error = "USB-том не выбран"
                 return False
-            store = self._store()
             self._status = BridgeStatus.EJECTING
             self._message = "Отключаем том…"
             self._clear_error()
-            self._start(self._run_eject, target, store)
+            self._start(self._run_eject, target)
             return True
 
-    def _run_eject(self, target: str, store: JobStore) -> None:
+    def _run_eject(self, target: str) -> None:
+        store = self._mixtape.job_store
         for job_id in store.list_ids():
             try:
                 job = store.load(job_id)
@@ -826,20 +760,14 @@ class MixtapeBridge:
                     self._error_code = "job_running"
                     self._error = f"Задача {job_id} ещё пишет: извлечение запрещено"
                 return
-        service = self._service()
+        service = self._mixtape.device_service
         try:
-            devices = service.list_removable_writable_filesystems()
-            identity = next(
-                (item for item in devices if item.udisks_object_path == target), None
-            )
-            if identity is None:
-                raise MixtapeError("Выбранный USB-том не найден")
-            identity = service.revalidate(identity)
-            service.safely_eject(identity)
+            self._mixtape.eject_target(target)
         except (UsbDeviceError, MixtapeError, OSError) as error:
+            code = getattr(error, "code", None)
             with self._lock:
                 self._status = BridgeStatus.FAILED
-                self._fail(error, getattr(getattr(error, "code", None), "value", "eject_failed"))
+                self._fail(error, str(getattr(code, "value", code) or "eject_failed"))
             return
         with self._lock:
             self._selected = ""
@@ -853,19 +781,6 @@ class MixtapeBridge:
         )
 
     # --- инфраструктура --------------------------------------------------
-    def _service(self) -> Any:
-        with self._lock:
-            if self._device_service is None:
-                self._device_service = UDisks2DeviceService()
-            return self._device_service
-
-    def _store(self) -> JobStore:
-        with self._lock:
-            if self._job_store is None:
-                root = Paths.resolve().ensure().data_dir / "mixtape" / "jobs"
-                self._job_store = JobStore(root)
-            return self._job_store
-
     def _start(self, target: Callable[..., None], *args: Any) -> None:
         worker = threading.Thread(
             target=self._guard, args=(target, *args), name="neurowave-mixtape", daemon=True
