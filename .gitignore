@@ -21,6 +21,8 @@ __pycache__/
 .env.*
 !.env.example
 *token*
+# ...но не тесты хранилища токенов: правило выше глотало сам файл теста
+!tests/test_token_store.py
 *.key
 *.pem
 cookies*
