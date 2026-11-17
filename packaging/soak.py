@@ -54,7 +54,7 @@ def read_status(pid: int) -> dict[str, float] | None:
     values: dict[str, float] = {}
     for line in text.splitlines():
         key, _, value = line.partition(":")
-        if key in {"VmRSS", "VmLib", "Threads", "FDSize"}:
+        if key in {"VmRSS", "VmLib", "VmSwap", "Threads", "FDSize"}:
             values[key] = float(value.split()[0])
     try:
         smaps = Path(f"/proc/{pid}/smaps_rollup").read_text()
@@ -139,17 +139,24 @@ def main() -> int:
             own = read_status(python_pid) or {}
             row["pss_py"] = own.get("Pss", 0.0)
             row["rss_py"] = own.get("VmRSS", 0.0)
+            row["swap_py"] = own.get("VmSwap", 0.0)
             row["fds_py"] = float(open_files(python_pid))
             row["threads_py"] = own.get("Threads", 0.0)
             if mpv_pid:
                 child = read_status(mpv_pid) or {}
                 row["pss_mpv"] = child.get("Pss", 0.0)
                 row["rss_mpv"] = child.get("VmRSS", 0.0)
+                row["swap_mpv"] = child.get("VmSwap", 0.0)
             ticks = cpu_ticks(python_pid)
             row["cpu_py_ticks"] = float(ticks or 0)
             samples.append(row)
 
-        print("t,сек,pss_py,МБ,pss_mpv,МБ,rss_py,МБ,fd,потоки,позиция,сек,треков")
+        # PSS не видит выгруженные страницы: при свопе PSS падает, хотя память
+        # не освобождается. Поэтому пишем swap и суммарный след рядом.
+        print(
+            "t,сек,pss_py,МБ,pss_mpv,МБ,rss_py,МБ,swap_py,МБ,swap_mpv,МБ,"
+            "total_py,МБ,total_mpv,МБ,fd,потоки,позиция,сек,треков"
+        )
         try:
             player.play_tracks(adapter.tracks, start=0)
             player.queue.set_repeat("all")
@@ -163,9 +170,14 @@ def main() -> int:
                 if elapsed - last_print >= args.interval:
                     last_print = elapsed
                     position = player.backend.position_ms() / 1000
+                    total_py = row["rss_py"] + row.get("swap_py", 0.0)
+                    total_mpv = row.get("rss_mpv", 0.0) + row.get("swap_mpv", 0.0)
                     print(
                         f"{elapsed:.0f},{elapsed:.0f},{row['pss_py'] / 1024:.1f},"
                         f"{(row.get('pss_mpv', 0.0)) / 1024:.1f},{row['rss_py'] / 1024:.1f},"
+                        f"{row.get('swap_py', 0.0) / 1024:.1f},"
+                        f"{row.get('swap_mpv', 0.0) / 1024:.1f},"
+                        f"{total_py / 1024:.1f},{total_mpv / 1024:.1f},"
                         f"{row['fds_py']:.0f},{row['threads_py']:.0f},{position:.1f},"
                         f"{len(transitions)}",
                         flush=True,
@@ -184,6 +196,14 @@ def main() -> int:
         print(f"Длительность: {elapsed / 60:.1f} мин")
         print(f"Python PSS: {first_pss:.1f} → {last_pss:.1f} МБ (дрейф {drift:+.1f})")
         print(f"mpv PSS на конце: {samples[-1].get('pss_mpv', 0.0) / 1024:.1f} МБ")
+        first_total = (samples[0]["rss_py"] + samples[0].get("swap_py", 0.0)) / 1024
+        last_total = (samples[-1]["rss_py"] + samples[-1].get("swap_py", 0.0)) / 1024
+        print(f"Python RSS+swap: {first_total:.1f} → {last_total:.1f} МБ "
+              f"(дрейф {last_total - first_total:+.1f})")
+        swapped = samples[-1].get("swap_py", 0.0) + samples[-1].get("swap_mpv", 0.0)
+        if swapped > 0:
+            print(f"ВНИМАНИЕ: в свопе {swapped / 1024:.1f} МБ — PSS занижен, "
+                  "сравнивайте RSS+swap")
         print(f"CPU Python: {used:.1f} с за {elapsed:.0f} с ({100 * used / elapsed:.2f} % ядра)")
         print(f"Дескрипторы: {samples[0]['fds_py']:.0f} → {samples[-1]['fds_py']:.0f}")
         print(f"Потоки: {samples[0]['threads_py']:.0f} → {samples[-1]['threads_py']:.0f}")
