@@ -62,9 +62,12 @@ writer умеет TRANSCODE с проверкой формата/длитель�
 локальный журнал 0600 и cancel-marker, проверяемый writer'ом между чанками.
 `export` без `--confirm` и план без `--confirm-local-rights` не пишут ничего;
 `eject` требует отдельного `--confirm`, вызывает `safely_eject` (Filesystem.Unmount)
-только после revalidate и не трогает незавершённую задачу. CLI работает без
-провайдера, сети и GUI. `tests/test_mixtape_cli.py` (22 офлайн-теста на
-fake-USB и временной библиотеке). Реальная запись и живой UDisks2 — USB-08.
+только после revalidate и не трогает незавершённую задачу (а `eject --job`
+сверяет object path задачи с `--target`). CLI работает без провайдера, сети и
+GUI. `verify` возвращает `ok=true` только для статуса `complete`: `partial` и
+файлы `failed`/`skipped` — расхождение. `tests/test_mixtape_cli.py`
+(27 офлайн-тестов на fake-USB и временной библиотеке). Реальная запись и
+живой UDisks2 — USB-08.
 
 ## 2. Отдельные acceptance gates
 

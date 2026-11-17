@@ -364,6 +364,57 @@ def test_verify_detects_corruption(library, tmp_path, usb, service, store, capsy
     assert data["mismatches"]
 
 
+def test_verify_requires_complete_status(library, tmp_path, usb, service, store, capsys):
+    plan_file = tmp_path / "plan.json"
+    saved = saved_plan(library, plan_file)
+    call(export_args(plan_file), capsys, service=service, store=store)
+    job = store.load(saved["plan_id"])
+    assert job is not None
+    job["status"] = "partial"
+    job["items"][0]["status"] = "failed"
+    job["items"][0]["error"] = "no_space"
+    store.save(saved["plan_id"], job)
+
+    code, data, _ = call(
+        parse("mixtape", "verify", "--job", saved["plan_id"], "--json"),
+        capsys,
+        service=service,
+        store=store,
+    )
+
+    assert code == 1
+    assert data["ok"] is False
+    assert data["status"] == "partial"
+    assert data["complete"] is False
+    assert data["checked"] == 1
+    assert data["total"] == 2
+    assert data["mismatches"] == [
+        {"destination": job["items"][0]["destination"], "error": "not_verified:failed"}
+    ]
+
+
+def test_verify_counts_skipped_as_mismatch(library, tmp_path, usb, service, store, capsys):
+    plan_file = tmp_path / "plan.json"
+    saved = saved_plan(library, plan_file)
+    call(export_args(plan_file), capsys, service=service, store=store)
+    job = store.load(saved["plan_id"])
+    assert job is not None
+    job["status"] = "complete"
+    job["items"][1]["status"] = "skipped"
+    store.save(saved["plan_id"], job)
+
+    code, data, _ = call(
+        parse("mixtape", "verify", "--job", saved["plan_id"], "--json"),
+        capsys,
+        service=service,
+        store=store,
+    )
+
+    assert code == 1
+    assert data["ok"] is False
+    assert [item["error"] for item in data["mismatches"]] == ["not_verified:skipped"]
+
+
 # --- eject --------------------------------------------------------------
 
 
@@ -431,7 +482,7 @@ def test_eject_refuses_any_running_job_for_target(service, store, capsys):
 
 
 def test_eject_refuses_running_job(service, store, capsys):
-    store.save("mixtape-run", {"status": "running"})
+    store.save("mixtape-run", {"status": "running", "object_path": OBJECT})
 
     code, data, _ = call(
         parse(
@@ -445,3 +496,81 @@ def test_eject_refuses_running_job(service, store, capsys):
     assert code == 2
     assert data["error"] == "job_running"
     assert service.ejected == []
+
+
+def test_eject_job_bound_to_object_path(service, store, capsys):
+    store.save(
+        "mixtape-other-target",
+        {
+            "status": "complete",
+            "object_path": "/org/freedesktop/UDisks2/block_devices/sdc1",
+        },
+    )
+
+    code, data, _ = call(
+        parse(
+            "mixtape",
+            "eject",
+            "--target",
+            OBJECT,
+            "--job",
+            "mixtape-other-target",
+            "--confirm",
+            "--json",
+        ),
+        capsys,
+        service=service,
+        store=store,
+    )
+
+    assert code == 2
+    assert data["error"] == "target_mismatch"
+    assert service.ejected == []
+
+
+def test_eject_job_without_object_path_is_refused(service, store, capsys):
+    store.save("mixtape-legacy", {"status": "complete"})
+
+    code, data, _ = call(
+        parse(
+            "mixtape",
+            "eject",
+            "--target",
+            OBJECT,
+            "--job",
+            "mixtape-legacy",
+            "--confirm",
+            "--json",
+        ),
+        capsys,
+        service=service,
+        store=store,
+    )
+
+    assert code == 2
+    assert data["error"] == "target_mismatch"
+    assert service.ejected == []
+
+
+def test_eject_with_matching_job(service, store, capsys):
+    store.save("mixtape-done", {"status": "complete", "object_path": OBJECT})
+
+    code, data, _ = call(
+        parse(
+            "mixtape",
+            "eject",
+            "--target",
+            OBJECT,
+            "--job",
+            "mixtape-done",
+            "--confirm",
+            "--json",
+        ),
+        capsys,
+        service=service,
+        store=store,
+    )
+
+    assert code == 0
+    assert data["ejected"] is True
+    assert service.ejected == [OBJECT]

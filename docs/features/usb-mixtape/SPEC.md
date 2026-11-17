@@ -108,7 +108,13 @@ neurowave mixtape eject --target <udisks-object-id> --confirm
 файле 0600 и содержит `plan_id`; export пересобирает план и отказывается при
 расхождении. **Нет** флага, обходящего подтверждение/проверку устройства:
 `export` требует `--confirm` и план с `--confirm-local-rights`, `eject` —
-отдельный `--confirm` и завершённую задачу.
+отдельный `--confirm` и завершённую задачу; `eject --job` дополнительно
+проверяет, что задача относится к тому же object path, что и `--target`.
+
+`verify` возвращает `ok=true` только для задачи в статусе `complete`, все
+пункты которой `verified` и совпали по sha256/size: `partial`/`failed`/
+`cancelled`, а также `failed`/`skipped`-файлы внутри задачи считаются
+расхождением (`not_verified:<status>`) с кодом выхода 1.
 
 ## 6. Критерии приёмки MVP
 

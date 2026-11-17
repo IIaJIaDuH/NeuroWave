@@ -329,8 +329,11 @@ Car-профиль: `car_filename`/`car_destination` с нумерацией `00
 план, сверяет `plan_id`, перепроверяет выбранный UDisks2 object path и пишет
 через `SafeWriter`. Журнал задач и cancel-marker лежат в XDG data (0600),
 `cancel` проверяется writer'ом между чанками. `verify` сверяет sha256 и размер
-записанных файлов. `eject` требует `--confirm`, вызывает `Filesystem.Unmount`
-только после revalidate и отказывает, пока задача в статусе `running`.
+записанных файлов и возвращает `ok=true` только для задачи в статусе `complete`:
+`partial`/`failed`/`cancelled` и файлы в статусе `failed`/`skipped` считаются
+расхождением. `eject` требует `--confirm`, вызывает `Filesystem.Unmount`
+только после revalidate и отказывает, пока задача в статусе `running`, или
+если `--job` относится к другому object path (`target_mismatch`).
 
 ## MPRIS и системный трей
 
@@ -407,7 +410,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 598 unit-тестов ядра, интеграций, провайдеров,
+Проверено в этом окружении: 603 unit-теста ядра, интеграций, провайдеров,
 планировщика, источника, устройств, writer и экспорта,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
@@ -421,7 +424,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 598 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства и mixtape CLI
+python -m pytest        # 603 теста: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства и mixtape CLI
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -432,7 +435,7 @@ SoundCloud — на фейковом транспорте: поиск, отбр�
 `401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
 тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока,
 обновление по `expires_at` и `401`, ротация refresh token и запись credentials.
-USB Mixtape проверяется 181 офлайн-тестами: планировщик (USB-01) — seed и
+USB Mixtape проверяется 186 офлайн-тестами: планировщик (USB-01) — seed и
 порядок кандидатов, бюджет времени и байт, dedup между провайдерами,
 shortage, права, профили и preview JSON; локальный источник (USB-02) —
 approved root, path containment, симлинки и политика `ExportRight`;
@@ -440,7 +443,8 @@ approved root, path containment, симлинки и политика `ExportRig
 writer (USB-04) — T-006…T-015 и T-020…T-026 на временном fake-USB;
 транскод, M3U8 и Car (USB-05) — на синтетическом WAV и внедряемом runner;
 CLI (USB-06) — devices/plan/export/status/cancel/verify/eject на fake-USB,
-временной библиотеке и локальном журнале, включая отказ без подтверждения —
+временной библиотеке и локальном журнале, включая отказ без подтверждения,
+требование статуса `complete` в `verify` и привязку `eject --job` к object path —
 без сети и реальных носителей.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика
 тестируется на заглушке, а `tests/test_integrations_optional.py` отдельными

@@ -336,11 +336,23 @@ def _cmd_verify(args, *, device_service=None, transcoder=None, job_store=None) -
     job = _store(job_store).load(args.job)
     if job is None:
         return _fail(args, "job_not_found", f"Задача не найдена: {args.job}")
+    status = str(job.get("status") or "")
     target = Path(str(job.get("target") or ""))
-    items = [item for item in job.get("items", []) if item.get("status") == "verified"]
+    items = list(job.get("items") or [])
     mismatches: list[dict[str, str]] = []
+    checked = 0
     for item in items:
         destination = str(item.get("destination") or "")
+        item_status = str(item.get("status") or "")
+        if item_status != "verified":
+            mismatches.append(
+                {
+                    "destination": destination,
+                    "error": f"not_verified:{item_status or 'unknown'}",
+                }
+            )
+            continue
+        checked += 1
         relative = Path(destination)
         if not destination or relative.is_absolute() or ".." in relative.parts:
             mismatches.append({"destination": destination, "error": "unsafe_path"})
@@ -356,14 +368,23 @@ def _cmd_verify(args, *, device_service=None, transcoder=None, job_store=None) -
                 mismatches.append({"destination": destination, "error": "hash_mismatch"})
         except OSError as error:
             mismatches.append({"destination": destination, "error": str(error)})
-    ok = bool(items) and not mismatches
+    complete = status == "complete"
+    ok = complete and bool(items) and not mismatches
     payload = {
         "ok": ok,
         "job": args.job,
-        "checked": len(items),
+        "status": status,
+        "complete": complete,
+        "checked": checked,
+        "total": len(items),
         "mismatches": mismatches,
     }
-    lines = [f"Проверено файлов: {len(items)}"]
+    lines = [
+        f"Статус задачи: {status or '—'}",
+        f"Проверено файлов: {checked} из {len(items)}",
+    ]
+    if not complete:
+        lines.append("Задача не завершена: проверка требует статус complete")
     lines += [f"  {item['destination']}: {item['error']}" for item in mismatches]
     lines.append("Итог: OK" if ok else "Итог: есть расхождения")
     return _emit(args, payload, lines, code=0 if ok else 1)
@@ -377,6 +398,12 @@ def _cmd_eject(args, *, device_service=None, transcoder=None, job_store=None) ->
         job = store.load(args.job)
         if job is None:
             return _fail(args, "job_not_found", f"Задача не найдена: {args.job}")
+        if job.get("object_path") != args.target:
+            return _fail(
+                args,
+                "target_mismatch",
+                f"Задача {args.job} относится к другому тому: извлечение запрещено",
+            )
         if job.get("status") == "running":
             return _fail(args, "job_running", "Задача ещё пишет: извлечение запрещено")
     else:
