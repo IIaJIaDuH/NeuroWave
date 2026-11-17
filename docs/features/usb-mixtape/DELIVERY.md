@@ -1,6 +1,6 @@
 # USB Mixtape — реализация по PR, зависимости, чек-листы
 
-**Статус:** USB-00 — спецификация; USB-01…USB-03 (планировщик, LocalExportSource, устройства) реализованы · 2026-11-17.  
+**Статус:** USB-00 — спецификация; USB-01…USB-04 (планировщик, LocalExportSource, устройства, safe writer) реализованы · 2026-11-17.  
 **Ветка спецификации:** feature/usb-mixtape-spec  
 **База:** main по состоянию на SHA 1baf6de3b8d30f453c1a4feb2af30a9b2e6c13aa.  
 **Приоритет относительно NeuroWave 0.2:** дополнительная фича. Не блокирует ADR-0005, Sound Lab и Qt Desktop.
@@ -41,8 +41,14 @@ matcher, протокол `ExportSource` и `MixtapePlanner`; `tests/test_mixtap
 
 **Сделано в USB-03:** `devices/base.py` (протокол, `DeviceIdentity`,
 `UsbDeviceError`), `devices/fake.py` и `devices/udisks2.py` (чистый маппер +
-ленивый D-Bus, без `/dev`); `tests/test_mixtape_devices.py` (31 тест,
-T-001…T-005). Writer, eject и CLI — план.
+ленивый D-Bus, без `/dev`); `tests/test_mixtape_devices.py` (35 тестов,
+T-001…T-005). Eject и CLI — план.
+
+**Сделано в USB-04:** `export/` — `SafeWriter`, `manifest.py`, `filenames.py`,
+ошибки; `tests/test_mixtape_writer.py` (26 тестов, T-006…T-015 и
+T-020…T-026): streaming copy с sha256, no-clobber commit, manifest и resume,
+cancel, ENOSPC/EROFS, выдёргивание fake-устройства, отказ чужому/битому
+manifest. EIO и rename-race остаются на USB-05/08, реальная запись — USB-08.
 
 ## 2. Отдельные acceptance gates
 
@@ -80,10 +86,13 @@ T-001…T-005). Writer, eject и CLI — план.
 ### G4. Writer (после USB-04)
 
 - [ ] Тесты на symlink swap, traversal, ENOSPC, EIO, EROFS, unplug, rename races.
-- [ ] Нет записи вне одобренного target root; нет silent overwrite.
-- [ ] Finished означает проверенную контрольную сумму; Partial означает неполный список.
-- [ ] Repeat job не создаёт дубли, не переписывает чужой каталог.
+- [x] Нет записи вне одобренного target root; нет silent overwrite.
+- [x] Finished означает проверенную контрольную сумму; Partial означает неполный список.
+- [x] Repeat job не создаёт дубли, не переписывает чужой каталог.
 - [ ] Pause/Cancel/Resume не забирает управление у аудиодвижка.
+
+USB-04 закрывает symlink/traversal, ENOSPC, EROFS, unplug, cancel/resume и
+проверку sha256; EIO, rename races и интеграция с playback — USB-05/08.
 
 ### G5. Transcode (после USB-05)
 

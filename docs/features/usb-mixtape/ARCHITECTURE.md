@@ -1,6 +1,6 @@
 # USB Mixtape — архитектура, контракты и структура проекта
 
-**Статус:** USB-01…USB-03 (models/planner, LocalExportSource, устройства) реализованы; writer и UI — план.  
+**Статус:** USB-01…USB-04 (models/planner, LocalExportSource, устройства, writer) реализованы; транскод, CLI и UI — план.  
 **Совместимость:** существующие Track / LocalMusicAdapter / Database / ProviderRouter без breaking changes; ADR-0004 и ADR-0005.
 
 ## 1. Схема компонентов
