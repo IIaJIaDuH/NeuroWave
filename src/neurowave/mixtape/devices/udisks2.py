@@ -28,8 +28,33 @@ FILESYSTEM_IFACE = "org.freedesktop.UDisks2.Filesystem"
 DRIVE_IFACE = "org.freedesktop.UDisks2.Drive"
 OBJECT_MANAGER_IFACE = "org.freedesktop.DBus.ObjectManager"
 
-SYSTEM_MOUNTPOINTS = frozenset({"/", "/boot", "/boot/efi", "/home", "/usr", "/var", "/etc"})
-SYSTEM_PREFIXES = ("/boot/", "/usr/", "/var/", "/etc/", "/proc/", "/sys/", "/dev/", "/run/")
+SYSTEM_MOUNTPOINTS = frozenset(
+    {
+        "/",
+        "/boot",
+        "/boot/efi",
+        "/home",
+        "/usr",
+        "/var",
+        "/etc",
+        "/run",
+        "/run/lock",
+        "/run/user",
+    }
+)
+# ``/run/media/<user>/<label>`` — штатное место съёмных томов в Fedora, поэтому
+# весь ``/run`` системным не считается: только lock/user-подкаталоги.
+SYSTEM_PREFIXES = (
+    "/boot/",
+    "/usr/",
+    "/var/",
+    "/etc/",
+    "/proc/",
+    "/sys/",
+    "/dev/",
+    "/run/lock/",
+    "/run/user/",
+)
 
 
 def identities_from_objects(

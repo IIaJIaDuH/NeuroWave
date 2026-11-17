@@ -146,11 +146,24 @@ def test_usb_bus_without_removable_flag_is_accepted():
     assert device.system is False
 
 
-@pytest.mark.parametrize("mount", ["/", "/home", "/boot", "/boot/efi", "/usr"])
+@pytest.mark.parametrize(
+    "mount",
+    ["/", "/home", "/boot", "/boot/efi", "/usr", "/run", "/run/lock", "/run/user/1000"],
+)
 def test_system_mountpoints_are_marked(mount):
     [device] = identities_from_objects(managed(mount=mount))
 
     assert device.system is True
+
+
+def test_fedora_run_media_mount_is_accepted():
+    objects = managed(mount="/run/media/user/USB")
+
+    [device] = identities_from_objects(objects)
+    assert device.system is False
+
+    devices = service_for(objects).list_removable_writable_filesystems()
+    assert [item.mountpoint for item in devices] == [Path("/run/media/user/USB")]
 
 
 def test_hint_system_is_marked():
