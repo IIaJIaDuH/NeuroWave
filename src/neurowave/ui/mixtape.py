@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..mixtape.bridge import MixtapeBridge, PlanPreview, describe_skips
+from ..mixtape.bridge import BridgeStatus, MixtapeBridge, PlanPreview, describe_skips
 from ..mixtape.models import PROFILES, MixtapeRequest
 
 TITLE = "USB Mixtape"
@@ -88,7 +88,17 @@ def _build_dialog(bridge: MixtapeBridge) -> Any:
         QVBoxLayout,
     )
 
-    dialog = QDialog()
+    class _Dialog(QDialog):
+        """Закрытие окна контролирует мост, а не Qt-умолчание."""
+
+        def closeEvent(self, event) -> None:  # noqa: N802 - Qt API
+            handler = getattr(self, "_close_handler", None)
+            if handler is None:
+                event.accept()
+                return
+            handler(event)
+
+    dialog = _Dialog()
     dialog.setWindowTitle(TITLE)
     dialog.resize(820, 560)
     layout = QVBoxLayout(dialog)
@@ -271,7 +281,12 @@ def _build_dialog(bridge: MixtapeBridge) -> Any:
             status.setText(state.error)
         else:
             summary_row = state.summary
-            text = state.message
+            prefix = {
+                BridgeStatus.PARTIAL: "Частично: ",
+                BridgeStatus.FAILED: "Ошибка: ",
+                BridgeStatus.CANCELLED: "Отменено: ",
+            }.get(state.status, "")
+            text = prefix + state.message
             if summary_row is not None:
                 text += (
                     f" · проверено: {summary_row.verified}, ошибок: {summary_row.failed}, "
@@ -367,6 +382,40 @@ def _build_dialog(bridge: MixtapeBridge) -> Any:
     )
 
     timer = QTimer(dialog)
+    closing = [False]
+
+    def on_close(event) -> None:
+        """Не терять worker: отмена с ожиданием либо отказ от закрытия."""
+
+        state = bridge.snapshot()
+        if not state.busy:
+            closing[0] = False
+            timer.stop()
+            bridge.close()
+            event.accept()
+            return
+        if not ask_confirm("Операция ещё идёт. Отменить её и закрыть окно?"):
+            event.ignore()
+            return
+        closing[0] = True
+        if state.can_cancel:
+            bridge.request_cancel()
+        # Без блокировки GUI: таймер закроет окно, когда worker остановится.
+        event.ignore()
+        refresh()
+
+    def finish_close_if_idle() -> None:
+        if not closing[0]:
+            return
+        if bridge.snapshot().busy:
+            return
+        closing[0] = False
+        timer.stop()
+        bridge.close()
+        dialog.close()
+
+    dialog._close_handler = on_close  # type: ignore[attr-defined]
+    timer.timeout.connect(finish_close_if_idle)
     timer.timeout.connect(refresh)
     timer.start(REFRESH_MS)
     refresh_devices()
@@ -391,6 +440,9 @@ def _build_dialog(bridge: MixtapeBridge) -> Any:
     dialog._progress = progress  # type: ignore[attr-defined]
     dialog._progress_label = progress_label  # type: ignore[attr-defined]
     dialog._status = status  # type: ignore[attr-defined]
+    dialog._timer = timer  # type: ignore[attr-defined]
+    dialog._finish_close = finish_close_if_idle  # type: ignore[attr-defined]
+    dialog._closing = closing  # type: ignore[attr-defined]
     dialog._on_plan = on_plan  # type: ignore[attr-defined]
     dialog._on_export = on_export  # type: ignore[attr-defined]
     dialog._on_cancel = on_cancel  # type: ignore[attr-defined]

@@ -227,3 +227,75 @@ def test_eject_disabled_while_exporting(dialog, monkeypatch):
         assert bridge.wait(20)
     window._refresh()
     assert window._eject_button.isEnabled() is True
+
+
+# --- USB-FIX-06: закрытие окна не оставляет worker ------------------------
+
+
+def test_close_stops_refresh_timer_and_bridge(dialog):
+    window, bridge, _library = dialog
+
+    assert window._timer.isActive() is True
+
+    window.close()
+
+    assert window._timer.isActive() is False
+    assert bridge.snapshot().busy is False
+    assert window._closing[0] is False
+
+
+def _blocked_export(dialog, monkeypatch):
+    window, bridge, _library = dialog
+    from neurowave.mixtape.export import SafeWriter
+    from neurowave.ui import mixtape as mixtape_ui
+
+    started = __import__("threading").Event()
+    release = __import__("threading").Event()
+    real_write = SafeWriter.write
+
+    def blocked(self, *args, **kwargs):
+        started.set()
+        release.wait(10)
+        return real_write(self, *args, **kwargs)
+
+    monkeypatch.setattr(SafeWriter, "write", blocked)
+    monkeypatch.setattr(mixtape_ui, "_ask", lambda parent, text: True)
+    build_plan(window, bridge)
+    window._on_export()
+    assert started.wait(10)
+    window._refresh()
+    return window, bridge, release
+
+
+def test_close_while_exporting_can_be_cancelled_by_user(dialog, monkeypatch):
+    from neurowave.ui import mixtape as mixtape_ui
+
+    window, bridge, release = _blocked_export(dialog, monkeypatch)
+    monkeypatch.setattr(mixtape_ui, "_ask", lambda parent, text: False)
+    try:
+        window.close()
+
+        assert window._closing[0] is False
+        assert window._timer.isActive() is True
+        assert bridge.snapshot().status.value == "exporting"
+    finally:
+        release.set()
+        assert bridge.wait(20)
+
+
+def test_close_while_exporting_cancels_and_finishes(dialog, monkeypatch):
+    window, bridge, release = _blocked_export(dialog, monkeypatch)
+
+    window.close()
+
+    assert window._closing[0] is True
+    assert bridge.snapshot().status.value == "exporting"
+
+    release.set()
+    assert bridge.wait(20)
+    window._finish_close()
+
+    assert window._closing[0] is False
+    assert window._timer.isActive() is False
+    assert bridge.snapshot().busy is False
+    assert bridge.snapshot().status.value == "cancelled"
