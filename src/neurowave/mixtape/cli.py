@@ -22,10 +22,9 @@ from neurowave.mixtape.devices import (
 )
 from neurowave.mixtape.errors import MixtapeError
 from neurowave.mixtape.export import ExportError, ExportStatus
-from neurowave.mixtape.jobs import CancelSignal as _CancelSignal
 from neurowave.mixtape.jobs import JobStore
 from neurowave.mixtape.models import PROFILES, MixtapeRequest
-from neurowave.mixtape.service import MixtapeService
+from neurowave.mixtape.service import MixtapeService, MixtapeServiceError
 
 PLAN_SCHEMA_VERSION = 1
 MAX_PLAN_BYTES = 1_048_576
@@ -309,7 +308,13 @@ def _cmd_eject(args, *, device_service=None, transcoder=None, job_store=None) ->
                     "job_running",
                     f"Задача {job_id} ещё пишет: извлечение запрещено",
                 )
-    identity = _service(device_service, transcoder, job_store).eject_target(args.target)
+    try:
+        identity = _service(device_service, transcoder, job_store).eject_target(args.target)
+    except MixtapeServiceError as error:
+        if error.code == "target_not_found":
+            # Для eject сохраняем исторический текст CLI (export говорит иначе).
+            return _fail(args, "target_not_found", "Выбранный USB-том не найден")
+        raise
     return _emit(
         args,
         {"ok": True, "object_path": identity.udisks_object_path, "ejected": True},

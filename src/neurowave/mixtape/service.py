@@ -134,13 +134,16 @@ class MixtapeService:
         source = LocalExportSource(
             root, rights=LocalExportRights(confirmed=bool(rights_confirmed))
         )
-        plan = MixtapePlanner([source]).plan(request, candidates)
+        # Один проход по библиотеке: планировщик возвращает те же assets, что сам
+        # использовал, поэтому повторный list_eligible (лишние stat) не нужен.
+        assets: list[ExportAsset] = []
+        plan = MixtapePlanner([source]).plan(request, candidates, assets_out=assets)
         return PlanBuild(
             library=root,
             request=request,
             rights_confirmed=bool(rights_confirmed),
             tracks=candidates,
-            assets=tuple(source.list_eligible(candidates)),
+            assets=tuple(assets),
             plan=plan,
         )
 

@@ -16,9 +16,9 @@ from pathlib import Path
 import pytest
 
 from neurowave.cli import build_parser
-from neurowave.mixtape.cli import _CancelSignal, run
+from neurowave.mixtape.cli import run
 from neurowave.mixtape.devices import FakeUsbDeviceService
-from neurowave.mixtape.jobs import JobStore
+from neurowave.mixtape.jobs import CancelSignal, JobStore
 from neurowave.mixtape.models import DeviceIdentity
 
 OBJECT = "/org/freedesktop/UDisks2/block_devices/sdb1"
@@ -329,7 +329,7 @@ def test_cancel_running_and_finished_job(service, store, capsys):
 
 def test_cancel_signal_reads_store_marker(store):
     store.save("mixtape-run", {"status": "running"})
-    signal = _CancelSignal(store, "mixtape-run")
+    signal = CancelSignal(store, "mixtape-run")
 
     assert signal.is_set() is False
     store.request_cancel("mixtape-run")
@@ -429,6 +429,33 @@ def test_eject_requires_confirm(service, store, capsys):
     assert code == 2
     assert data["error"] == "confirmation_required"
     assert service.ejected == []
+
+
+def test_eject_keeps_its_own_target_message(service, store, library, tmp_path, capsys):
+    """Тексты CLI не меняются: у eject и export разная формулировка."""
+
+    code, data, _ = call(
+        parse(
+            "mixtape", "eject", "--target", "/org/freedesktop/UDisks2/block_devices/sdz1", "--confirm", "--json"
+        ),
+        capsys,
+        service=service,
+        store=store,
+    )
+    assert code == 2
+    assert data["error"] == "target_not_found"
+    assert data["message"] == "Выбранный USB-том не найден"
+
+    plan_file = tmp_path / "plan.json"
+    saved_plan(library, plan_file)
+    code, data, _ = call(
+        export_args(plan_file, target="/org/freedesktop/UDisks2/block_devices/sdz1"),
+        capsys,
+        service=service,
+        store=store,
+    )
+    assert code == 2
+    assert data["message"] == "Выбранный USB-том не найден среди writable-томов"
 
 
 def test_eject_confirmed(service, store, capsys):

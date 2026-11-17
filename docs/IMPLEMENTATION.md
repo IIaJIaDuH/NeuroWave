@@ -430,7 +430,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 633 офлайн-теста ядра, интеграций, провайдеров,
+Проверено в этом окружении: 635 офлайн-тестов ядра, интеграций, провайдеров,
 планировщика, источника, устройств, writer и экспорта,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
@@ -444,7 +444,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 633 теста: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства, mixtape CLI, service и bridge (с PySide6 — 649)
+python -m pytest        # 635 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства, mixtape CLI, service и bridge (с PySide6 — 651)
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -455,7 +455,7 @@ SoundCloud — на фейковом транспорте: поиск, отбр�
 `401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
 тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока,
 обновление по `expires_at` и `401`, ротация refresh token и запись credentials.
-USB Mixtape проверяется 216 офлайн-тестами: планировщик (USB-01) — seed и
+USB Mixtape проверяется 218 офлайн-тестами: планировщик (USB-01) — seed и
 порядок кандидатов, бюджет времени и байт, dedup между провайдерами,
 shortage, права, профили и preview JSON; локальный источник (USB-02) —
 approved root, path containment, симлинки и политика `ExportRight`;

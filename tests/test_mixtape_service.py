@@ -85,6 +85,29 @@ def test_plan_is_side_effect_free(service, library):
     assert not (library / SUB).exists()
 
 
+def test_plan_walks_the_library_once(service, library, monkeypatch):
+    """Повторного list_eligible (и лишних stat) на большой библиотеке нет."""
+
+    from neurowave.mixtape.sources.local import LocalExportSource
+
+    calls: list[int] = []
+    real = LocalExportSource.list_eligible
+
+    def counted(self, candidates):
+        calls.append(len(list(candidates)))
+        return real(self, candidates)
+
+    monkeypatch.setattr(LocalExportSource, "list_eligible", counted)
+    build = service.plan(library, REQUEST, rights_confirmed=True)
+
+    assert calls == [2]
+    assert len(build.assets) == 2
+    assert {asset.track_key for asset in build.assets} == {
+        "local:Artist One - Song One.wav",
+        "local:Artist Two - Song Two.wav",
+    }
+
+
 def test_plan_without_rights_has_no_files(service, library):
     build = service.plan(library, REQUEST, rights_confirmed=False)
 

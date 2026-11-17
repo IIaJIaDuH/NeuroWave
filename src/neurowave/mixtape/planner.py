@@ -67,11 +67,19 @@ class MixtapePlanner:
         request: MixtapeRequest,
         candidates: Sequence[Track],
         taste: TasteSnapshot | None = None,
+        assets_out: list[ExportAsset] | None = None,
     ) -> MixtapePlan:
+        """Построить план; ``assets_out`` получает те же assets без второго прохода.
+
+        Источники обходят библиотеку ровно один раз: если вызывающему нужны
+        выданные файлы (например, для последующей записи), он передаёт список
+        и получает их тем же вызовом.
+        """
+
         policy = _validate(request)
         taste = taste or TasteSnapshot.empty()
         candidates = tuple(candidates)
-        assets_by_key = self._collect_assets(candidates)
+        assets_by_key = self._collect_assets(candidates, assets_out)
 
         skipped: list[SkippedCandidate] = []
         resolved: list[_Resolved] = []
@@ -152,13 +160,19 @@ class MixtapePlanner:
             revision=PLAN_REVISION,
         )
 
-    def _collect_assets(self, candidates: Sequence[Track]) -> dict[str, list[ExportAsset]]:
+    def _collect_assets(
+        self,
+        candidates: Sequence[Track],
+        assets_out: list[ExportAsset] | None = None,
+    ) -> dict[str, list[ExportAsset]]:
         wanted = {track.key for track in candidates}
         by_key: dict[str, list[ExportAsset]] = {}
         for source in self._sources:
             for asset in source.list_eligible(candidates):
                 if asset.track_key and asset.track_key in wanted:
                     by_key.setdefault(asset.track_key, []).append(asset)
+                    if assets_out is not None:
+                        assets_out.append(asset)
         return by_key
 
     def _deduplicate(
