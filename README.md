@@ -59,6 +59,7 @@
 - [Бета-чеклист](docs/BETA-CHECKLIST.md) — что проверено, что открыто, замеры soak и памяти
 - [Сторонние лицензии и условия поставки](docs/THIRD-PARTY-NOTICES.md) — инвентаризация зависимостей и гейты релиза
 - [USB Mixtape: ТЗ, безопасность, архитектура, план PR](docs/features/usb-mixtape/README.md) — **документы, функция ещё не реализована**
+- [Neyrowave × DJ Franky — бренд-концепция](docs/brand/README.md) — публичное название, оригинальный маскот, визуальный стиль и идея анимации; **без изменения технического имени NeuroWave и runtime**
 - [ADR-0007: USB Mixtape](docs/decisions/0007-usb-mixtape.md) — предложенная архитектура автономного экспорта
 - [Smoke-тест Sprint 1 на Mint](docs/SMOKE-SPRINT1.md)
 
