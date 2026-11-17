@@ -47,9 +47,18 @@ class BridgeStatus(str, Enum):
     VERIFYING = "verifying"
     EJECTING = "ejecting"
     DONE = "done"
+    PARTIAL = "partial"
     VERIFIED = "verified"
     CANCELLED = "cancelled"
     FAILED = "failed"
+
+
+_EXPORT_STATUS_TO_BRIDGE = {
+    ExportStatus.COMPLETE: BridgeStatus.DONE,
+    ExportStatus.PARTIAL: BridgeStatus.PARTIAL,
+    ExportStatus.FAILED: BridgeStatus.FAILED,
+    ExportStatus.CANCELLED: BridgeStatus.CANCELLED,
+}
 
 
 @dataclass(frozen=True)
@@ -622,15 +631,19 @@ class MixtapeBridge:
                 speed_bps=self._speed(),
                 eta_s=0.0,
             )
-            self._status = (
-                BridgeStatus.CANCELLED
-                if summary.status == ExportStatus.CANCELLED.value
-                else BridgeStatus.DONE
-            )
-            self._message = (
+            # USB-FIX-04: GUI повторяет фактический итог, а не «всё хорошо».
+            self._status = _EXPORT_STATUS_TO_BRIDGE.get(report.status, BridgeStatus.FAILED)
+            counts = (
                 f"Записано файлов: {report.verified_count} из {plan_items}"
-                + (" · отменено" if summary.status == ExportStatus.CANCELLED.value else "")
+                f" · ошибок: {report.failed_count}, пропущено: {report.skipped_count}"
             )
+            suffix = {
+                ExportStatus.COMPLETE: "",
+                ExportStatus.PARTIAL: " · часть файлов не записана",
+                ExportStatus.FAILED: " · экспорт не завершён",
+                ExportStatus.CANCELLED: " · отменено",
+            }[report.status]
+            self._message = counts + suffix
             self._clear_error()
 
     def _set_job_id(self, job_id: str) -> None:

@@ -13,6 +13,8 @@
 
 from __future__ import annotations
 
+import secrets
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
@@ -46,6 +48,17 @@ RIGHTS_NOT_CONFIRMED = "rights_not_confirmed"
 PLAN_CHANGED = "plan_changed"
 TARGET_NOT_FOUND = "target_not_found"
 JOB_NOT_FOUND = "job_not_found"
+
+
+def make_job_id(plan_id: str) -> str:
+    """Уникальный id запуска: план — содержимое, задача — конкретная запись.
+
+    Один и тот же план на двух флешках должен получить разные задачи, иначе
+    журнал и флаг отмены одному экспорту мешают другому.
+    """
+
+    stamp = time.strftime("%Y%m%dT%H%M%S", time.gmtime())
+    return f"{plan_id}-{stamp}-{secrets.token_hex(3)}"
 
 
 class MixtapeServiceError(MixtapeError):
@@ -194,12 +207,16 @@ class MixtapeService:
             )
         identity = self.require_target(object_path)
         store = self.job_store
-        job_id = plan.plan_id
+        # USB-FIX-05: fresh job id per run; plan_id остаётся id содержимого плана.
+        job_id = make_job_id(plan.plan_id)
+        while store.load(job_id) is not None:  # pragma: no cover - коллизия имён
+            job_id = make_job_id(plan.plan_id)
         store.clear_cancel(job_id)
         store.save(
             job_id,
             {
                 "status": "running",
+                "job_id": job_id,
                 "plan_id": plan.plan_id,
                 "target": str(identity.mountpoint),
                 "object_path": identity.udisks_object_path,
@@ -226,6 +243,7 @@ class MixtapeService:
                 job_id,
                 {
                     "status": "failed",
+                    "job_id": job_id,
                     "plan_id": plan.plan_id,
                     "target": str(identity.mountpoint),
                     "object_path": identity.udisks_object_path,
@@ -239,6 +257,7 @@ class MixtapeService:
             target=str(identity.mountpoint),
             object_path=identity.udisks_object_path,
             library=str(build.library),
+            job_id=job_id,
         )
         store.save(job_id, record)
         return ExportOutcome(
@@ -259,6 +278,7 @@ __all__ = [
     "ExportOutcome",
     "MixtapeService",
     "MixtapeServiceError",
+    "make_job_id",
         "PlanBuild",
 ]
 

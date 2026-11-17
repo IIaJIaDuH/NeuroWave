@@ -176,7 +176,11 @@ def test_export_writes_files_and_journal(service, library, usb, tmp_path):
 
     assert outcome.report.status.value == "complete"
     assert outcome.report.verified_count == 2
-    assert outcome.job_id == build.plan.plan_id
+    # USB-FIX-05: id запуска уникален, plan_id остаётся id содержимого плана.
+    assert outcome.job_id != build.plan.plan_id
+    assert outcome.job_id.startswith(build.plan.plan_id)
+    assert outcome.record["job_id"] == outcome.job_id
+    assert outcome.record["plan_id"] == build.plan.plan_id
     assert started == [(outcome.job_id, "running")]  # журнал уже пишется
     assert outcome.record["object_path"] == OBJECT
     assert outcome.record["library"] == str(build.library)
@@ -185,6 +189,8 @@ def test_export_writes_files_and_journal(service, library, usb, tmp_path):
     assert (usb / "sentinel.txt").read_text(encoding="utf-8") == "не трогать"
     saved = store.load(outcome.job_id)
     assert saved is not None and saved["status"] == "complete"
+    assert saved["job_id"] == outcome.job_id
+    assert saved["plan_id"] == build.plan.plan_id
 
 
 def test_verify_after_export(service, library, usb):
@@ -210,3 +216,44 @@ def test_eject_uses_revalidated_target(service, usb):
 
     assert identity.udisks_object_path == OBJECT
     assert service.device_service.ejected == [OBJECT]
+
+
+# --- USB-FIX-05: задачи разных запусков не смешиваются --------------------
+
+
+def test_two_exports_of_same_plan_get_distinct_jobs(service, library, usb, tmp_path):
+    build = service.plan(library, REQUEST, rights_confirmed=True)
+
+    first = service.export(build, object_path=OBJECT)
+    second = service.export(build, object_path=OBJECT)
+
+    assert first.job_id != second.job_id
+    assert first.job_id.startswith(build.plan.plan_id)
+    assert second.job_id.startswith(build.plan.plan_id)
+    assert first.record["plan_id"] == second.record["plan_id"] == build.plan.plan_id
+    store = JobStore(tmp_path / "jobs")
+    assert store.load(first.job_id)["status"] == "complete"
+    assert store.load(second.job_id)["status"] == "complete"
+    assert sorted(store.list_ids()) == sorted([first.job_id, second.job_id])
+
+    # Отмена одной задачи не задевает другую.
+    store.request_cancel(second.job_id)
+
+    assert store.cancel_requested(second.job_id) is True
+    assert store.cancel_requested(first.job_id) is False
+
+
+def test_legacy_journal_without_job_id_is_still_readable(service, library, usb, tmp_path):
+    """Старые журналы (ключ — plan_id) не теряются после разделения id."""
+
+    build = service.plan(library, REQUEST, rights_confirmed=True)
+    outcome = service.export(build, object_path=OBJECT)
+    store = JobStore(tmp_path / "jobs")
+    legacy = dict(outcome.record)
+    legacy.pop("job_id", None)
+    store.save(build.plan.plan_id, legacy)
+
+    report = service.verify(build.plan.plan_id)
+
+    assert report.ok is True
+    assert report.checked == 2

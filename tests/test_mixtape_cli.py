@@ -253,8 +253,13 @@ def test_export_writes_files_manifest_and_job(library, tmp_path, usb, service, s
     assert len(files) == 2
     assert (usb / SUB / "playlist.m3u8").is_file()
     assert (usb / SUB / "manifest.json").is_file()
-    job = store.load(saved["plan_id"])
+    job = store.load(data["job"])
     assert job is not None and job["status"] == "complete"
+    assert job["job_id"] == data["job"]
+    assert job["plan_id"] == saved["plan_id"]
+    # USB-FIX-05: id запуска уникален, plan_id остаётся id содержимого плана.
+    assert data["job"] != saved["plan_id"]
+    assert data["job"].startswith(saved["plan_id"])
     assert (usb / "sentinel.txt").read_text(encoding="utf-8") == "не трогать"
 
 
@@ -267,8 +272,11 @@ def test_repeat_export_does_not_duplicate(library, tmp_path, usb, service, store
     assert first[0] == 0 and second[0] == 0
     assert second[1]["verified_count"] == 2
     assert len(list((usb / SUB).glob("*.wav"))) == 2
-    job = store.load(saved["plan_id"])
-    assert job is not None and job["status"] == "complete"
+    assert first[1]["job"] != second[1]["job"]
+    for job_id in (first[1]["job"], second[1]["job"]):
+        job = store.load(job_id)
+        assert job is not None and job["status"] == "complete"
+        assert job["plan_id"] == saved["plan_id"]
 
 
 # --- status / cancel / verify -------------------------------------------
@@ -276,18 +284,19 @@ def test_repeat_export_does_not_duplicate(library, tmp_path, usb, service, store
 
 def test_status_after_export(library, tmp_path, service, store, capsys):
     plan_file = tmp_path / "plan.json"
-    saved = saved_plan(library, plan_file)
-    call(export_args(plan_file), capsys, service=service, store=store)
+    saved_plan(library, plan_file)
+    exported = call(export_args(plan_file), capsys, service=service, store=store)
+    job_id = exported[1]["job"]
 
     code, data, _ = call(
-        parse("mixtape", "status", "--job", saved["plan_id"], "--json"),
+        parse("mixtape", "status", "--job", job_id, "--json"),
         capsys,
         service=service,
         store=store,
     )
 
     assert code == 0
-    assert data["job"] == saved["plan_id"]
+    assert data["job"] == job_id
     assert data["status"] == "complete"
     assert data["cancel_requested"] is False
 
@@ -338,11 +347,11 @@ def test_cancel_signal_reads_store_marker(store):
 
 def test_verify_detects_corruption(library, tmp_path, usb, service, store, capsys):
     plan_file = tmp_path / "plan.json"
-    saved = saved_plan(library, plan_file)
-    call(export_args(plan_file), capsys, service=service, store=store)
+    saved_plan(library, plan_file)
+    job_id = call(export_args(plan_file), capsys, service=service, store=store)[1]["job"]
 
     code, data, _ = call(
-        parse("mixtape", "verify", "--job", saved["plan_id"], "--json"),
+        parse("mixtape", "verify", "--job", job_id, "--json"),
         capsys,
         service=service,
         store=store,
@@ -354,7 +363,7 @@ def test_verify_detects_corruption(library, tmp_path, usb, service, store, capsy
     [file] = sorted((usb / SUB).glob("*.wav"))[:1]
     file.write_bytes(b"corrupted")
     code, data, _ = call(
-        parse("mixtape", "verify", "--job", saved["plan_id"], "--json"),
+        parse("mixtape", "verify", "--job", job_id, "--json"),
         capsys,
         service=service,
         store=store,
@@ -366,17 +375,17 @@ def test_verify_detects_corruption(library, tmp_path, usb, service, store, capsy
 
 def test_verify_requires_complete_status(library, tmp_path, usb, service, store, capsys):
     plan_file = tmp_path / "plan.json"
-    saved = saved_plan(library, plan_file)
-    call(export_args(plan_file), capsys, service=service, store=store)
-    job = store.load(saved["plan_id"])
+    saved_plan(library, plan_file)
+    job_id = call(export_args(plan_file), capsys, service=service, store=store)[1]["job"]
+    job = store.load(job_id)
     assert job is not None
     job["status"] = "partial"
     job["items"][0]["status"] = "failed"
     job["items"][0]["error"] = "no_space"
-    store.save(saved["plan_id"], job)
+    store.save(job_id, job)
 
     code, data, _ = call(
-        parse("mixtape", "verify", "--job", saved["plan_id"], "--json"),
+        parse("mixtape", "verify", "--job", job_id, "--json"),
         capsys,
         service=service,
         store=store,
@@ -395,16 +404,16 @@ def test_verify_requires_complete_status(library, tmp_path, usb, service, store,
 
 def test_verify_counts_skipped_as_mismatch(library, tmp_path, usb, service, store, capsys):
     plan_file = tmp_path / "plan.json"
-    saved = saved_plan(library, plan_file)
-    call(export_args(plan_file), capsys, service=service, store=store)
-    job = store.load(saved["plan_id"])
+    saved_plan(library, plan_file)
+    job_id = call(export_args(plan_file), capsys, service=service, store=store)[1]["job"]
+    job = store.load(job_id)
     assert job is not None
     job["status"] = "complete"
     job["items"][1]["status"] = "skipped"
-    store.save(saved["plan_id"], job)
+    store.save(job_id, job)
 
     code, data, _ = call(
-        parse("mixtape", "verify", "--job", saved["plan_id"], "--json"),
+        parse("mixtape", "verify", "--job", job_id, "--json"),
         capsys,
         service=service,
         store=store,
@@ -488,8 +497,11 @@ def test_export_marks_job_failed_on_writer_error(
 
     assert code == 2
     assert data["error"] == ExportErrorCode.ENOSPC.value
-    job = store.load(saved["plan_id"])
+    [job_id] = store.list_ids()
+    assert job_id.startswith(saved["plan_id"]) and job_id != saved["plan_id"]
+    job = store.load(job_id)
     assert job is not None and job["status"] == "failed"
+    assert job["plan_id"] == saved["plan_id"]
     assert "нет места" in job["error"]
 
 

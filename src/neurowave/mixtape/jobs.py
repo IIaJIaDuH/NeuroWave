@@ -110,11 +110,17 @@ def job_record(
     target: str,
     object_path: str,
     library: str,
+    job_id: str = "",
 ) -> dict[str, Any]:
-    """Запись журнала по отчёту writer'а (общая для CLI и GUI)."""
+    """Запись журнала по отчёту writer'а (общая для CLI и GUI).
+
+    ``job_id`` — конкретный запуск, ``plan_id`` — содержимое плана. Старые
+    журналы без ``job_id`` остаются читаемыми по прежнему имени файла.
+    """
 
     return {
         "status": report.status.value,
+        "job_id": job_id,
         "plan_id": report.plan_id,
         "target": str(target),
         "object_path": str(object_path),

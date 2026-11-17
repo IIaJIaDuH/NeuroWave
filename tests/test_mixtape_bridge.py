@@ -237,16 +237,19 @@ def test_export_runs_in_background_thread(bridge, usb, monkeypatch):
 def test_export_progress_summary_and_journal(bridge, usb, store):
     bridge.refresh_devices()
     plan_bridge(bridge)
-    job_id = bridge.snapshot().preview.plan_id
+    plan_id = bridge.snapshot().preview.plan_id
 
     assert bridge.start_export(confirm=True) is True
     assert bridge.wait(20)
     state = bridge.snapshot()
+    job_id = state.summary.job_id if state.summary else ""
 
     assert state.status is BridgeStatus.DONE
     assert state.summary is not None
     assert state.summary.verified == 2
-    assert state.summary.job_id == job_id
+    assert job_id != plan_id
+    assert job_id.startswith(plan_id)
+    assert bridge.job_id == job_id
     assert state.progress is not None
     assert state.progress.bytes_done > 0
     assert state.progress.percent == 100.0
@@ -285,7 +288,6 @@ def test_cancel_stops_export_and_marks_job(bridge, usb, store, monkeypatch):
     monkeypatch.setattr(SafeWriter, "write", cancel_then_write)
     bridge.refresh_devices()
     plan_bridge(bridge)
-    job_id = bridge.snapshot().preview.plan_id
 
     assert bridge.start_export(confirm=True) is True
     assert bridge.wait(20)
@@ -293,6 +295,7 @@ def test_cancel_stops_export_and_marks_job(bridge, usb, store, monkeypatch):
 
     assert state.status is BridgeStatus.CANCELLED
     assert state.summary is not None and state.summary.status == "cancelled"
+    job_id = state.summary.job_id
     job = store.load(job_id)
     assert job is not None and job["status"] == "cancelled"
     assert job["verified_count"] == 0
@@ -301,9 +304,9 @@ def test_cancel_stops_export_and_marks_job(bridge, usb, store, monkeypatch):
 def test_verify_requires_complete_job(bridge, store):
     bridge.refresh_devices()
     plan_bridge(bridge)
-    job_id = bridge.snapshot().preview.plan_id
     bridge.start_export(confirm=True)
     assert bridge.wait(20)
+    job_id = bridge.snapshot().summary.job_id
 
     assert bridge.request_verify() is True
     assert bridge.wait(20)
@@ -409,3 +412,53 @@ def test_close_cancels_running_export(bridge, monkeypatch):
 
     assert bridge.wait(10)
     assert bridge.snapshot().busy is False
+
+
+# --- USB-FIX-04: GUI показывает фактический итог --------------------------
+
+
+def _block_destinations(bridge, usb, count):
+    """Занять имена файлов плана, чтобы writer их пропустил (EXISTS)."""
+
+    tracks = bridge.snapshot().preview.tracks[:count]
+    for track in tracks:
+        path = usb / track.destination
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"user-file")
+
+
+def test_export_reports_partial_status(bridge, usb):
+    bridge.refresh_devices()
+    plan_bridge(bridge)
+    _block_destinations(bridge, usb, 1)
+
+    assert bridge.start_export(confirm=True) is True
+    assert bridge.wait(20)
+    state = bridge.snapshot()
+
+    assert state.status is BridgeStatus.PARTIAL
+    assert state.summary is not None and state.summary.status == "partial"
+    assert state.summary.verified == 1
+    assert "часть файлов не записана" in state.message
+    assert state.error == ""
+    assert state.can_verify is True
+
+
+def test_export_reports_failed_status(bridge, usb):
+    bridge.refresh_devices()
+    plan_bridge(bridge)
+    _block_destinations(bridge, usb, 2)
+
+    assert bridge.start_export(confirm=True) is True
+    assert bridge.wait(20)
+    state = bridge.snapshot()
+
+    assert state.status is BridgeStatus.FAILED
+    assert state.summary is not None and state.summary.status == "failed"
+    assert state.summary.verified == 0
+    assert "экспорт не завершён" in state.message
+    assert "пропущено: 2" in state.message
+    assert state.can_verify is False
+    # Чужие файлы остались нетронутыми.
+    for track in state.preview.tracks:
+        assert (usb / track.destination).read_bytes() == b"user-file"
