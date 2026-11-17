@@ -3,6 +3,7 @@
 from neurowave.mixtape.errors import MixtapeError, PlanError
 from neurowave.mixtape.models import (
     PROFILES,
+    DeviceIdentity,
     ExportAsset,
     ExportOperation,
     ExportRight,
@@ -19,6 +20,7 @@ from neurowave.mixtape.planner import MixtapePlanner
 
 __all__ = [
     "PROFILES",
+    "DeviceIdentity",
     "ExportAsset",
     "ExportOperation",
     "ExportRight",

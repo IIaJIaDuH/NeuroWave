@@ -81,6 +81,28 @@ class ExportAsset:
 
 
 @dataclass(frozen=True)
+class DeviceIdentity:
+    """Снимок съёмного тома; перепроверяется перед каждой записью.
+
+    ``block_device`` — только диагностика (например ``/dev/sdb1``), писать в
+    него напрямую нельзя. ``system`` — результат проверки UDisks2-подсказок и
+    системных mountpoint; такие тома не предлагаются для записи.
+    """
+
+    udisks_object_path: str
+    block_device: str
+    mountpoint: Path
+    filesystem_type: str = ""
+    filesystem_uuid: str | None = None
+    drive_id: str | None = None
+    removable: bool = False
+    writable: bool = False
+    capacity_bytes: int = 0
+    free_bytes: int = 0
+    system: bool = False
+
+
+@dataclass(frozen=True)
 class TasteSnapshot:
     """Снимок локальных сигналов вкуса; сеть и БД не нужны."""
 

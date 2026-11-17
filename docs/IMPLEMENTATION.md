@@ -287,6 +287,16 @@ soundcloud = "my_provider:spec"
 берёт файл. `rights_status` отвечает только за реально выданные этим
 источником asset id, а не за произвольную строку `local-...`.
 
+**USB-03 — устройства.** `DeviceIdentity` фиксирует UDisks2 object path,
+block device (только диагностика), mountpoint, UUID, drive id, removable,
+writable, объёмы и системный флаг. `UDisks2DeviceService` строит список через
+`ObjectManager.GetManagedObjects`: принимаются removable- или USB-тома,
+отбрасываются swap/шифрованные и немонтированные, системные mountpoint и
+`HintSystem` помечаются и не предлагаются. `revalidate()` заново читает шину
+и отклоняет исчезнувший, изменённый, read-only или системный том.
+`FakeUsbDeviceService` воспроизводит те же правила без D-Bus; `dbus-next`
+импортируется лениво, запись в `/dev` отсутствует.
+
 ## MPRIS и системный трей
 
 Ядро о D-Bus и Qt не знает: интеграции живут в `src/neurowave/integrations`
@@ -361,8 +371,8 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 497 unit-тестов ядра, интеграций, провайдеров,
-планировщика и локального источника,
+Проверено в этом окружении: 528 unit-тестов ядра, интеграций, провайдеров,
+планировщика, источника и устройств,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
 импорт и сборка пакета, работа MPRIS на отдельном сессионном шине
@@ -375,7 +385,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 497 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик и LocalExportSource
+python -m pytest        # 528 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource и устройства
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -386,11 +396,12 @@ SoundCloud — на фейковом транспорте: поиск, отбр�
 `401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
 тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока,
 обновление по `expires_at` и `401`, ротация refresh token и запись credentials.
-USB Mixtape проверяется 79 офлайн-тестами: планировщик (USB-01) — seed и
+USB Mixtape проверяется 110 офлайн-тестами: планировщик (USB-01) — seed и
 порядок кандидатов, бюджет времени и байт, dedup между провайдерами,
 shortage, права, профили и preview JSON; локальный источник (USB-02) —
-approved root, path containment, симлинки, политика `ExportRight` и
-интеграция с планировщиком — без сети и USB.
+approved root, path containment, симлинки и политика `ExportRight`;
+устройства (USB-03) — T-001…T-005 на fake-сервисе и managed objects — без
+сети и реальных носителей.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика
 тестируется на заглушке, а `tests/test_integrations_optional.py` отдельными
 процессами проверяет, что импорт не тянет `dbus-next`/`PySide6` и что

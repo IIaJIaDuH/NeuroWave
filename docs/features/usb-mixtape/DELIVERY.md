@@ -1,6 +1,6 @@
 # USB Mixtape — реализация по PR, зависимости, чек-листы
 
-**Статус:** USB-00 — спецификация; USB-01 (планировщик) и USB-02 (LocalExportSource + права) реализованы · 2026-11-17.  
+**Статус:** USB-00 — спецификация; USB-01…USB-03 (планировщик, LocalExportSource, устройства) реализованы · 2026-11-17.  
 **Ветка спецификации:** feature/usb-mixtape-spec  
 **База:** main по состоянию на SHA 1baf6de3b8d30f453c1a4feb2af30a9b2e6c13aa.  
 **Приоритет относительно NeuroWave 0.2:** дополнительная фича. Не блокирует ADR-0005, Sound Lab и Qt Desktop.
@@ -37,7 +37,12 @@ matcher, протокол `ExportSource` и `MixtapePlanner`; `tests/test_mixtap
 (`LocalExportRights`, `ExportRight`); `tests/test_mixtape_local_source.py`
 (32 теста). Экспорт возможен только из approved root и только после явного
 подтверждения прав; абсолютные пути, `..`, NUL, скрытые сегменты, симлинки
-наружу и stream-only провайдеры отклоняются. UDisks2, writer и CLI — план.
+наружу и stream-only провайдеры отклоняются.
+
+**Сделано в USB-03:** `devices/base.py` (протокол, `DeviceIdentity`,
+`UsbDeviceError`), `devices/fake.py` и `devices/udisks2.py` (чистый маппер +
+ленивый D-Bus, без `/dev`); `tests/test_mixtape_devices.py` (31 тест,
+T-001…T-005). Writer, eject и CLI — план.
 
 ## 2. Отдельные acceptance gates
 
@@ -64,10 +69,13 @@ matcher, протокол `ExportSource` и `MixtapePlanner`; `tests/test_mixtap
 
 ### G3. USB Device (после USB-03)
 
-- [ ] Не предлагает системные разделы как записываемые USB.
-- [ ] Выбранный drive перепроверяется непосредственно перед записью.
-- [ ] Две флешки или смена mountpoint требуют нового выбора/согласия.
-- [ ] Все UDisks2 операции необязательны для обычного плеера.
+- [x] Не предлагает системные разделы как записываемые USB.
+- [x] Выбранный drive перепроверяется непосредственно перед записью.
+- [x] Две флешки или смена mountpoint требуют нового выбора/согласия.
+- [x] Все UDisks2 операции необязательны для обычного плеера.
+
+Пункты закрыты офлайн-тестами USB-03 на fake-сервисе и managed objects;
+живой UDisks2 проверяется на целевой машине (USB-08).
 
 ### G4. Writer (после USB-04)
 
