@@ -56,6 +56,7 @@
 - [Сравнение с CloudMus и YaMusic](docs/COMPARISON-CLOUDMUS-YAMUSIC.md) — старт, память, CPU, локальное воспроизведение
 - [ADR-0006: Лицензия](docs/decisions/0006-license.md) — принято: MIT, замена `mutagen` на `tinytag`
 - [Бета-чеклист](docs/BETA-CHECKLIST.md) — что проверено, что открыто, замеры soak и памяти
+- [Сторонние лицензии и условия поставки](docs/THIRD-PARTY-NOTICES.md) — инвентаризация зависимостей и гейты релиза
 - [Smoke-тест Sprint 1 на Mint](docs/SMOKE-SPRINT1.md)
 
 ## Текущее состояние
