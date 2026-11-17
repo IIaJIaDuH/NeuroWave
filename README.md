@@ -54,6 +54,10 @@
 - [ADR-0003: Основа интерфейса](docs/decisions/0003-ui-foundation.md)
 - [ADR-0004: Провайдеры музыки](docs/decisions/0004-multi-provider.md)
 - [ADR-0005: Аудиодвижок](docs/decisions/0005-audio-engine.md) — mpv + IPC + lavfi, альтернативы и условия пересмотра
+- [Сравнение с CloudMus и YaMusic](docs/COMPARISON-CLOUDMUS-YAMUSIC.md) — старт, память, CPU, локальное воспроизведение
+- [ADR-0006: Лицензия](docs/decisions/0006-license.md) — принято: MIT, замена `mutagen` на `tinytag`
+- [Бета-чеклист](docs/BETA-CHECKLIST.md) — что проверено, что открыто, замеры soak и памяти
+- [Сторонние лицензии и условия поставки](docs/THIRD-PARTY-NOTICES.md) — инвентаризация зависимостей и гейты релиза
 - [USB Mixtape: ТЗ, безопасность, архитектура, план PR](docs/features/usb-mixtape/README.md) — **документы, функция ещё не реализована**
 - [ADR-0007: USB Mixtape](docs/decisions/0007-usb-mixtape.md) — предложенная архитектура автономного экспорта
 - [Smoke-тест Sprint 1 на Mint](docs/SMOKE-SPRINT1.md)
@@ -62,7 +66,7 @@
 
 **Sprint 1: Core MVP (headless).** Реализованы адаптер Яндекс Музыки, «Моя волна», поиск, библиотека, лайки, плейлисты, очередь, машина состояний, кеш, SQLite и вывод через mpv. Подробности и границы — в [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md).
 
-Sprint 0 (сравнение CloudMus/YaMusic на целевой машине и замеры) остаётся нужным до публичного релиза: GUI и DSP не выбираются до этих замеров.
+Сравнение с CloudMus/YaMusic выполнено ([замеры](docs/COMPARISON-CLOUDMUS-YAMUSIC.md)), замеры Sprint 0 — в [SPRINT0-MEASUREMENTS.md](docs/SPRINT0-MEASUREMENTS.md). Открыты: 6-часовой soak (идёт), физический HDMI (порт не подключён) и стриминг конкурентов под живым аккаунтом.
 
 Платформа первой версии: **Linux Mint / Linux x86_64**. Приоритетные аудиоустройства: **Bluetooth и HDMI**.
 
@@ -82,8 +86,12 @@ neurowave --provider spotify devices                     # устройства 
 neurowave --provider spotify remote play "запрос"         # играть на устройстве Spotify
 neurowave --provider spotify login --token <access> \
   --refresh-token <refresh> --client-id <id>            # чтобы пульт не отваливался
+neurowave output        # выходы: Bluetooth/HDMI, реальный кодек, текущий маршрут
+neurowave output --set pulse/bluez_output.…   # выбрать выход (систему не меняем)
 neurowave sound         # профиль звука: режим, полосы, лимитер, lavfi-граф
 neurowave sound --profile bluetooth --graph   # выбрать профиль и увидеть цепь
+neurowave sound --profiles                     # встроенные и свои профили
+neurowave app           # окно: транспорт, перемотка, громкость, звук, выход, Sound Lab
 neurowave tray          # волна + значок в трее + MPRIS: pip install -e '.[desktop]'
 ./packaging/install-desktop.sh   # ярлык в меню и на рабочем столе
 ```
@@ -99,7 +107,11 @@ neurowave tray          # волна + значок в трее + MPRIS: pip ins
 
 ## Лицензирование
 
-**Лицензия ещё не выбрана.** Публичность репозитория не даёт права свободно копировать и распространять код. Перед заимствованием компонентов или публикацией бинарников проверяем лицензии исходных проектов, Qt, декодеров и сторонних библиотек. Не импортируем чужой код до юридического и технического решения.
+**MIT** — см. [LICENSE](LICENSE). Решение и обоснование: [ADR-0006](docs/decisions/0006-license.md).
+
+Сторонние компоненты сохраняют свои лицензии: `mpv` запускается отдельным процессом (GPL-2.0+), `PySide6` — LGPL-3.0 (динамическая линковка), остальные зависимости MIT/Apache-2.0. Теги локальных файлов читает `tinytag` (MIT); GPL-`mutagen` из зависимостей и из кода удалён.
+
+Перед заимствованием компонентов или публикацией бинарников проверяем лицензии исходных проектов, Qt, декодеров и сторонних библиотек. Не импортируем чужой код до юридического и технического решения.
 
 ## Дисклеймер
 

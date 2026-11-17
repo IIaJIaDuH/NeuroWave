@@ -308,3 +308,67 @@ def test_safe_boost_is_gain_inside_graph_before_limiter(tmp_path: Path) -> None:
     peak = max(abs(sample) for sample in samples)
     assert sum(1 for sample in samples if abs(sample) >= 0.999) == 0
     assert 20 * math.log10(peak) == pytest.approx(-3.0, abs=0.35)
+
+
+def test_real_mpv_lists_and_switches_audio_device(tmp_path: Path) -> None:
+    """Список устройств настоящего mpv и переключение без остановки звука.
+
+    Тест требует живого звукового сервера (pactl + sink по умолчанию): в CI
+    без PipeWire/PulseAudio он пропускается, потому что mpv с реальным AO
+    там запустить нельзя, а `--ao=null` не показывает настоящие устройства.
+    """
+    from neurowave.audio.devices import probe_default_sink
+
+    if probe_default_sink() is None:
+        pytest.skip("нет звукового сервера: нечего переключать")
+
+    backend = MpvBackend(extra_args=["--volume=6"])
+    audio = make_wav(tmp_path / "tone-device.wav", 8.0)
+    try:
+        backend.load(str(audio))
+        devices = backend.audio_devices()
+        assert any(item.get("name") == "auto" for item in devices)
+        candidates = [item["name"] for item in devices if item.get("name") != "auto"]
+        if not candidates:
+            pytest.skip("в окружении нет реальных аудиовыходов кроме auto")
+        assert wait_until(lambda: backend.position_ms() > 200, timeout=8.0)
+        target = candidates[0]
+        backend.set_audio_device(target)
+        assert backend.audio_device() == target
+        before = backend.position_ms()
+        assert wait_until(lambda: backend.position_ms() > before, timeout=8.0), (
+            "переключение выхода не должно останавливать воспроизведение"
+        )
+    finally:
+        backend.shutdown()
+
+
+def test_real_mpv_accepts_custom_profile_graph(tmp_path: Path) -> None:
+    """Пользовательский профиль (4 полосы + лимитер) должен собрать живой lavfi."""
+    from neurowave.audio.dsp_controller import DspController
+    from neurowave.audio.dsp_profiles import AudioProfile, EqBand, Limiter
+    from neurowave.config import Settings
+
+    profile = AudioProfile(
+        id="custom-live",
+        name="Проверка",
+        preamp_db=-5.0,
+        bands=(
+            EqBand("lowshelf", 90.0, -2.0, 0.7),
+            EqBand("peaking", 450.0, 1.5, 1.4),
+            EqBand("peaking", 3200.0, -1.0, 2.0),
+            EqBand("highshelf", 10500.0, -2.5, 0.7),
+        ),
+        limiter=Limiter(enabled=True, ceiling_dbfs=-3.5, lookahead_ms=6.0, release_ms=70.0),
+    )
+    backend = MpvBackend(extra_args=["--ao=null", "--volume=100"])
+    controller = DspController(backend, settings=Settings(dsp_profile="flat"))
+    audio = make_wav(tmp_path / "tone-custom.wav", 2.5, freq=450, level=26000)
+    try:
+        backend.load(str(audio))
+        status = controller.apply(profile)
+        assert status.confirmed is True, status.reason
+        assert "lowshelf=f=90" in (backend.audio_filter() or "")
+        assert wait_until(lambda: backend.position_ms() > 300, timeout=5.0)
+    finally:
+        backend.shutdown()

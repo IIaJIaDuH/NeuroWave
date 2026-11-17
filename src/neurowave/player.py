@@ -14,7 +14,9 @@ from typing import Any, Callable, Iterable, Protocol
 
 from .audio.backend import AudioBackend
 from .audio.dsp_controller import DspController, DspStatus
+from .audio.devices import AudioOutput, build_outputs, classify, probe_default_sink, probe_sinks
 from .audio.dsp_profiles import AudioProfile, resolve_profile
+from .audio.profile_store import ProfileRegistry
 from .config import SAFE_VOLUME, Settings
 from .domain import Quality, RepeatMode, StreamInfo, Track
 from .errors import NeuroWaveError, PlayerError, TrackUnavailable
@@ -78,8 +80,9 @@ class PlayerService:
         self._started_at: float | None = None
         self._boost_notice_shown = False
         backend.on_end = self._handle_end
+        self.profiles = ProfileRegistry.from_settings(self.settings)
         self.dsp = dsp if dsp is not None else DspController(
-            backend, settings=self.settings, listener=self._notify_dsp
+            backend, settings=self.settings, listener=self._notify_dsp, registry=self.profiles
         )
         self.backend.set_volume(self._apply_volume_policy())
 
@@ -205,16 +208,102 @@ class PlayerService:
             self.state.transition(PlayerStatus.STOPPED)
         self._emit("stopped", track=self.current_track)
 
+    def available_profiles(self) -> list[AudioProfile]:
+        return self.profiles.all()
+
+    def save_profile(self, profile: AudioProfile) -> AudioProfile:
+        """Сохранить пользовательский профиль в настройках плеера."""
+        existing = profile.id in self.profiles.custom
+        saved = self.profiles.update(profile) if existing else self.profiles.add(profile)
+        self.profiles.save(self.settings)
+        return saved
+
+    def delete_profile(self, profile_id: str) -> bool:
+        removed = self.profiles.remove(profile_id)
+        self.profiles.save(self.settings)
+        if self.settings.dsp_profile == profile_id:
+            self.settings.dsp_profile = "flat"
+        return removed
+
     def set_dsp_profile(self, profile: AudioProfile | str) -> DspStatus:
         """Выбрать профиль звука: применить сейчас или сохранить до старта."""
-        chosen = resolve_profile(profile) if not isinstance(profile, AudioProfile) else profile
+        chosen = (
+            profile
+            if isinstance(profile, AudioProfile)
+            else (self.profiles.get(profile) or resolve_profile(profile))
+        )
         self.settings.dsp_profile = chosen.id
         if self.store is not None:
             self.store.set_setting("dsp_profile", chosen.id)
         if getattr(self.backend, "is_running", False):
             return self.dsp.apply(chosen)
-        # mpv ещё не запущен: не поднимаем процесс ради фильтра.
-        return DspStatus(profile=chosen, mode=chosen.mode, graph=None, confirmed=False)
+        # mpv ещё не запущен: не поднимаем процесс ради фильтра, но интерфейс
+        # должен видеть выбранный профиль, а не предыдущий.
+        self.dsp.status = DspStatus(profile=chosen, mode=chosen.mode, graph=None, confirmed=False)
+        return self.dsp.status
+
+    # --- аудиовыход ---------------------------------------------------
+    def outputs(self) -> list[AudioOutput]:
+        """Выходы с типами и кодеками; без запущенного mpv — только настройка."""
+        running = bool(getattr(self.backend, "is_running", False))
+        devices = self.backend.audio_devices() if running else []
+        current = self.backend.audio_device() if running else None
+        return build_outputs(
+            devices, probe_sinks(), current or (self.settings.audio_output or None), probe_default_sink()
+        )
+
+    def set_output(self, device_id: str) -> AudioOutput:
+        """Выбрать выход. Несуществующий id отвергается до отправки в mpv.
+
+        mpv молча принимает любой id и продолжает играть «в никуда», поэтому
+        проверка по списку обязательна — иначе пользователь думает, что звук
+        переключился.
+        """
+        device_id = (device_id or "auto").strip()
+        running = bool(getattr(self.backend, "is_running", False))
+        available = self.backend.audio_devices() if running else []
+        known = {str(item.get("name")) for item in available if isinstance(item, dict)}
+        if known and device_id not in known:
+            options = ", ".join(sorted(known))
+            raise PlayerError(f"Нет такого аудиовыхода: {device_id}. Доступны: {options}")
+        previous = self.settings.audio_output
+        self.settings.audio_output = device_id
+        if self.store is not None:
+            self.store.set_setting("audio_output", device_id)
+        if not running:
+            return AudioOutput(id=device_id, name=device_id, kind=classify(device_id), current=True)
+        try:
+            self.backend.set_audio_device(device_id)
+            actual = self.backend.audio_device()
+            if actual is not None and actual != device_id:
+                raise PlayerError(f"mpv оставил другой выход: {actual}")
+        except PlayerError:
+            self.settings.audio_output = previous
+            if previous:
+                try:
+                    self.backend.set_audio_device(previous)
+                except PlayerError:
+                    pass
+            raise
+        chosen = next((item for item in self.outputs() if item.id == device_id), None)
+        output = chosen or AudioOutput(id=device_id, name=device_id, kind=classify(device_id), current=True)
+        self._emit("output", output=output.to_dict())
+        return output
+
+    def _sync_output(self) -> None:
+        """Применить сохранённый выход. Исчезнувшее устройство не ломает звук."""
+        desired = (self.settings.audio_output or "").strip()
+        if not desired or desired == "auto":
+            return
+        if self.backend.audio_device() == desired:
+            return
+        known = {str(item.get("name")) for item in self.backend.audio_devices() if isinstance(item, dict)}
+        if desired not in known:
+            return
+        try:
+            self.backend.set_audio_device(desired)
+        except PlayerError:
+            pass
 
     def set_dsp_mode(self, mode: str) -> DspStatus:
         from .audio.dsp_profiles import DspMode
@@ -222,9 +311,11 @@ class PlayerService:
         parsed = DspMode.parse(mode)
         if not getattr(self.backend, "is_running", False):
             self.settings.dsp_profile = (
-                "flat" if parsed is DspMode.PURE else resolve_profile(self.settings.dsp_profile).id
+                "flat" if parsed is DspMode.PURE else self.profiles.resolve(self.settings.dsp_profile).id
             )
-            return DspStatus(profile=resolve_profile(self.settings.dsp_profile), mode=parsed)
+            chosen = self.profiles.resolve(self.settings.dsp_profile)
+            self.dsp.status = DspStatus(profile=chosen, mode=parsed)
+            return self.dsp.status
         return self.dsp.set_mode(parsed)
 
     def close(self) -> None:
@@ -255,8 +346,9 @@ class PlayerService:
         quality = self._current_quality  # снимок: диспетчер может уже уйти вперёд
         self.backend.load(url)
         self.backend.set_volume(self._apply_volume_policy())
-        # Фильтры живут в mpv между треками, поэтому sync() обычно no-op.
+        # Фильтры и выход живут в mpv между треками, поэтому обычно no-op.
         self.dsp.sync()
+        self._sync_output()
         self.backend.play()
         self.state.transition(PlayerStatus.PLAYING)
         self.state.clear_overlay(Overlay.TRACK_UNAVAILABLE)

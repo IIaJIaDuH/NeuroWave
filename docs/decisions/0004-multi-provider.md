@@ -126,7 +126,7 @@ Spotify и других». Ядро до сих пор жёстко создав
 4. **Кеш по условиям.** `ProviderInfo.cache_allowed`, ключ кеша — `track.key`.
 
 Второй провайдер — **локальные файлы** (`src/neurowave/local`): скан папки
-(`local_music_dir`, по умолчанию `~/Music`), теги через `mutagen` (extras
+(`local_music_dir`, по умолчанию `~/Music`), теги через `tinytag` (MIT, extras
 `[local]`) с резервом на имена файлов, защита от выхода за пределы папки,
 `lossless` только по расширению. Возможности: `CATALOG`, `DIRECT_STREAM`,
 `SHUFFLE_LIBRARY`; `PERSONAL_RADIO` ему не приписывается — «волна» здесь
