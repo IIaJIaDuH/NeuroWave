@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Protocol, runtime_checkable
+from typing import Any, Callable, Mapping, Protocol, runtime_checkable
 
 from ..config import Paths, Settings
 
@@ -111,6 +111,8 @@ class ProviderContext:
     token: str | None = None
     paths: Paths | None = None
     settings: Settings = field(default_factory=Settings)
+    #: Параметры конкретного входа (например, client_id и port у Spotify).
+    options: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

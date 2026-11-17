@@ -68,13 +68,13 @@ def test_local_provider_is_implemented_without_account() -> None:
 def test_spotify_provider_is_delegated_playback_only() -> None:
     spec = get_spec("spotify")
     assert spec.info.implemented is True
-    assert spec.info.auth is AuthKind.API_TOKEN
+    assert spec.info.auth is AuthKind.OAUTH_BROWSER
     assert spec.info.supports(Capability.CATALOG)
     assert spec.info.supports(Capability.DELEGATED_PLAYBACK)
     assert not spec.info.supports(Capability.DIRECT_STREAM)
     assert spec.info.plays_in_mpv is False
     assert spec.info.cache_allowed is False
-    assert spec.login is None  # токен вводится через login --token
+    assert spec.login is not None  # вход по PKCE в браузере
 
 
 def test_soundcloud_provider_requires_app_key() -> None:
@@ -217,7 +217,7 @@ def test_providers_command_lists_connected_and_planned(tmp_path, capsys) -> None
     assert soundcloud["cache_allowed"] is False
     assert soundcloud["plays_in_mpv"] is True
     spotify = next(row for row in data["connected"] if row["id"] == "spotify")
-    assert spotify["auth"] == "api_token"
+    assert spotify["auth"] == "oauth_browser"
     assert spotify["plays_in_mpv"] is False
     assert spotify["cache_allowed"] is False
     assert "delegated_playback" in spotify["capabilities"]

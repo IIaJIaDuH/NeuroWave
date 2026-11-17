@@ -103,7 +103,10 @@ def build_parser() -> argparse.ArgumentParser:
     login.add_argument(
         "--token",
         metavar="KEY",
-        help="API-ключ провайдера (SoundCloud: client_id/access token; Spotify: access token)",
+        help=(
+            "API-ключ провайдера (SoundCloud: client_id/access token; Spotify: "
+            "access token — запасной путь, основной вход: login --client-id)"
+        ),
     )
     login.add_argument(
         "--refresh-token",
@@ -115,7 +118,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--client-id",
         dest="client_id",
         metavar="ID",
-        help="Spotify: client_id приложения, нужен вместе с refresh token",
+        help=(
+            "Spotify: client_id приложения — для входа по PKCE или вместе с "
+            "refresh token"
+        ),
+    )
+    login.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help="Spotify: порт локального callback для входа по PKCE (по умолчанию 8888)",
     )
     sub.add_parser("logout", help="удалить сохранённый токен")
     sub.add_parser("me", help="аккаунт и статус подписки")
@@ -351,11 +363,12 @@ def _require_token(ctx: Context) -> None:
     if info.auth is AuthKind.NONE:
         return
     if not getattr(ctx.adapter, "token", None):
-        hint = (
-            "neurowave login --token <ключ>"
-            if info.auth is AuthKind.API_TOKEN
-            else "neurowave login"
-        )
+        if info.id == "spotify":
+            hint = "neurowave --provider spotify login --client-id <id>"
+        elif info.auth is AuthKind.API_TOKEN:
+            hint = "neurowave login --token <ключ>"
+        else:
+            hint = "neurowave login"
         raise AuthError(f"Требуется вход в {info.title}. Выполните: {hint}")
 
 
@@ -403,7 +416,9 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
         print(f"Вход не требуется: «{spec.info.title}» работает с локальными файлами.")
         return 0
     if args.token:
-        if spec.info.auth is not AuthKind.API_TOKEN:
+        # Spotify поддерживает и PKCE, и ручной токен: второй остаётся
+        # запасным путём для headless-окружений и старых входов.
+        if spec.info.auth is not AuthKind.API_TOKEN and spec.info.id != "spotify":
             raise AuthError(
                 f"«{spec.info.title}» не принимает ключ вручную: выполните "
                 "интерактивный вход neurowave login."
@@ -465,13 +480,27 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
 
     def on_code(url: str, code: str) -> None:
         print("Откройте страницу подтверждения:", url)
-        print("Введите код:", code)
+        if code:
+            # У Device Flow код нужно ввести руками; у PKCE его нет.
+            print("Введите код:", code)
         print("Ожидаю подтверждения…", flush=True)
 
+    options: dict[str, Any] = {}
+    if args.client_id:
+        options["client_id"] = args.client_id.strip()
+    if args.port:
+        options["port"] = args.port
     token = spec.login(
-        ProviderContext(token=None, paths=ctx.paths, settings=ctx.settings), on_code
+        ProviderContext(
+            token=None, paths=ctx.paths, settings=ctx.settings, options=options
+        ),
+        on_code,
     )
     ctx.tokens.save(token)
+    if spec.info.id == "spotify" and args.client_id:
+        # client_id — не секрет: храним, чтобы следующий вход не требовал флага.
+        ctx.settings.spotify_client_id = args.client_id.strip()
+        ConfigStore(ctx.paths).save(ctx.settings)
     print(f"Вход выполнен ({spec.info.title}). Токен сохранён: {ctx.tokens.backend}.")
     ctx.adapter = create(
         spec, ProviderContext(token=token, paths=ctx.paths, settings=ctx.settings)

@@ -394,14 +394,14 @@ grep -il 'client_id\|OAuth ' ~/nw-smoke/*.log
 
 ## Шаг 14. Spotify как «пульт» (10 мин)
 
-Нужны OAuth access token Spotify (scopes `user-read-playback-state`,
-`user-modify-playback-state`, `user-read-private`), Premium и любое устройство
-с открытым приложением Spotify в том же аккаунте. Поток через нас не идёт —
-это и проверяем.
+Нужен client_id приложения Spotify с Redirect URI
+`http://127.0.0.1:8888/callback` (как зарегистрировать — в
+[IMPLEMENTATION.md](IMPLEMENTATION.md#вход-spotify-по-pkce)), Premium и любое
+устройство с открытым приложением Spotify в том же аккаунте. Поток через нас
+не идёт — это и проверяем.
 
 ```bash
-neurowave --provider spotify login --token <access token> \
-  --refresh-token <refresh token> --client-id <client_id>
+neurowave --provider spotify login --client-id <client_id>   # браузер + callback
 neurowave --provider spotify doctor
 neurowave --provider spotify me
 neurowave --provider spotify search "daft punk" --limit 5

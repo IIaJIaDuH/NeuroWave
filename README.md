@@ -20,9 +20,10 @@
 - локальные файлы из своей папки (`--provider local`) без аккаунта, сети и кеша;
 - SoundCloud (`--provider soundcloud`): поиск и поток доступных треков в mpv,
   атрибуция автора и отключённый кеш; ключ — `login --token`;
-- Spotify как «пульт» (`--provider spotify`): каталог и Spotify Connect —
-  `devices`, `connect`, `remote play|pause|next|previous`; поток остаётся в
-  приложении Spotify, кеша нет; токен обновляется по refresh token;
+- Spotify как «пульт» (`--provider spotify`): вход по OAuth PKCE в браузере
+  (`login --client-id`), каталог и Spotify Connect — `devices`, `connect`,
+  `remote play|pause|next|previous`; поток остаётся в приложении Spotify,
+  кеша нет; токен обновляется по refresh token;
 - квалифицированные ID `provider:track_id` в очереди, истории и кеше;
 - MPRIS и системный трей: пауза, next/prev и качество источника из панели,
   `playerctl` и медиа-клавиш, без окна.
@@ -84,8 +85,9 @@ neurowave --provider soundcloud login --token <client_id>  # ключ SoundCloud
 neurowave --provider soundcloud play "запрос"              # поток в mpv
 neurowave --provider spotify devices                     # устройства Spotify Connect
 neurowave --provider spotify remote play "запрос"         # играть на устройстве Spotify
+neurowave --provider spotify login --client-id <id>     # OAuth PKCE в браузере
 neurowave --provider spotify login --token <access> \
-  --refresh-token <refresh> --client-id <id>            # чтобы пульт не отваливался
+  --refresh-token <refresh> --client-id <id>            # запасной путь без браузера
 neurowave output        # выходы: Bluetooth/HDMI, реальный кодек, текущий маршрут
 neurowave output --set pulse/bluez_output.…   # выбрать выход (систему не меняем)
 neurowave sound         # профиль звука: режим, полосы, лимитер, lavfi-граф

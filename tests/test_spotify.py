@@ -363,7 +363,7 @@ def test_adapter_has_no_stream_and_router_refuses() -> None:
 def test_spotify_provider_is_delegated_only() -> None:
     info = get_spec("spotify").info
     assert info.implemented is True
-    assert info.auth is AuthKind.API_TOKEN
+    assert info.auth is AuthKind.OAUTH_BROWSER
     assert info.supports(Capability.CATALOG)
     assert info.supports(Capability.DELEGATED_PLAYBACK)
     assert not info.supports(Capability.DIRECT_STREAM)
@@ -587,7 +587,7 @@ def test_cli_devices_requires_token(tmp_path, capsys) -> None:
     assert main(["--home", str(tmp_path / "home"), "--provider", "spotify", "devices"]) == 2
     err = capsys.readouterr().err
     assert "Требуется вход" in err
-    assert "login --token" in err
+    assert "login --client-id" in err
 
 
 # --- закрытые долги: refresh при входе, scopes, remote --device ---------

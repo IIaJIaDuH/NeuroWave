@@ -43,7 +43,8 @@
 
 Подробности и обоснования — в [отчёте](REPORT-2026-11-16.md#технический-долг-и-хвосты).
 
-- [ ] Spotify: OAuth PKCE с браузером вместо ручного `--token/--refresh-token/--client-id`.
+- [x] Spotify: OAuth PKCE с браузером вместо ручного `--token/--refresh-token/--client-id`
+  (`login --client-id`, callback на `127.0.0.1`, проверка `state`; ручной токен — запасной путь).
 - [x] Spotify: проверять refresh token при входе и подсказывать недостающие scopes при `403`
   (`verify()` пробно обновляет токен; `403` с упоминанием scope называет нужные права).
 - [x] Spotify: `remote --device`, чтобы не делать `connect` отдельной командой.

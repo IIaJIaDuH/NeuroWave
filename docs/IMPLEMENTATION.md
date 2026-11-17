@@ -99,14 +99,14 @@ neurowave wave              # «Моя волна», управление из �
 ## Провайдеры музыки
 
 Провайдер — это не «сервис вообще», а набор явных возможностей
-(`src/neurowave/providers`). Подключены два:
+(`src/neurowave/providers`). Подключены четыре:
 
 | Провайдер | Возможности | Вход | Кеш |
 |---|---|---|---|
 | `yandex` | `CATALOG`, `LIBRARY`, `PLAYLISTS`, `PERSONAL_RADIO`, `DIRECT_STREAM` | OAuth Device Flow | да |
 | `local` | `CATALOG`, `DIRECT_STREAM`, `SHUFFLE_LIBRARY` | не требуется | нет |
 | `soundcloud` | `CATALOG`, `DIRECT_STREAM` | API-ключ (`login --token`) | нет |
-| `spotify` | `CATALOG`, `DELEGATED_PLAYBACK` | OAuth access token (`login --token`) | нет |
+| `spotify` | `CATALOG`, `DELEGATED_PLAYBACK` | OAuth PKCE в браузере (запасной путь — `login --token`) | нет |
 
 ```bash
 neurowave providers                    # что подключено и что умеет
@@ -115,6 +115,7 @@ neurowave --provider yandex wave       # провайдер на сессию
 neurowave --provider local wave        # случайная выборка, не персональный поток
 neurowave --provider soundcloud login --token <client_id>   # ключ приложения
 neurowave --provider soundcloud play "запрос"               # поток playable-треков в mpv
+neurowave --provider spotify login --client-id <id>        # вход по PKCE
 neurowave --provider spotify devices                       # устройства Spotify Connect
 neurowave --provider spotify connect "Kitchen"             # перенести воспроизведение
 neurowave --provider spotify remote play "запрос"          # играть на устройстве Spotify
@@ -124,7 +125,7 @@ neurowave --provider spotify remote play "запрос"          # играть 
 Токен у каждого провайдера свой: запись keyring `<provider>-oauth` или файл
 `token.<provider>` с правами 0600 (для Яндекса — исторические имена);
 провайдерам с `AuthKind.API_TOKEN` ключ передаётся через `login --token`
-(в вывод не попадает);
+(в вывод не попадает); у `AuthKind.OAUTH_BROWSER` (Spotify) — вход по PKCE;
 провайдерам с `AuthKind.NONE` токен не нужен, и `login` так и говорит.
 
 ### Квалифицированные ID
@@ -176,16 +177,46 @@ play` для Spotify отвечает «не поддерживает: пото�
 входа.
 
 ```bash
-neurowave --provider spotify login --token <access token> \
-  --refresh-token <refresh token> --client-id <client_id>
+neurowave --provider spotify login --client-id <client_id>
 neurowave --provider spotify devices
 neurowave --provider spotify connect "Living Room"
 neurowave --provider spotify remote play "запрос"     # или --uri spotify:track:…
 neurowave --provider spotify remote pause|next|previous
 ```
 
-Токен проверяется запросом `/me` при входе; `403` переводится в понятное
-требование Premium, `404` — в «нет активного устройства». `me` показывает
+### Вход Spotify по PKCE
+
+Основной вход — OAuth 2.0 Authorization Code + PKCE: client secret не нужен и
+не хранится, браузер возвращает код на loopback, токены не печатаются.
+
+```bash
+neurowave --provider spotify login --client-id <client_id>
+neurowave --provider spotify login --client-id <id> --port 8899  # если 8888 занят
+```
+
+Что нужно зарегистрировать в Spotify:
+
+1. Открыть [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
+   и создать приложение (Web API).
+2. В Settings → Redirect URIs добавить ровно
+   `http://127.0.0.1:8888/callback` (при другом `--port` — соответствующий
+   адрес). Spotify допускает `http` только для loopback `127.0.0.1`;
+   остальные адреса должны быть `https`.
+3. Скопировать **Client ID**. Client secret для PKCE не нужен и не должен
+   попадать в репозиторий или настройки.
+4. Войти и подтвердить доступ: access и refresh token лягут в `TokenStore`, а
+   `client_id` — в `config.json`, чтобы следующий вход не требовал флага.
+
+Запрашиваемые scopes: `user-read-playback-state`, `user-modify-playback-state`,
+`user-read-currently-playing`, `user-read-private`. Параметр `state`
+проверяется, callback слушает только `127.0.0.1`, код и `code_verifier`
+никуда не выводятся. Ручной вход
+`login --token <access> --refresh-token <refresh> --client-id <id>` остаётся
+запасным путём для headless-окружений.
+
+Токен проверяется запросом `/me` при входе (и пробным обновлением refresh
+token, если он есть); `403` переводится в понятное требование Premium или
+недостающих scopes, `404` — в «нет активного устройства». `me` показывает
 подписку Premium, если сервис вернул `product=premium`. Кеша нет
 (`cache_allowed=False`): хранить нечего, звук остаётся в Spotify. Сеть
 изолирована в `spotify/client.py`, транспорт подменяется в тестах.

@@ -77,6 +77,8 @@ class Settings:
     audio_backend: str = "mpv"
     provider: str = "yandex"
     local_music_dir: str = ""
+    #: client_id приложения Spotify для входа по PKCE (не секрет).
+    spotify_client_id: str = ""
     reduced_motion: bool = False
     language: str = "ru"
     ai_enabled: bool = False
