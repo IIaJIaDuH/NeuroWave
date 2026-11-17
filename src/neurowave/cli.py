@@ -15,6 +15,7 @@ import socket
 import sys
 import time
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any, Sequence
 
 from . import __version__
@@ -29,7 +30,7 @@ from .audio.devices import (
 from .audio.dsp_graph import build_filter_graph, describe_profile
 from .audio.dsp_profiles import BUILTIN_PROFILES, DspError, get_profile, resolve_profile
 from .audio.profile_store import ProfileRegistry
-from .config import ConfigStore, Paths, Settings
+from .config import ConfigStore, Paths, Settings, atomic_write_json
 from .domain import AccountInfo, Track
 from .errors import AuthError, NetworkError, NeuroWaveError, PlayerError
 from .player import PlayerService
@@ -140,6 +141,9 @@ def build_parser() -> argparse.ArgumentParser:
     remote.add_argument("query", nargs="?", help="запрос для play")
     remote.add_argument("--uri", help="spotify:track:… вместо поиска")
     remote.add_argument("--limit", type=int, default=5)
+    remote.add_argument(
+        "--device", help="сначала перенести звук на это устройство Spotify Connect"
+    )
 
     library = sub.add_parser("library", help="понравившиеся треки")
     library.add_argument("--limit", type=int, default=50)
@@ -436,6 +440,14 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
                     file=sys.stderr,
                     flush=True,
                 )
+        # verify() мог обновить токен (Spotify проверяет refresh token), поэтому
+        # сохраняем фактическое состояние клиента, а не аргументы команды.
+        storage = getattr(adapter, "storage_token", None)
+        if callable(storage):
+            try:
+                stored_token = storage() or stored_token
+            except NeuroWaveError:
+                pass
         ctx.tokens.save(stored_token)
         ctx.adapter = adapter
         print(f"Ключ сохранён ({spec.info.title}). Хранилище: {ctx.tokens.backend}.")
@@ -477,6 +489,11 @@ def _cmd_login(args: argparse.Namespace, ctx: Context) -> int:
 
 def _cmd_logout(args: argparse.Namespace, ctx: Context) -> int:
     ctx.tokens.delete()
+    # Кеш аккаунта — персональные данные: после выхода он не нужен.
+    try:
+        _account_cache_file(ctx.paths, ctx.provider).unlink()
+    except OSError:
+        pass
     if ctx.provider == "yandex":
         print("Токен удалён. Персональные данные больше не запрашиваются.")
     else:
@@ -487,10 +504,98 @@ def _cmd_logout(args: argparse.Namespace, ctx: Context) -> int:
 def _cmd_me(args: argparse.Namespace, ctx: Context) -> int:
     _require_token(ctx)
     info = ctx.provider_info
+    try:
+        account = ctx.adapter.account()
+    except NetworkError as exc:
+        # Без сети показываем последнее известное состояние, а не ошибку:
+        # аккаунт и подписка меняются редко, а связь пропадает часто.
+        cached = _load_cached_account(ctx.paths, ctx.provider)
+        if cached is None:
+            raise
+        account, saved_at = cached
+        when = (
+            time.strftime("%d.%m.%Y %H:%M", time.localtime(saved_at))
+            if saved_at
+            else "неизвестно когда"
+        )
+        print(
+            f"Сеть недоступна ({exc}). Показываю последнее известное состояние "
+            f"на {when}.",
+            file=sys.stderr,
+        )
+        _print_account(
+            account,
+            args.json,
+            info.subscription,
+            info.unavailable_hint or None,
+            cached=True,
+        )
+        return 0
+    _save_cached_account(ctx.paths, ctx.provider, account)
     _print_account(
-        ctx.adapter.account(), args.json, info.subscription, info.unavailable_hint or None
+        account, args.json, info.subscription, info.unavailable_hint or None
     )
     return 0
+
+
+ACCOUNT_CACHE_VERSION = 1
+
+
+def _account_cache_file(paths: Paths, provider: str) -> Path:
+    return paths.data_dir / f"account.{provider}.json"
+
+
+def _save_cached_account(
+    paths: Paths, provider: str, account: AccountInfo
+) -> None:
+    """Сохранить последнее известное состояние аккаунта — без токенов."""
+    try:
+        atomic_write_json(
+            _account_cache_file(paths, provider),
+            {
+                "version": ACCOUNT_CACHE_VERSION,
+                "saved_at": time.time(),
+                "account": {
+                    "uid": account.uid,
+                    "login": account.login,
+                    "display_name": account.display_name,
+                    "service_available": account.service_available,
+                    "plus": account.plus,
+                },
+            },
+        )
+    except OSError:
+        pass  # кеш не должен ломать команду
+
+
+def _load_cached_account(
+    paths: Paths, provider: str
+) -> tuple[AccountInfo, float] | None:
+    try:
+        raw = json.loads(
+            _account_cache_file(paths, provider).read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(raw, dict) or not isinstance(raw.get("account"), dict):
+        return None
+    data = raw["account"]
+    display_name = str(data.get("display_name") or "").strip()
+    if not display_name:
+        return None
+    plus = data.get("plus")
+    raw_uid = data.get("uid")
+    saved_at = raw.get("saved_at")
+    return (
+        AccountInfo(
+            uid=raw_uid if isinstance(raw_uid, int) else None,
+            login=data.get("login"),
+            display_name=display_name,
+            service_available=bool(data.get("service_available", True)),
+            plus=plus if isinstance(plus, bool) else None,
+        ),
+        float(saved_at) if isinstance(saved_at, (int, float)) else 0.0,
+    )
 
 
 def _print_account(
@@ -498,20 +603,19 @@ def _print_account(
     as_json: bool,
     subscription: str | None = None,
     unavailable_hint: str | None = None,
+    cached: bool = False,
 ) -> None:
     if as_json:
-        print(
-            json.dumps(
-                {
-                    "uid": account.uid,
-                    "login": account.login,
-                    "display_name": account.display_name,
-                    "service_available": account.service_available,
-                    "plus": account.plus,
-                },
-                ensure_ascii=False,
-            )
-        )
+        payload = {
+            "uid": account.uid,
+            "login": account.login,
+            "display_name": account.display_name,
+            "service_available": account.service_available,
+            "plus": account.plus,
+        }
+        if cached:
+            payload["cached"] = True
+        print(json.dumps(payload, ensure_ascii=False))
         return
     print(f"Аккаунт: {account.title}")
     if account.login:
@@ -635,6 +739,15 @@ def _cmd_remote(args: argparse.Namespace, ctx: Context) -> int:
     """Управление устройством сервиса: звук идёт мимо нашего `mpv`."""
     _require_capability(ctx, Capability.DELEGATED_PLAYBACK)
     _require_token(ctx)
+    target = (args.device or "").strip()
+    if target:
+        devices = ctx.adapter.devices()
+        match = _match_device(devices, target)
+        if match is None:
+            names = ", ".join(device.name for device in devices) or "ни одного"
+            raise PlayerError(f"Устройство «{target}» не найдено. Доступны: {names}.")
+        ctx.adapter.transfer(match.id)
+        print(f"Воспроизведение перенесено на «{match.name}».")
     action = args.action
     if action == "play":
         uri = (args.uri or "").strip()
@@ -1192,6 +1305,19 @@ def _cmd_cache(args: argparse.Namespace) -> int:
     print(
         f"Кеш: {stats.megabytes_used} МБ из {stats.megabytes_quota} МБ, файлов: {stats.count}"
     )
+    try:
+        free = shutil.disk_usage(paths.cache_dir).free
+    except OSError as exc:
+        print(f"Свободное место не проверено: {exc}", file=sys.stderr)
+        return 0
+    print(f"Свободно на диске: {free / 1024**3:.1f} ГБ")
+    if settings.cache_quota_bytes and free < settings.cache_quota_bytes:
+        print(
+            "! Свободного места меньше квоты кеша "
+            f"({settings.cache_quota_bytes / 1024**3:.1f} ГБ): кеш может не поместиться. "
+            "Уменьшите cache_quota_gb или освободите место.",
+            file=sys.stderr,
+        )
     return 0
 
 
@@ -1244,8 +1370,29 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     python_ok = sys.version_info >= (3, 10)
     checks.append(("Python ≥ 3.10", python_ok, sys.version.split()[0]))
 
+    paths = Paths.resolve()
+    try:
+        provider_id = _resolve_provider_id(args, ConfigStore(paths).load())
+    except NeuroWaveError:
+        provider_id = getattr(args, "provider", None) or "yandex"
+    try:
+        plays_in_mpv = get_spec(provider_id).info.plays_in_mpv
+    except NeuroWaveError:
+        plays_in_mpv = True
+
+    # mpv нужен только там, где мы сами отдаём поток (DIRECT_STREAM).
+    # У «пульта» Spotify звук остаётся в приложении сервиса.
     mpv_path = shutil.which("mpv")
-    checks.append(("mpv", bool(mpv_path), mpv_path or "sudo apt install mpv"))
+    if plays_in_mpv:
+        checks.append(("mpv", bool(mpv_path), mpv_path or "sudo apt install mpv"))
+    else:
+        checks.append(
+            (
+                "mpv",
+                True,
+                f"{mpv_path} — не обязателен" if mpv_path else "не обязателен: звук в приложении сервиса",
+            )
+        )
 
     if keyring_disabled():
         checks.append(
@@ -1262,7 +1409,6 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
                 ("keyring", True, "нет backend — токен будет в файле 0600")
             )
 
-    paths = Paths.resolve()
     try:
         paths.ensure()
         probe = paths.data_dir / ".write-test"
@@ -1272,7 +1418,6 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     except OSError as exc:
         checks.append(("Каталоги XDG", False, str(exc)))
 
-    provider_id = _resolve_provider_id(args, ConfigStore(paths).load())
     checks.extend(_provider_dependency_checks(provider_id))
     try:
         provider_title = get_spec(provider_id).info.title

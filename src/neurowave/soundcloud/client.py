@@ -116,6 +116,9 @@ class SoundCloudClient:
         sleep: Callable[[float], None] = time.sleep,
         rng: random.Random | None = None,
         api_root: str = API_ROOT,
+        cache_ttl: float = 300.0,
+        cache_size: int = 256,
+        clock: Callable[[], float] = time.monotonic,
     ):
         self._token = (token or "").strip() or None
         self._transport = transport or UrllibTransport()
@@ -125,6 +128,12 @@ class SoundCloudClient:
         self._sleep = sleep
         self._rng = rng or random.Random()
         self._api_root = api_root.rstrip("/")
+        # Метаданные трека нужны и для проверки доступа, и для ссылки на поток:
+        # без кеша `stream_url` делал два запроса на каждый повторный трек.
+        self._cache_ttl = max(0.0, float(cache_ttl))
+        self._cache_size = max(0, int(cache_size))
+        self._clock = clock
+        self._track_cache: dict[str, tuple[float, dict[str, Any]]] = {}
 
     @property
     def token(self) -> str | None:
@@ -156,9 +165,14 @@ class SoundCloudClient:
         self._get_json("/tracks", {"limit": 1, "access": PLAYABLE_ACCESS})
 
     def track(self, track_id: str) -> dict[str, Any]:
-        payload = self._get_json(f"/tracks/{self._quote(track_id)}")
+        key = str(track_id)
+        cached = self._cached_track(key)
+        if cached is not None:
+            return cached
+        payload = self._get_json(f"/tracks/{self._quote(key)}")
         if not isinstance(payload, dict) or not payload.get("id"):
             raise TrackUnavailable("SoundCloud не вернул данные трека")
+        self._remember_track(key, payload)
         return payload
 
     def stream_location(self, track_id: str) -> str:
@@ -184,6 +198,27 @@ class SoundCloudClient:
         raise ApiError(f"SoundCloud вернул {response.status} вместо адреса потока")
 
     # --- внутреннее ---------------------------------------------------
+    def _cached_track(self, key: str) -> dict[str, Any] | None:
+        if self._cache_ttl <= 0 or self._cache_size <= 0:
+            return None
+        cached = self._track_cache.get(key)
+        if cached is None:
+            return None
+        saved_at, payload = cached
+        if self._clock() - saved_at > self._cache_ttl:
+            self._track_cache.pop(key, None)
+            return None
+        return dict(payload)  # наружу — копия: кеш не должен меняться снаружи
+
+    def _remember_track(self, key: str, payload: dict[str, Any]) -> None:
+        if self._cache_ttl <= 0 or self._cache_size <= 0:
+            return
+        if len(self._track_cache) >= self._cache_size and key not in self._track_cache:
+            oldest = min(self._track_cache, key=lambda item: self._track_cache[item][0])
+            self._track_cache.pop(oldest, None)
+        # Храним копию: вызвавший получает исходный объект и может его менять.
+        self._track_cache[key] = (self._clock(), dict(payload))
+
     @staticmethod
     def _quote(track_id: str) -> str:
         return urllib.parse.quote(str(track_id), safe="")

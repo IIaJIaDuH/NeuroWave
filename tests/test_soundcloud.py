@@ -390,3 +390,50 @@ def test_cli_soundcloud_library_is_refused(tmp_path, capsys, monkeypatch) -> Non
     code = main(["--home", str(home), "--provider", "soundcloud", "library"])
     assert code == 2
     assert "не поддерживает" in capsys.readouterr().err
+
+
+# --- закрытый долг: метаданные трека не читаются дважды подряд ----------
+def test_track_metadata_is_cached_in_memory() -> None:
+    transport = FakeTransport([make_response(PLAYABLE)])
+    client = make_client(transport)
+
+    first = client.track("101")
+    second = client.track("101")
+
+    assert first == second == PLAYABLE
+    assert len(transport.calls) == 1
+    assert first is not second  # наружу — копия, кеш не меняется снаружи
+
+
+def test_stream_url_reuses_cached_track_metadata() -> None:
+    transport = FakeTransport(
+        [make_response(PLAYABLE)],
+        redirect=HttpResponse(status=302, headers={"Location": CDN_URL}),
+    )
+    adapter = SoundCloudAdapter(client=make_client(transport))
+
+    adapter.stream_url("101")
+    adapter.stream_url("101")
+
+    json_calls = [call for call in transport.calls if call[0] == "json"]
+    assert len(json_calls) == 1
+
+
+def test_track_cache_expires_and_is_bounded() -> None:
+    now = [0.0]
+    transport = FakeTransport([make_response(PLAYABLE)])
+    client = SoundCloudClient(
+        token="k", transport=transport, cache_ttl=10, cache_size=1, clock=lambda: now[0]
+    )
+    client.track("101")
+    now[0] = 11.0
+    client.track("101")
+    assert len(transport.calls) == 2
+
+    other = {**PLAYABLE, "id": 202}
+    two = FakeTransport([make_response(PLAYABLE), make_response(other)])
+    bounded = SoundCloudClient(token="k", transport=two, cache_size=1, clock=lambda: 0.0)
+    bounded.track("101")
+    bounded.track("202")
+    bounded.track("101")  # 101 уже вытеснен
+    assert len(two.calls) == 3

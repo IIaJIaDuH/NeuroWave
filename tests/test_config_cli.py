@@ -162,3 +162,132 @@ def test_logout_clears_token_file(tmp_path):
     code = main(["--home", str(tmp_path), "logout"])
     assert code == 0
     assert not token_file.exists()
+
+
+# --- закрытые долги: doctor без mpv, место под кеш, me без сети ---------
+def test_doctor_mpv_is_optional_for_delegated_playback(tmp_path, capsys) -> None:
+    code = main(["--home", str(tmp_path), "--provider", "spotify", "--json", "doctor"])
+    checks = {item["check"]: item for item in json.loads(capsys.readouterr().out)}
+    assert checks["mpv"]["ok"] is True
+    assert "не обязателен" in checks["mpv"]["detail"]
+    assert code in (0, 1)
+
+
+def test_cache_warns_when_free_space_is_below_quota(tmp_path, capsys, monkeypatch):
+    from types import SimpleNamespace
+
+    from neurowave import cli
+
+    monkeypatch.setattr(cli.shutil, "disk_usage", lambda path: SimpleNamespace(free=1024))
+    assert main(["--home", str(tmp_path), "cache", "info"]) == 0
+    captured = capsys.readouterr()
+    assert "Свободно на диске" in captured.out
+    assert "меньше квоты кеша" in captured.err
+
+
+def test_me_shows_last_known_account_without_network(tmp_path, capsys):
+    from types import SimpleNamespace
+
+    from neurowave import cli
+    from neurowave.domain import AccountInfo
+    from neurowave.errors import NetworkError
+    from neurowave.providers import AuthKind
+
+    paths = Paths.resolve({"NEUROWAVE_HOME": str(tmp_path)}).ensure()
+    cli._save_cached_account(
+        paths, "spotify", AccountInfo(login="u1", display_name="Слушатель", plus=True)
+    )
+
+    class Adapter:
+        token = "token-in-memory"
+
+        def account(self):
+            raise NetworkError("нет сети")
+
+    ctx = SimpleNamespace(
+        paths=paths,
+        provider="spotify",
+        adapter=Adapter(),
+        provider_info=SimpleNamespace(
+            auth=AuthKind.NONE, subscription="Premium", unavailable_hint=None, title="Spotify"
+        ),
+    )
+    assert cli._cmd_me(SimpleNamespace(json=False), ctx) == 0
+    captured = capsys.readouterr()
+    assert "Аккаунт: Слушатель" in captured.out
+    assert "Подписка Premium: активна" in captured.out
+    assert "последнее известное состояние" in captured.err
+    assert "token-in-memory" not in captured.out + captured.err
+
+
+def test_login_saves_refreshed_credentials_after_verify(tmp_path, capsys, monkeypatch):
+    from neurowave import cli
+    from neurowave.storage import TokenStore
+
+    monkeypatch.setattr(TokenStore, "_import_keyring", staticmethod(lambda: None))
+    refreshed = (
+        '{"version": 1, "access_token": "fresh", "refresh_token": "rotated", '
+        '"client_id": "cid", "expires_at": 123.0}'
+    )
+
+    class Adapter:
+        token = "input-access"
+
+        def verify(self):
+            pass
+
+        def storage_token(self):
+            return refreshed
+
+    monkeypatch.setattr(cli, "create", lambda spec, context: Adapter())
+    home = tmp_path / "home"
+    code = main(
+        [
+            "--home", str(home),
+            "--provider", "spotify",
+            "login", "--token", "input-access",
+            "--refresh-token", "input-refresh",
+            "--client-id", "cid",
+        ]
+    )
+    assert code == 0
+    stored = TokenStore(Paths.resolve({"NEUROWAVE_HOME": str(home)}), provider="spotify")
+    assert stored.load() == refreshed
+
+
+def test_logout_removes_cached_account(tmp_path):
+    from neurowave import cli
+    from neurowave.domain import AccountInfo
+
+    paths = Paths.resolve({"NEUROWAVE_HOME": str(tmp_path)}).ensure()
+    cli._save_cached_account(paths, "yandex", AccountInfo(display_name="Слушатель"))
+    cache_file = paths.data_dir / "account.yandex.json"
+    assert cache_file.exists()
+
+    assert main(["--home", str(tmp_path), "logout"]) == 0
+    assert not cache_file.exists()
+
+
+def test_me_without_network_and_cache_still_fails(tmp_path):
+    from types import SimpleNamespace
+
+    from neurowave import cli
+    from neurowave.errors import NetworkError
+    from neurowave.providers import AuthKind
+
+    class Adapter:
+        token = "t"
+
+        def account(self):
+            raise NetworkError("нет сети")
+
+    ctx = SimpleNamespace(
+        paths=Paths.resolve({"NEUROWAVE_HOME": str(tmp_path)}).ensure(),
+        provider="spotify",
+        adapter=Adapter(),
+        provider_info=SimpleNamespace(
+            auth=AuthKind.NONE, subscription=None, unavailable_hint=None, title="Spotify"
+        ),
+    )
+    with pytest.raises(NetworkError):
+        cli._cmd_me(SimpleNamespace(json=False), ctx)

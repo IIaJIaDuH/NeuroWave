@@ -588,3 +588,102 @@ def test_cli_devices_requires_token(tmp_path, capsys) -> None:
     err = capsys.readouterr().err
     assert "Требуется вход" in err
     assert "login --token" in err
+
+
+# --- закрытые долги: refresh при входе, scopes, remote --device ---------
+def test_verify_proves_refresh_token_and_sets_expiry() -> None:
+    credentials = SpotifyCredentials(
+        access_token="access", refresh_token="ref", client_id="cid"
+    )
+    transport = FakeTransport(
+        [
+            make_response({"id": "u1"}),
+            make_response({"access_token": "fresh", "expires_in": 3600}),
+        ]
+    )
+    client = SpotifyClient(
+        credentials=credentials, transport=transport, clock=lambda: 100.0
+    )
+
+    client.verify()
+
+    assert [call[1] for call in transport.calls] == [
+        "https://api.spotify.com/v1/me",
+        "https://accounts.spotify.com/api/token",
+    ]
+    assert credentials.access_token == "fresh"
+    assert credentials.expires_at == 3700.0
+    assert json.loads(client.storage_token())["refresh_token"] == "ref"
+
+
+def test_verify_rejects_bad_refresh_token_at_login() -> None:
+    credentials = SpotifyCredentials(
+        access_token="access", refresh_token="bad-refresh", client_id="cid"
+    )
+    transport = FakeTransport(
+        [
+            make_response({"id": "u1"}),
+            make_response({"error": "invalid_grant"}, status=400),
+        ]
+    )
+    client = SpotifyClient(credentials=credentials, transport=transport)
+    with pytest.raises(AuthError) as exc:
+        client.verify()
+    message = str(exc.value)
+    assert "Не удалось обновить токен" in message
+    assert "bad-refresh" not in message
+
+
+def test_403_scope_error_names_missing_permissions() -> None:
+    response = make_response(
+        {"error": {"status": 403, "message": "Insufficient client scope"}}, status=403
+    )
+    with pytest.raises(AuthError) as exc:
+        make_client(FakeTransport([response])).play(["spotify:track:tr-1"])
+    message = str(exc.value)
+    assert "Insufficient client scope" in message
+    assert "user-modify-playback-state" in message
+
+
+def test_cli_remote_device_moves_playback_first(tmp_path, capsys, monkeypatch) -> None:
+    from neurowave.cli import main
+
+    calls = patch_spotify(monkeypatch)
+    home = str(tmp_path / "home")
+    login(home)
+    capsys.readouterr()
+
+    code = main(
+        [
+            "--home", home,
+            "--provider", "spotify",
+            "remote", "play", "nightcall",
+            "--device", "living room",
+        ]
+    )
+    assert code == 0
+    assert calls == [("transfer", "dev-2"), ("play", ("tr-1",))]
+    assert "перенесено на «Living Room»" in capsys.readouterr().out
+
+
+def test_cli_remote_unknown_device_is_named_error(tmp_path, capsys, monkeypatch) -> None:
+    from neurowave.cli import main
+
+    calls = patch_spotify(monkeypatch)
+    home = str(tmp_path / "home")
+    login(home)
+    capsys.readouterr()
+
+    code = main(
+        [
+            "--home", home,
+            "--provider", "spotify",
+            "remote", "pause",
+            "--device", "nowhere",
+        ]
+    )
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "не найдено" in err
+    assert "Kitchen" in err
+    assert calls == []
