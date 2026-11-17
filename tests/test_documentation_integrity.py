@@ -77,7 +77,7 @@ def test_beta_checklist_does_not_call_swap_affected_memory_proven_clean() -> Non
     # Assert the *interpretation* of the soak, not incidental fd counts.
     # Numeric measurements legitimately change when a fresh run replaces the table.
     assert re.search(
-        r"памят[ьи][^\\n]{0,100}(?:не доказан|неопредел[её]н|не подтвержден)",
+        r"памят[ьи][^\n]{0,100}(?:не доказан|неопредел[её]н|не подтвержден)",
         beta,
         flags=re.IGNORECASE,
     ), "Checklist must not treat swap-affected memory measurements as proof of no leaks"
