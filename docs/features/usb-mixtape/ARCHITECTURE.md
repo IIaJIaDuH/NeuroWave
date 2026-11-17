@@ -185,6 +185,10 @@ NEW → PLANNING → PLANNED → AWAITING_CONFIRMATION
 
 CANCELLED, FAILED are terminal for that attempt.
 PARTIAL is a final report status when some items skipped/failed but job finishes.
+
+Мост (`mixtape/bridge.py`) отдаёт в GUI те же четыре исхода: COMPLETE → `done`,
+PARTIAL → `partial`, FAILED → `failed`, CANCELLED → `cancelled`; сообщение
+содержит `verified/failed/skipped`, а не безусловное «готово».
 ~~~
 
 **State transition gate:** выбор нового устройства или изменение плана после подтверждения возвращает к AWAITING_CONFIRMATION. READY/COMPLETE означает: все заявленные готовые файлы реально проверены и final manifest последовательно записан, а не только отправлен в write().
@@ -204,9 +208,9 @@ PARTIAL is a final report status when some items skipped/failed but job finishes
 
 ## 7. Хранение и восстановление
 
-- Локальный журнал: XDG_DATA_HOME/neurowave/mixtape/jobs/<uuid>.json (права 0600, atomically replaced).
+- Локальный журнал: XDG_DATA_HOME/neurowave/mixtape/jobs/<job_id>.json (права 0600, atomically replaced). `job_id` уникален для запуска, `plan_id` внутри записи — id содержимого плана; старые журналы под `plan_id` читаются как прежде.
 - На USB: MUSIC/NeuroWave/.neurowave-job-<uuid>/ временные данные; MUSIC/NeuroWave/manifest.json с schema_version и перечнем **файлов, которыми владеет именно эта задача**, не всех данных тома.
-- В manifest: job_id, version, consented target fingerprint, source identifiers (без токенов/ссылок), relative paths, status, source/destination hash, bytes, timestamps. Хешировать конфиденциальные абсолютные пути в публичном export-report при необходимости.
+- В manifest: job_id, playlist (имя собственного M3U8 или пусто), version, consented target fingerprint, source identifiers (без токенов/ссылок), relative paths, status, source/destination hash, bytes, timestamps. Хешировать конфиденциальные абсолютные пути в публичном export-report при необходимости.
 - Любые пути, прочитанные из manifest на USB, считаются недоверенными; парсинг с размерным лимитом, schema check и собственной проверкой path containment.
 - Resume возможен только при совпадении identity тома, plan revision и валидных уже записанных файлов. Без совпадения → новый план и подтверждение.
 - При отмене удалять только собственные временные файлы по подтверждённому пути и валидированному job-id; готовые файлы сохранять, если пользователь не запросил безопасную уборку.

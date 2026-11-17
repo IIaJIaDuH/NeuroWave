@@ -254,3 +254,22 @@ AI recommendations NEVER call Safe writer or OS APIs directly.
 - Готовый ZIP/USB содержит **только музыку и минимум метаданных**, никаких ключей и приватных профилей.
 
 После MVP можно планировать smart update, playlist cover, device profiles, optional official download plugin и optional AI. Но каждое отдельно.
+
+## Ревью-фиксы перед merge (USB-FIX-01…07)
+
+Ревью коммита `000d646` заблокировало merge: расширение функций остановлено,
+исправлялись только безопасность записи, статусы, задачи и CI.
+
+| Пункт | Статус | Где |
+|---|---|---|
+| USB-FIX-01 чужой playlist | исправлено | `export/manifest.py` (поле `playlist`), `export/writer.py::_write_playlist` |
+| USB-FIX-02 no-clobber без гонки | исправлено | `export/writer.py::_commit` / `_rename_noreplace`, код `no_atomic_replace` |
+| USB-FIX-03 проверка тома до записи | исправлено | `export/writer.py::_assert_mountpoint`, `devices/udisks2.py::assert_mountpoint` |
+| USB-FIX-04 честные статусы GUI | исправлено | `mixtape/bridge.py` (COMPLETE/PARTIAL/FAILED/CANCELLED), пустой план = failed |
+| USB-FIX-05 `job_id` ≠ `plan_id` | исправлено | `mixtape/service.py::make_job_id`, `jobs.py::job_record` |
+| USB-FIX-06 жизненный цикл Qt-диалога | исправлено | `ui/mixtape.py::closeEvent`, отмена с ожиданием и `bridge.close()` |
+| USB-FIX-07 Qt в CI без ложных skip | исправлено | `.github/workflows/tests.yml` (Qt-job + падение на `skipped`) |
+
+Офлайн fake-USB и offscreen-Qt прогоны зелёные; живой UDisks2, физическая
+запись на FAT32/exFAT и аппаратная проверка по-прежнему не выполнялись и
+остаются отдельным шагом после merge-разблокировки.
