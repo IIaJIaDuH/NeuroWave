@@ -159,6 +159,18 @@ class UDisks2DeviceService:
             )
         return current
 
+    def safely_eject(self, expected: DeviceIdentity) -> DeviceIdentity:
+        current = self.revalidate(expected)
+        try:
+            asyncio.run(_unmount_object(current.udisks_object_path))
+        except UsbDeviceError:
+            raise
+        except Exception as error:  # pragma: no cover - живая шина
+            raise UsbDeviceError(
+                DeviceErrorCode.EJECT_FAILED, f"Не удалось размонтировать том: {error}"
+            ) from error
+        return current
+
     def _snapshot(self) -> dict[str, DeviceIdentity]:
         try:
             objects = self._provider()
@@ -201,6 +213,19 @@ async def _read_managed_objects():
         proxy = bus.get_proxy_object(UDISKS_BUS, UDISKS_PATH, introspection)
         manager = proxy.get_interface(OBJECT_MANAGER_IFACE)
         return await manager.call_get_managed_objects()
+    finally:
+        bus.disconnect()
+
+
+async def _unmount_object(object_path: str) -> None:
+    from dbus_next.aio import MessageBus
+
+    bus = await MessageBus().connect()
+    try:
+        introspection = await bus.introspect(UDISKS_BUS, object_path)
+        proxy = bus.get_proxy_object(UDISKS_BUS, object_path, introspection)
+        filesystem = proxy.get_interface(FILESYSTEM_IFACE)
+        await filesystem.call_unmount({})
     finally:
         bus.disconnect()
 

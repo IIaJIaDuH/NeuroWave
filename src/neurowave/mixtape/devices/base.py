@@ -21,6 +21,7 @@ class DeviceErrorCode(str, Enum):
     NOT_REMOVABLE = "device_not_removable"
     SYSTEM = "device_system"
     UNVERIFIED = "device_unverified"
+    EJECT_FAILED = "eject_failed"
 
 
 class UsbDeviceError(Exception):
@@ -35,6 +36,8 @@ class UsbDeviceService(Protocol):
     def list_removable_writable_filesystems(self) -> Sequence[DeviceIdentity]: ...
 
     def revalidate(self, expected: DeviceIdentity) -> DeviceIdentity: ...
+
+    def safely_eject(self, expected: DeviceIdentity) -> DeviceIdentity: ...
 
 
 def identities_match(expected: DeviceIdentity, current: DeviceIdentity) -> bool:

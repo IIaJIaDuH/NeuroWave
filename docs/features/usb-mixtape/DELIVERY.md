@@ -1,6 +1,6 @@
 # USB Mixtape — реализация по PR, зависимости, чек-листы
 
-**Статус:** USB-00 — спецификация; USB-01…USB-05 (планировщик, источник, устройства, writer, транскод/M3U8/Car) реализованы · 2026-11-17.  
+**Статус:** USB-00 — спецификация; USB-01…USB-06 (планировщик, источник, устройства, writer, транскод/M3U8/Car, headless CLI) реализованы · 2026-11-17.
 **Ветка спецификации:** feature/usb-mixtape-spec  
 **База:** main по состоянию на SHA 1baf6de3b8d30f453c1a4feb2af30a9b2e6c13aa.  
 **Приоритет относительно NeuroWave 0.2:** дополнительная фича. Не блокирует ADR-0005, Sound Lab и Qt Desktop.
@@ -42,7 +42,7 @@ matcher, протокол `ExportSource` и `MixtapePlanner`; `tests/test_mixtap
 **Сделано в USB-03:** `devices/base.py` (протокол, `DeviceIdentity`,
 `UsbDeviceError`), `devices/fake.py` и `devices/udisks2.py` (чистый маппер +
 ленивый D-Bus, без `/dev`); `tests/test_mixtape_devices.py` (35 тестов,
-T-001…T-005). Eject и CLI — план.
+T-001…T-005). Eject и CLI добавлены в USB-06; живая шина — USB-08.
 
 **Сделано в USB-04:** `export/` — `SafeWriter`, `manifest.py`, `filenames.py`,
 ошибки; `tests/test_mixtape_writer.py` (26 тестов, T-006…T-015 и
@@ -55,6 +55,16 @@ shell, таймаут, внедряемый runner), `export/playlist.py` (M3U8 
 verified-файлам), `car.py` (нумерация, портативные имена, транслитерация);
 writer умеет TRANSCODE с проверкой формата/длительности. `tests/test_mixtape_transcode.py`
 (17 тестов на синтетическом WAV) плюс EIO/rename-race в writer-тестах.
+
+**Сделано в USB-06:** `mixtape/cli.py` — команды `devices`, `plan`, `export`,
+`status`, `cancel`, `verify`, `eject` с JSON, интеграцией `MixtapePlanner`,
+`LocalExportSource`, fake/UDisks2-устройств и `SafeWriter`; `mixtape/jobs.py` —
+локальный журнал 0600 и cancel-marker, проверяемый writer'ом между чанками.
+`export` без `--confirm` и план без `--confirm-local-rights` не пишут ничего;
+`eject` требует отдельного `--confirm`, вызывает `safely_eject` (Filesystem.Unmount)
+только после revalidate и не трогает незавершённую задачу. CLI работает без
+провайдера, сети и GUI. `tests/test_mixtape_cli.py` (22 офлайн-теста на
+fake-USB и временной библиотеке). Реальная запись и живой UDisks2 — USB-08.
 
 ## 2. Отдельные acceptance gates
 
@@ -85,6 +95,7 @@ writer умеет TRANSCODE с проверкой формата/длитель�
 - [x] Выбранный drive перепроверяется непосредственно перед записью.
 - [x] Две флешки или смена mountpoint требуют нового выбора/согласия.
 - [x] Все UDisks2 операции необязательны для обычного плеера.
+- [x] Eject — только после revalidate и завершённого writer; CLI требует `--confirm`.
 
 Пункты закрыты офлайн-тестами USB-03 на fake-сервисе и managed objects;
 живой UDisks2 проверяется на целевой машине (USB-08).
@@ -112,6 +123,8 @@ ffmpeg/ffprobe и FAT32/exFAT проверяются на аппаратном �
 
 ### G6. UI и аппаратная проверка (после USB-07/08)
 
+- [x] CLI показывает device, папку, оценку байт и причины пропуска до записи.
+- [x] CLI export/eject без явного подтверждения отказывают и не меняют носитель.
 - [ ] UI остаётся отзывчивым и не блокирует mpv при копировании.
 - [ ] Device, folder, разрешённые треки, estimated bytes, skip reasons видны до записи.
 - [ ] Полноценный «отключить USB» вызывается только после завершения worker.

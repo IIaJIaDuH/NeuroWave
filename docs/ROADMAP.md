@@ -113,7 +113,7 @@
 
 ## Опциональная фича: USB Mixtape
 
-**Статус: USB-00 — спецификация; USB-01…USB-05 (планировщик, источник, устройства, writer, транскод/M3U8/Car) реализованы; остальное — план.** Не блокирует Sound Lab, GUI и ближайший релиз.
+**Статус: USB-00 — спецификация; USB-01…USB-06 (планировщик, источник, устройства, writer, транскод/M3U8/Car, headless CLI) реализованы; остальное — план.** Не блокирует Sound Lab, GUI и ближайший релиз.
 
 - [x] Подготовлены [ТЗ, архитектура и безопасность](features/usb-mixtape/README.md) как предложение к ревью.
 - [ ] Принять [ADR-0007](decisions/0007-usb-mixtape.md): независимый модуль, только разрешённые аудиофайлы.
@@ -122,10 +122,9 @@
 - [x] Протокол устройства, fake USB и UDisks2 detection (USB-03): removable/writable, системные тома, revalidate.
 - [x] Safe writer, manifest и resume (USB-04): no-clobber, sha256, ENOSPC, cancel/resume.
 - [x] Транскод, M3U8 и Car-профиль (USB-05): опциональный ffmpeg, проверка probe, относительные пути.
-- [ ] CLI headless (USB-06): devices/plan/export/status/cancel/verify/eject.
-- [ ] Safe UDisks2 device detection и USB writer с checksum, resume, no-clobber.
-- [ ] CLI, профили автомагнитол, MP3/Original/FLAC-only и M3U8.
-- [ ] Qt экран, аппаратный Linux Mint smoke, тесты unplug/ENOSPC/path traversal.
+- [x] CLI headless (USB-06): devices/plan/export/status/cancel/verify/eject, JSON, отмена и явное подтверждение записи/извлечения.
+- [ ] Qt экран USB Mixtape (USB-07) без блокировки playback.
+- [ ] Аппаратная проверка USB-08: реальный UDisks2, FAT32/exFAT, unplug/ENOSPC, Linux Mint smoke.
 - [ ] Опциональные **только официально разрешённые** загрузки и AI-подбор — после отдельного review.
 
 План последовательных PR: [USB-00…USB-10](features/usb-mixtape/DELIVERY.md).

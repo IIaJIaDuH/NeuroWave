@@ -1,6 +1,6 @@
 # USB Mixtape — архитектура, контракты и структура проекта
 
-**Статус:** USB-01…USB-05 (models/planner, LocalExportSource, устройства, writer, транскод/M3U8/Car) реализованы; CLI и UI — план.  
+**Статус:** USB-01…USB-06 (models/planner, LocalExportSource, устройства, writer, транскод/M3U8/Car, headless CLI) реализованы; Qt UI — план.
 **Совместимость:** существующие Track / LocalMusicAdapter / Database / ProviderRouter без breaking changes; ADR-0004 и ADR-0005.
 
 ## 1. Схема компонентов
@@ -149,7 +149,7 @@ class ExportSource(Protocol):
 class UsbDeviceService(Protocol):
     def list_removable_writable_filesystems(self) -> Sequence[DeviceIdentity]: ...
     def revalidate(self, expected: DeviceIdentity) -> DeviceIdentity: ...
-    def safely_eject(self, expected: DeviceIdentity) -> None: ...
+    def safely_eject(self, expected: DeviceIdentity) -> DeviceIdentity: ...
 
 class MixtapeService(Protocol):
     def plan(self, request: MixtapeRequest) -> MixtapePlan: ...

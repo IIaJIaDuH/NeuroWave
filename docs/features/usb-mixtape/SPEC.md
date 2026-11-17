@@ -91,19 +91,24 @@
 - **NFR-09:** ошибки источников и накопителя классифицированы, диагностируемы и возвращаются в CLI --json.
 - **NFR-10:** операции записи opt-in; никакого «вставил — сразу пошла запись» без включённого режима и явного подтверждения.
 
-## 5. Минимальный публичный CLI (контракт, НЕ реализован)
+## 5. Минимальный публичный CLI (реализован в USB-06)
 
 ~~~text
 neurowave mixtape devices --json
-neurowave mixtape plan --profile road --hours 4 --format mp3 --json
-neurowave mixtape export --plan <id> --target <udisks-object-id> --confirm
+neurowave mixtape plan --profile road --hours 4 --format mp3 \
+    --confirm-local-rights --save plan.json --json
+neurowave mixtape export --plan plan.json --target <udisks-object-id> --confirm
 neurowave mixtape status --job <id> --json
 neurowave mixtape cancel --job <id>
-neurowave mixtape verify --job <id>
-neurowave mixtape eject --target <udisks-object-id>
+neurowave mixtape verify --job <id> --json
+neurowave mixtape eject --target <udisks-object-id> --confirm
 ~~~
 
-Путь к mountpoint не может заменять проверенный object ID. Синтаксис CLI уточнить после проектирования сервиса; **не** добавлять флаг, обходящий подтверждение/проверку устройства.
+Путь к mountpoint не может заменять проверенный object ID. План хранится в
+файле 0600 и содержит `plan_id`; export пересобирает план и отказывается при
+расхождении. **Нет** флага, обходящего подтверждение/проверку устройства:
+`export` требует `--confirm` и план с `--confirm-local-rights`, `eject` —
+отдельный `--confirm` и завершённую задачу.
 
 ## 6. Критерии приёмки MVP
 

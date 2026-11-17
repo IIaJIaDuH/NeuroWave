@@ -19,6 +19,7 @@ class FakeUsbDeviceService:
         self._devices: dict[str, DeviceIdentity] = {
             device.udisks_object_path: device for device in devices
         }
+        self.ejected: list[str] = []
 
     @property
     def devices(self) -> tuple[DeviceIdentity, ...]:
@@ -55,4 +56,10 @@ class FakeUsbDeviceService:
                 DeviceErrorCode.CHANGED,
                 "Том изменился: требуется новый выбор и подтверждение",
             )
+        return current
+
+    def safely_eject(self, expected: DeviceIdentity) -> DeviceIdentity:
+        current = self.revalidate(expected)
+        self.ejected.append(current.udisks_object_path)
+        self.remove(current.udisks_object_path)
         return current

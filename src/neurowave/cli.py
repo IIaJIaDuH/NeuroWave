@@ -33,6 +33,7 @@ from .audio.profile_store import ProfileRegistry
 from .config import ConfigStore, Paths, Settings, atomic_write_json
 from .domain import AccountInfo, Track
 from .errors import AuthError, NetworkError, NeuroWaveError, PlayerError
+from .mixtape.cli import build_mixtape_parser
 from .player import PlayerService
 from .providers import (
     AuthKind,
@@ -194,6 +195,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("doctor", help="диагностика окружения (без токенов)")
     sub.add_parser("providers", help="провайдеры музыки: что подключено и что умеет")
     sub.add_parser("app", help="графическое окно (Qt): транспорт, громкость, звук, выход")
+    build_mixtape_parser(sub)
     return parser
 
 
@@ -254,6 +256,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def _dispatch(args: argparse.Namespace, parser: argparse.ArgumentParser) -> int:
+    if args.command == "mixtape":
+        from .mixtape.cli import run as run_mixtape
+
+        return run_mixtape(args)
     if args.command == "doctor":
         return _cmd_doctor(args)
     if args.command == "cache":
