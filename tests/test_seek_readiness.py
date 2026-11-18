@@ -8,6 +8,7 @@ command»). Двойник mpv (``tests/fake_mpv.py``) воспроизводи�
 
 from __future__ import annotations
 
+import threading
 import time
 from pathlib import Path
 
@@ -237,6 +238,161 @@ def test_pending_seek_does_not_wait_forever_without_file_loaded(
 
 
 # --- PlayerService --------------------------------------------------------
+
+
+def test_stale_timer_callback_cannot_take_new_track_pending_seek(
+    fake_mpv, tmp_path, monkeypatch
+) -> None:
+    """Гонка ревью P1-1: callback старого таймера не должен трогать новый seek."""
+    monkeypatch.setattr("neurowave.audio.mpv.SEEK_READY_TIMEOUT", 60.0)
+    log = tmp_path / "mpv.log"
+    backend = make_backend(fake_mpv, tmp_path, "slow-load", log)
+    try:
+        backend.load("fake://first")
+        first_generation = backend._load_gen
+        backend.seek(3000)
+
+        backend.load("fake://second")
+        backend.seek(5000)
+
+        # Так сработал бы таймер, созданный на первой загрузке (например,
+        # уже стоял в очереди за _state_lock, когда началась вторая).
+        backend._expire_pending_seek(first_generation)
+        backend._apply_pending_seek(None, first_generation)
+
+        assert seeks_in(log) == [], "старый callback отправил seek нового трека"
+        assert backend._pending_seek is not None
+        assert backend._pending_seek[1] == 5000.0
+
+        assert wait_until(lambda: backend.position_ms() == 5000)
+        assert seeks_in(log) == ["seek 5.0"]
+    finally:
+        backend.shutdown()
+
+
+def test_stale_timer_callback_after_stop_sends_nothing(fake_mpv, tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr("neurowave.audio.mpv.SEEK_READY_TIMEOUT", 60.0)
+    log = tmp_path / "mpv.log"
+    backend = make_backend(fake_mpv, tmp_path, "slow-load", log)
+    try:
+        backend.load("fake://first")
+        generation = backend._load_gen
+        backend.seek(3000)
+
+        backend.stop()
+        backend._expire_pending_seek(generation)
+
+        assert seeks_in(log) == []
+        assert backend.position_ms() == 0
+    finally:
+        backend.shutdown()
+
+
+class _SeekGate:
+    """Придерживает отправку seek, чтобы детерминированно поймать гонку."""
+
+    def __init__(self) -> None:
+        self.entered = threading.Event()
+        self.release = threading.Event()
+
+    def install(self, backend: MpvBackend, monkeypatch: pytest.MonkeyPatch) -> None:
+        original = backend._command
+
+        def command(*args, **kwargs):
+            if args and args[0] == "seek" and not self.release.is_set():
+                self.entered.set()
+                assert self.release.wait(5.0), "тест не отпустил seek"
+            return original(*args, **kwargs)
+
+        monkeypatch.setattr(backend, "_command", command)
+
+
+def _call(function, args, errors: list[BaseException]) -> None:
+    try:
+        function(*args)
+    except BaseException as exc:  # noqa: BLE001 — тест должен увидеть любую ошибку
+        errors.append(exc)
+
+
+def test_direct_seek_is_not_sent_after_new_load_starts(fake_mpv, tmp_path, monkeypatch) -> None:
+    """Гонка ревью P1-2: проверка файла и отправка seek — одна транзакция."""
+    log = tmp_path / "mpv.log"
+    backend = make_backend(fake_mpv, tmp_path, "idle", log)
+    gate = _SeekGate()
+    gate.install(backend, monkeypatch)
+    errors: list[BaseException] = []
+    try:
+        backend.load("fake://first")
+        assert wait_until(lambda: not backend._loading)
+
+        seeker = threading.Thread(target=_call, args=(backend.seek, (4000,), errors))
+        seeker.start()
+        assert gate.entered.wait(5.0)
+
+        load_done = threading.Event()
+
+        def switch_track() -> None:
+            try:
+                backend.load("fake://second")
+            finally:
+                load_done.set()
+
+        switcher = threading.Thread(target=switch_track)
+        switcher.start()
+
+        assert not load_done.wait(0.5), "loadfile ушёл вперёд незавершённого seek"
+
+        gate.release.set()
+        seeker.join(5.0)
+        switcher.join(10.0)
+        assert not seeker.is_alive() and not switcher.is_alive()
+        assert errors == []
+
+        lines = read_log(log)
+        assert lines.index("seek 4.0") < lines.index("loadfile fake://second")
+    finally:
+        gate.release.set()
+        backend.shutdown()
+
+
+def test_direct_seek_is_not_sent_after_stop(fake_mpv, tmp_path, monkeypatch) -> None:
+    log = tmp_path / "mpv.log"
+    backend = make_backend(fake_mpv, tmp_path, "idle", log)
+    gate = _SeekGate()
+    gate.install(backend, monkeypatch)
+    errors: list[BaseException] = []
+    try:
+        backend.load("fake://first")
+        assert wait_until(lambda: not backend._loading)
+
+        seeker = threading.Thread(target=_call, args=(backend.seek, (4000,), errors))
+        seeker.start()
+        assert gate.entered.wait(5.0)
+
+        stop_done = threading.Event()
+
+        def stop_backend() -> None:
+            try:
+                backend.stop()
+            finally:
+                stop_done.set()
+
+        stopper = threading.Thread(target=stop_backend)
+        stopper.start()
+
+        assert not stop_done.wait(0.5), "stop прошёл вперёд незавершённого seek"
+
+        gate.release.set()
+        seeker.join(5.0)
+        stopper.join(10.0)
+        assert not seeker.is_alive() and not stopper.is_alive()
+        assert errors == []
+
+        lines = read_log(log)
+        assert lines.index("seek 4.0") < lines.index("stop")
+    finally:
+        gate.release.set()
+        backend.shutdown()
 
 
 def test_player_seek_right_after_play_is_applied(fake_mpv, tmp_path) -> None:
