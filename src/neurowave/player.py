@@ -183,6 +183,12 @@ class PlayerService:
         return applied
 
     def seek(self, position_ms: int) -> None:
+        """Перемотать трек.
+
+        Пока mpv загружает файл, бэкенд откладывает команду до готовности:
+        сам mpv такой seek отклоняет (QA D-01). Сигнатура и семантика для
+        вызывающего не меняются.
+        """
         self.backend.seek(position_ms)
 
     def next_track(self, automatic: bool = False) -> Track | None:
