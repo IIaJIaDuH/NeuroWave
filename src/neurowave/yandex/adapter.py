@@ -24,6 +24,7 @@ import re
 import time
 from collections.abc import Mapping
 from typing import Any, Callable
+from urllib.parse import urlsplit
 
 from ..domain import (
     AccountInfo,
@@ -66,6 +67,15 @@ _SCHEMA_HINT = (
     "pip install -U yandex-music"
 )
 
+#: Подсказка на случай, если библиотека переименовала или убрала метод.
+_METHOD_HINT = (
+    "Библиотека yandex-music не поддерживает операцию «{name}»: обновите её: "
+    "pip install -U yandex-music"
+)
+
+_ALLOWED_STREAM_SCHEMES = {"http", "https"}
+_MISSING = object()
+
 
 def _classes(exceptions_module: Any, *names: str) -> tuple[type[BaseException], ...]:
     """Собрать существующие классы исключений библиотеки (без падений)."""
@@ -83,8 +93,54 @@ def _as_int(value: Any) -> int | None:
         return None
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
+        # OverflowError — ``inf``/``-inf`` из JSON-ответа: не число для плеера.
         return None
+
+
+def _vendor_attr(obj: Any, name: str) -> Any:
+    """Атрибут клиента библиотеки или контролируемая ошибка.
+
+    Метод разрешается *до* входа в :meth:`_call`, поэтому переименование в
+    новой версии библиотеки иначе выходило бы наружу как ``AttributeError``
+    мимо обработчика CLI. Ловим только отсутствие атрибута на границе с
+    вендором и не маскируем прочие программные ошибки.
+    """
+    try:
+        return getattr(obj, name)
+    except AttributeError:
+        raise ApiError(_METHOD_HINT.format(name=name)) from None
+
+
+def _vendor_method(obj: Any, name: str) -> Callable[..., Any]:
+    """Метод клиента библиотеки; отсутствующий или невызываемый — ``ApiError``."""
+    method = _vendor_attr(obj, name)
+    if not callable(method):
+        raise ApiError(_METHOD_HINT.format(name=name))
+    return method
+
+
+def _valid_stream_url(value: Any) -> str | None:
+    """Ссылка на поток, которую можно отдать плееру; иначе ``None``.
+
+    Принимаем только абсолютные ``http(s)`` URL: ``file:``, ``javascript:`` и
+    прочие схемы из ответа сервиса не должны попадать в mpv. Пробелы по краям
+    срезаем, сам URL наружу в сообщениях не выводим.
+    """
+    if not isinstance(value, str):
+        return None
+    url = value.strip()
+    if not url:
+        return None
+    try:
+        parts = urlsplit(url)
+    except ValueError:
+        return None
+    if parts.scheme.lower() not in _ALLOWED_STREAM_SCHEMES:
+        return None
+    if not parts.netloc:
+        return None
+    return url
 
 
 def _as_bool(value: Any, default: bool = True) -> bool:
@@ -290,11 +346,11 @@ class YandexMusicAdapter:
             token = client.device_auth(callback, device_name=device_name, timeout=timeout)
         except Exception as exc:  # noqa: BLE001 - библиотека, OAuth и сеть
             # Текст чужой ошибки может содержать тело ответа: наружу — только
-            # понятное действие.
+            # понятное действие, без цепочки с сырым ответом в traceback.
             raise AuthError(
                 "Авторизация не завершена (код истёк или вход отменён). "
                 "Повторите: neurowave login"
-            ) from exc
+            ) from None
         access = getattr(token, "access_token", None)
         if not access:
             raise AuthError("Сервис не вернул токен доступа. Повторите: neurowave login")
@@ -305,7 +361,7 @@ class YandexMusicAdapter:
     def account(self) -> AccountInfo:
         client = self.client
         # ``client.me`` — это Status, а сам пользователь лежит в ``me.account``.
-        me = self._call(lambda: client.me)
+        me = self._call(lambda: _vendor_attr(client, "me"))
         account = getattr(me, "account", None) or me
         plus: bool | None = None
         try:
@@ -328,7 +384,7 @@ class YandexMusicAdapter:
         if not text:
             return SearchResults()
         client = self.client
-        result = self._call(client.search, text, type_=kind)
+        result = self._call(_vendor_method(client, "search"), text, type_=kind)
 
         tracks = self._tracks(_results(result, "tracks"), limit)
         artists = [
@@ -376,7 +432,7 @@ class YandexMusicAdapter:
 
     def liked_tracks(self, limit: int = 100) -> list[Track]:
         client = self.client
-        tracks_list = self._call(client.users_likes_tracks)
+        tracks_list = self._call(_vendor_method(client, "users_likes_tracks"))
         if tracks_list is None:
             return []
         fetch = getattr(tracks_list, "fetch_tracks", None)
@@ -387,7 +443,7 @@ class YandexMusicAdapter:
 
     def recent_tracks(self, limit: int = 20) -> list[Track]:
         client = self.client
-        history = self._call(client.music_history)
+        history = self._call(_vendor_method(client, "music_history"))
         if history is None:
             return []
         result: list[Track] = []
@@ -402,15 +458,27 @@ class YandexMusicAdapter:
         client = self.client
         # Запись: повтор после таймаута может дать второй запрос, поэтому
         # ровно одна попытка.
-        return bool(self._call(client.users_likes_tracks_add, [track_id], retry=False))
+        return bool(
+            self._call(
+                _vendor_method(client, "users_likes_tracks_add"),
+                [track_id],
+                retry=False,
+            )
+        )
 
     def unlike(self, track_id: str) -> bool:
         client = self.client
-        return bool(self._call(client.users_likes_tracks_remove, [track_id], retry=False))
+        return bool(
+            self._call(
+                _vendor_method(client, "users_likes_tracks_remove"),
+                [track_id],
+                retry=False,
+            )
+        )
 
     def playlists(self) -> list[NamedRef]:
         client = self.client
-        playlists = self._call(client.users_playlists_list)
+        playlists = self._call(_vendor_method(client, "users_playlists_list"))
         result: list[NamedRef] = []
         for item in _sequence(playlists):
             kind = getattr(item, "kind", None)
@@ -428,21 +496,23 @@ class YandexMusicAdapter:
 
     def playlist_tracks(self, identifier: str | int, limit: int = 200) -> list[Track]:
         client = self.client
-        playlist = self._call(client.users_playlists, identifier)
+        playlist = self._call(_vendor_method(client, "users_playlists"), identifier)
         if playlist is None:
             raise TrackUnavailable(f"Плейлист {identifier} недоступен")
         shorts = _sequence(getattr(playlist, "tracks", None))
         ids = [str(track_id) for track_id in (getattr(s, "track_id", None) for s in shorts) if track_id]
         if not ids:
             return []
-        raw = self._call(client.tracks, ids[:limit])
+        raw = self._call(_vendor_method(client, "tracks"), ids[:limit])
         return self._tracks(raw, limit)
 
     # --- «Моя волна» ---------------------------------------------------
     def wave_tracks(self) -> list[Track]:
         client = self.client
         result = self._call(
-            client.rotor_station_tracks, WAVE_STATION, queue=self._wave_queue
+            _vendor_method(client, "rotor_station_tracks"),
+            WAVE_STATION,
+            queue=self._wave_queue,
         )
         if result is None:
             raise ApiError("«Моя волна» не вернула треки")
@@ -478,7 +548,7 @@ class YandexMusicAdapter:
         try:
             return bool(
                 self._call(
-                    client.rotor_station_feedback,
+                    _vendor_method(client, "rotor_station_feedback"),
                     WAVE_STATION,
                     type_,
                     batch_id=self._wave_batch_id,
@@ -495,7 +565,11 @@ class YandexMusicAdapter:
     # --- поток --------------------------------------------------------
     def stream_url(self, track_id: str) -> StreamInfo:
         client = self.client
-        infos = self._call(client.tracks_download_info, track_id, get_direct_links=True)
+        infos = self._call(
+            _vendor_method(client, "tracks_download_info"),
+            track_id,
+            get_direct_links=True,
+        )
         if infos is None:
             infos = []
         if isinstance(infos, Mapping) or not isinstance(infos, (list, tuple)):
@@ -504,27 +578,48 @@ class YandexMusicAdapter:
             )
         candidates = [info for info in infos if info is not None]
 
-        best = max(
-            (info for info in candidates if getattr(info, "direct_link", None)),
-            key=_bitrate,
-            default=None,
-        )
-        if best is None:
+        usable: list[tuple[Any, str]] = []
+        malformed = False
+        for info in candidates:
+            raw_link = getattr(info, "direct_link", None)
+            if not raw_link:
+                continue
+            link = _valid_stream_url(raw_link)
+            if link is None:
+                # Ссылка есть, но отдать её плееру нельзя — это порча данных.
+                malformed = True
+                continue
+            usable.append((info, link))
+
+        best: Any = None
+        url: str | None = None
+        if usable:
+            best, url = max(usable, key=lambda pair: _bitrate(pair[0]))
+        else:
             # Ссылки нет в ответе — библиотека умеет запрашивать её отдельно.
             for info in sorted(candidates, key=_bitrate, reverse=True):
                 resolver = getattr(info, "get_direct_link", None)
                 if not callable(resolver):
                     continue
                 try:
-                    link = self._call(resolver)
+                    raw = self._call(resolver)
                 except NeuroWaveError:
                     # Один недоступный вариант не отменяет остальные.
                     continue
-                if link:
-                    setattr(info, "direct_link", link)
-                    best = info
-                    break
-        if best is None:
+                if not raw:
+                    continue
+                link = _valid_stream_url(raw)
+                if link is None:
+                    malformed = True
+                    continue
+                best, url = info, link
+                break
+
+        if best is None or url is None:
+            if malformed:
+                raise ApiError(
+                    "Сервис вернул непригодную ссылку на поток. " + _SCHEMA_HINT
+                )
             raise TrackUnavailable(
                 "Сервис не выдал ссылку на поток: трек недоступен или требует подписки"
             )
@@ -537,7 +632,7 @@ class YandexMusicAdapter:
             bitrate_kbps=bitrate if bitrate and bitrate > 0 else None,
             lossless=bool(codec and codec in LOSSLESS_CODECS),
         )
-        return StreamInfo(url=str(best.direct_link), quality=quality)
+        return StreamInfo(url=url, quality=quality)
 
     # --- преобразование ------------------------------------------------
     def _tracks(self, raw: Any, limit: int, liked: bool = False) -> list[Track]:
@@ -645,36 +740,61 @@ class YandexMusicAdapter:
                 return func(*args, **kwargs)
             except unauthorized as exc:  # type: ignore[misc]
                 raise _auth_error(exc) from None
-            except not_found as exc:  # type: ignore[misc]
+            except not_found:  # type: ignore[misc]
                 # Текст исключения библиотеки — тело ответа сервера, наружу его
                 # не выводим.
                 raise TrackUnavailable(
                     "Трек, плейлист или ссылка недоступны в сервисе (404)"
-                ) from exc
-            except bad_request as exc:  # type: ignore[misc]
+                ) from None
+            except bad_request:  # type: ignore[misc]
                 raise ApiError(
                     "Сервис отклонил запрос (400): вероятно, изменился формат "
                     "запроса. Обновите yandex-music: pip install -U yandex-music"
-                ) from exc
-            except schema_mismatch as exc:  # type: ignore[misc]
-                raise ApiError(_SCHEMA_HINT) from exc
+                ) from None
+            except schema_mismatch:  # type: ignore[misc]
+                raise ApiError(_SCHEMA_HINT) from None
             except network as exc:  # type: ignore[misc]
                 if attempt >= attempts or not _retryable(exc, timed_out):
-                    raise NetworkError(_network_message(exc, timed_out)) from exc
+                    raise NetworkError(_network_message(exc, timed_out)) from None
                 delay = min(self._backoff * (2 ** (attempt - 1)), MAX_RETRY_DELAY)
                 delay += self._rng.uniform(0.0, delay * 0.2)
                 if waited + delay > MAX_RETRY_DELAY:
-                    raise NetworkError(_network_message(exc, timed_out)) from exc
+                    raise NetworkError(_network_message(exc, timed_out)) from None
                 waited += delay
                 self._sleep(delay)
             except base_error as exc:
-                raise _api_error(exc, schema_mismatch) from exc
+                raise _api_error(exc, schema_mismatch) from None
         raise ApiError("Запрос не выполнен: сервис не ответил")
 
 
 def _results(result: Any, name: str) -> list[Any]:
-    """``result.<name>.results`` как список; иначе пустая выдача."""
-    return _sequence(getattr(getattr(result, name, None), "results", None))
+    """``result.<name>.results`` как список.
+
+    Честно пустая выдача — это отсутствующая секция, ``results: null`` или
+    пустой список. Если секция есть, но структура не та (поле переименовали,
+    вместо списка словарь/строка), это изменение схемы: возвращать «ничего не
+    найдено» нельзя, иначе UI скрывает поломку сервиса.
+    """
+    if isinstance(result, Mapping):
+        section = result.get(name)
+    else:
+        section = getattr(result, name, None)
+    if section is None:
+        return []
+    if isinstance(section, (list, tuple)):
+        return [item for item in section if item is not None]
+
+    if isinstance(section, Mapping):
+        raw = section.get("results", _MISSING)
+    else:
+        raw = getattr(section, "results", _MISSING)
+    if raw is _MISSING:
+        raise ApiError(_SCHEMA_HINT)
+    if raw is None:
+        return []
+    if isinstance(raw, (list, tuple)):
+        return [item for item in raw if item is not None]
+    raise ApiError(_SCHEMA_HINT)
 
 
 def _named_id(item: Any) -> bool:

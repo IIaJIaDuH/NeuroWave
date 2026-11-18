@@ -13,6 +13,7 @@
 from __future__ import annotations
 
 import json
+import traceback
 from collections import Counter
 from pathlib import Path
 from types import SimpleNamespace
@@ -229,15 +230,14 @@ def test_contract_library_likes_and_playlist():
     "response",
     [
         None,
+        SimpleNamespace(),
         SimpleNamespace(tracks=None),
         SimpleNamespace(tracks=SimpleNamespace(results=None)),
         SimpleNamespace(tracks=SimpleNamespace(results=[])),
-        SimpleNamespace(tracks=SimpleNamespace(items=[{"id": 1001}])),  # поле переименовано
-        SimpleNamespace(tracks=SimpleNamespace(results={"1001": {"id": 1001}})),
-        SimpleNamespace(tracks="unexpected"),
     ],
 )
-def test_search_empty_or_changed_shape_is_empty_not_crash(response):
+def test_search_genuinely_empty_is_empty_not_crash(response):
+    """Пустая выдача — это ``null``/``[]``, а не «поле переименовали»."""
     client = FakeClient()
     client.search_response = response
     adapter, _ = make_adapter(client)
@@ -245,6 +245,28 @@ def test_search_empty_or_changed_shape_is_empty_not_crash(response):
     results = adapter.search("anonymized")
 
     assert results.is_empty()
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        SimpleNamespace(tracks=SimpleNamespace(items=[{"id": 1001}])),  # поле переименовано
+        SimpleNamespace(tracks=SimpleNamespace(results={"1001": {"id": 1001}})),
+        SimpleNamespace(tracks=SimpleNamespace(results="unexpected")),
+        SimpleNamespace(tracks="unexpected"),
+        SimpleNamespace(tracks=42),
+    ],
+)
+def test_search_incompatible_shape_is_api_error(response):
+    """Непустой, но несовместимый ответ — поломка схемы, а не «ничего не найдено»."""
+    client = FakeClient()
+    client.search_response = response
+    adapter, _ = make_adapter(client)
+
+    with pytest.raises(ApiError) as exc:
+        adapter.search("anonymized")
+
+    assert "yandex-music" in str(exc.value)
 
 
 def test_search_all_tracks_malformed_is_controlled_error():
@@ -659,3 +681,187 @@ def test_local_cli_status_works_when_yandex_library_is_unavailable(tmp_path, cap
     assert code == 0
     assert data["provider"]["id"] == "local"
     assert data["token"]["required"] is False
+
+
+# --- регрессии повторного ревью (P1/P2) ----------------------------------
+class MissingMethodClient:
+    """Клиент без одного метода/атрибута: имитация переименования в библиотеке."""
+
+    def __init__(self, missing: str) -> None:
+        self._inner = FakeClient()
+        self._missing = missing
+
+    def __getattr__(self, name: str) -> Any:
+        if name == self._missing:
+            raise AttributeError(name)
+        return getattr(self._inner, name)
+
+
+MISSING_METHOD_CASES: list[tuple[str, Callable[[YandexMusicAdapter], Any]]] = [
+    ("search", lambda adapter: adapter.search("x")),
+    ("me", lambda adapter: adapter.account()),
+    ("users_likes_tracks", lambda adapter: adapter.liked_tracks()),
+    ("music_history", lambda adapter: adapter.recent_tracks()),
+    ("users_likes_tracks_add", lambda adapter: adapter.like("1001")),
+    ("users_likes_tracks_remove", lambda adapter: adapter.unlike("1001")),
+    ("users_playlists_list", lambda adapter: adapter.playlists()),
+    ("users_playlists", lambda adapter: adapter.playlist_tracks(3)),
+    ("tracks", lambda adapter: adapter.playlist_tracks(3)),
+    ("rotor_station_tracks", lambda adapter: adapter.wave_tracks()),
+    (
+        "rotor_station_feedback",
+        lambda adapter: adapter.wave_feedback("started", "1001", ignore_errors=False),
+    ),
+    ("tracks_download_info", lambda adapter: adapter.stream_url("1001")),
+]
+
+
+@pytest.mark.parametrize(
+    "missing, action",
+    MISSING_METHOD_CASES,
+    ids=[case[0] for case in MISSING_METHOD_CASES],
+)
+def test_missing_vendor_method_is_controlled_domain_error(missing, action):
+    """Исчезнувший метод библиотеки не должен выходить наружу как AttributeError."""
+    adapter, _ = make_adapter(MissingMethodClient(missing))
+
+    with pytest.raises(ApiError) as exc:
+        action(adapter)
+
+    assert "yandex-music" in str(exc.value)
+    formatted = "".join(
+        traceback.format_exception(type(exc.value), exc.value, exc.value.__traceback__)
+    )
+    assert "AttributeError" not in formatted
+    assert SECRET_TOKEN not in formatted
+
+
+class _DeviceAuthFails:
+    def device_auth(self, callback, device_name=None, timeout=None):
+        raise ym_exceptions.NetworkError(
+            f'Unknown HTTPError (500): {{"error":"{SECRET_BODY_MARKER}","token":"{SECRET_TOKEN}"}}'
+        )
+
+
+def test_device_login_failure_does_not_leak_body_or_token():
+    adapter = YandexMusicAdapter(client=_DeviceAuthFails())
+
+    with pytest.raises(AuthError) as exc:
+        adapter.device_login(lambda url, code: None)
+
+    message = str(exc.value)
+    assert SECRET_BODY_MARKER not in message
+    assert SECRET_TOKEN not in message
+    formatted = "".join(
+        traceback.format_exception(type(exc.value), exc.value, exc.value.__traceback__)
+    )
+    assert SECRET_BODY_MARKER not in formatted
+    assert SECRET_TOKEN not in formatted
+
+
+TRACEBACK_CASES: list[tuple[str, BaseException]] = [
+    (
+        "503",
+        ym_exceptions.NetworkError(
+            f'Unknown HTTPError (503): {{"error":"{SECRET_BODY_MARKER}","token":"{SECRET_TOKEN}"}}'
+        ),
+    ),
+    (
+        "timeout",
+        ym_exceptions.NetworkError(f'timed out: {{"token":"{SECRET_TOKEN}"}}'),
+    ),
+    (
+        "401",
+        ym_exceptions.UnauthorizedError(f'{{"error":"{SECRET_BODY_MARKER}","token":"{SECRET_TOKEN}"}}'),
+    ),
+    ("400", ym_exceptions.BadRequestError(f'{{"error":"{SECRET_BODY_MARKER}"}}')),
+    ("404", ym_exceptions.NotFoundError(f'{{"error":"{SECRET_BODY_MARKER}"}}')),
+    ("schema", ym_exceptions.SchemaMismatchError(f'{{"error":"{SECRET_BODY_MARKER}"}}')),
+]
+
+
+@pytest.mark.parametrize("label, error", TRACEBACK_CASES, ids=[case[0] for case in TRACEBACK_CASES])
+def test_full_traceback_does_not_reveal_vendor_body(label, error):
+    """Traceback, а не только ``str(exc)``, не должен содержать тела ответа."""
+    client = FakeClient()
+    client.search = failing(error)
+    adapter, _ = make_adapter(client)
+
+    with pytest.raises(NeuroWaveError) as exc:
+        adapter.search("x")
+
+    formatted = "".join(
+        traceback.format_exception(type(exc.value), exc.value, exc.value.__traceback__)
+    )
+    assert SECRET_BODY_MARKER not in formatted
+    assert SECRET_TOKEN not in formatted
+
+
+STREAM_BAD_LINKS: list[Any] = [
+    "not a url",
+    "file:///etc/passwd",
+    "javascript:alert(1)",
+    "ftp://example.invalid/stream",
+    "https://",
+    "",
+    42,
+    True,
+    {"url": "https://example.invalid/stream"},
+]
+
+
+@pytest.mark.parametrize("link", STREAM_BAD_LINKS)
+def test_stream_rejects_bad_direct_link_with_controlled_error(link):
+    client = FakeClient()
+    client.download_response = [FakeDownload("mp3", 320, link)]
+    adapter, _ = make_adapter(client, retries=1)
+
+    with pytest.raises((ApiError, TrackUnavailable)) as exc:
+        adapter.stream_url("1001")
+
+    assert "yandex-music" in str(exc.value) or "недоступен" in str(exc.value)
+
+
+def test_stream_rejects_bad_resolved_link_with_controlled_error():
+    client = FakeClient()
+    client.download_response = [
+        FakeDownload("mp3", 192, None, resolver=lambda: "file:///etc/passwd"),
+    ]
+    adapter, _ = make_adapter(client, retries=1)
+
+    with pytest.raises(ApiError):
+        adapter.stream_url("1001")
+
+
+def test_stream_accepts_link_with_surrounding_whitespace():
+    client = FakeClient()
+    client.download_response = [
+        FakeDownload("mp3", 192, "  https://example.invalid/stream/ok  "),
+    ]
+    adapter, _ = make_adapter(client)
+
+    assert adapter.stream_url("1001").url == "https://example.invalid/stream/ok"
+
+
+@pytest.mark.parametrize("value", [float("inf"), float("-inf"), float("nan"), "1e999"])
+def test_nonfinite_numeric_fields_degrade_without_overflow(value):
+    track = YandexMusicAdapter._to_track(
+        SimpleNamespace(id=1007, title="t", duration_ms=value, available=True)
+    )
+
+    assert track is not None
+    assert track.duration_ms is None
+    assert track.duration_text == "--:--"
+
+
+def test_nonfinite_bitrate_is_ignored():
+    client = FakeClient()
+    client.download_response = [
+        FakeDownload("mp3", float("inf"), "https://example.invalid/stream/a"),
+    ]
+    adapter, _ = make_adapter(client)
+
+    stream = adapter.stream_url("1001")
+
+    assert stream.url == "https://example.invalid/stream/a"
+    assert stream.quality.bitrate_kbps is None
