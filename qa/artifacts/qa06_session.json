@@ -1,0 +1,139 @@
+{
+  "scenario": "QA-06 длинная сессия",
+  "minutes": 40.0,
+  "startup_to_first_audio_ms": 356,
+  "actions": 139,
+  "action_errors": [
+    "pause: PlayerError: Пауза недоступна в состоянии buffering"
+  ],
+  "latency_ms": {
+    "next": {
+      "count": 26,
+      "max": 5.81,
+      "avg": 1.76
+    },
+    "pause": {
+      "count": 41,
+      "max": 0.65,
+      "avg": 0.48
+    },
+    "seek": {
+      "count": 21,
+      "max": 0.25,
+      "avg": 0.17
+    },
+    "volume": {
+      "count": 24,
+      "max": 0.63,
+      "avg": 0.42
+    },
+    "dsp": {
+      "count": 27,
+      "max": 1.93,
+      "avg": 0.64
+    }
+  },
+  "events_total": 188,
+  "events_by_type": {
+    "dsp_applied": 36,
+    "paused": 26,
+    "resumed": 15,
+    "track": 87,
+    "volume": 24
+  },
+  "resources": {
+    "samples": 480,
+    "py": {
+      "rss_kb": {
+        "min": 26088.0,
+        "max": 27572.0,
+        "avg": 27185.1,
+        "first": 26088.0,
+        "last": 27572.0,
+        "delta_last_minus_first": 1484.0
+      },
+      "pss_kb": {
+        "min": 15070.0,
+        "max": 17246.0,
+        "avg": 16328.3,
+        "first": 15070.0,
+        "last": 17246.0,
+        "delta_last_minus_first": 2176.0
+      },
+      "fds": {
+        "min": 66.0,
+        "max": 66.0,
+        "avg": 66.0,
+        "first": 66.0,
+        "last": 66.0,
+        "delta_last_minus_first": 0.0
+      },
+      "threads": {
+        "min": 4.0,
+        "max": 4.0,
+        "avg": 4.0,
+        "first": 4.0,
+        "last": 4.0,
+        "delta_last_minus_first": 0.0
+      },
+      "cpu_ticks": {
+        "min": 6.0,
+        "max": 922.0,
+        "avg": 455.7,
+        "first": 6.0,
+        "last": 922.0,
+        "delta_last_minus_first": 916.0
+      }
+    },
+    "mpv": {
+      "rss_kb": {
+        "min": 53032.0,
+        "max": 76604.0,
+        "avg": 75272.4,
+        "first": 53032.0,
+        "last": 76592.0,
+        "delta_last_minus_first": 23560.0
+      },
+      "pss_kb": {
+        "min": 52155.0,
+        "max": 75683.0,
+        "avg": 74112.9,
+        "first": 53099.0,
+        "last": 75671.0,
+        "delta_last_minus_first": 22572.0
+      },
+      "fds": {
+        "min": 15.0,
+        "max": 19.0,
+        "avg": 19.0,
+        "first": 15.0,
+        "last": 19.0,
+        "delta_last_minus_first": 4.0
+      },
+      "threads": {
+        "min": 14.0,
+        "max": 33.0,
+        "avg": 30.0,
+        "first": 14.0,
+        "last": 33.0,
+        "delta_last_minus_first": 19.0
+      },
+      "cpu_ticks": {
+        "min": 7.0,
+        "max": 2394.0,
+        "avg": 1183.8,
+        "first": 7.0,
+        "last": 2394.0,
+        "delta_last_minus_first": 2387.0
+      }
+    }
+  },
+  "after_session": {
+    "mpv_processes": [],
+    "stale_ipc_sockets": []
+  },
+  "swap_pressure": {
+    "system_swap_used_kb": 2038784,
+    "note": "RSS/PSS без учёта свопа искажаются при нехватке памяти"
+  }
+}

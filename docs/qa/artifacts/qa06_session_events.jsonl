@@ -10,3 +10,179 @@
 {"t": 104.951, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
 {"t": 112.229, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
 {"t": 115.234, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 124.126, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 135.255, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 138.418, "event": "paused", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}}}
+{"t": 151.101, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 168.792, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 181.101, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 183.426, "event": "paused", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 201.342, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 209.346, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 217.742, "event": "paused", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 226.614, "event": "volume", "payload": {"volume": 30, "requested": 30}}
+{"t": 251.258, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 275.012, "event": "resumed", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 297.268, "event": "volume", "payload": {"volume": 45, "requested": 45}}
+{"t": 324.386, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 340.035, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 343.053, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 343.337, "event": "paused", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}}}
+{"t": 379.678, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 385.698, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 400.188, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 415.714, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 422.417, "event": "volume", "payload": {"volume": 60, "requested": 60}}
+{"t": 440.738, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 445.356, "event": "paused", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}}}
+{"t": 462.888, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 486.472, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 500.898, "event": "volume", "payload": {"volume": 20, "requested": 20}}
+{"t": 507.885, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 507.885, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 510.892, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 513.625, "event": "volume", "payload": {"volume": 20, "requested": 20}}
+{"t": 530.323, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 536.343, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 544.192, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 560.225, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 569.207, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 574.736, "event": "paused", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}}}
+{"t": 584.362, "event": "volume", "payload": {"volume": 30, "requested": 30}}
+{"t": 592.662, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 616.733, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 616.734, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 639.845, "event": "paused", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 650.873, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 664.512, "event": "volume", "payload": {"volume": 45, "requested": 45}}
+{"t": 698.321, "event": "volume", "payload": {"volume": 20, "requested": 20}}
+{"t": 720.997, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 756.4, "event": "resumed", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 771.386, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 793.219, "event": "volume", "payload": {"volume": 20, "requested": 20}}
+{"t": 796.493, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 799.5, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 815.303, "event": "paused", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}}}
+{"t": 860.775, "event": "resumed", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}}}
+{"t": 862.441, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 868.457, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 904.453, "event": "paused", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 953.176, "event": "volume", "payload": {"volume": 30, "requested": 30}}
+{"t": 970.834, "event": "resumed", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 994.193, "event": "paused", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 1012.225, "event": "resumed", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 1018.073, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 1029.193, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 1037.187, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 1049.835, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1064.948, "event": "paused", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 1084.526, "event": "volume", "payload": {"volume": 60, "requested": 60}}
+{"t": 1097.384, "event": "resumed", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 1108.07, "event": "paused", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 1122.622, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1141.233, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1171.853, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 1174.848, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1191.13, "event": "paused", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}}}
+{"t": 1209.874, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1224.368, "event": "resumed", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}}}
+{"t": 1228.082, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1234.098, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 1236.425, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1252.805, "event": "volume", "payload": {"volume": 30, "requested": 30}}
+{"t": 1262.014, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 1281.712, "event": "paused", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 1290.619, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1298.73, "event": "resumed", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 1304.065, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 1312.065, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 1313.967, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 1316.971, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1336.982, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1342.998, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 1358.187, "event": "volume", "payload": {"volume": 45, "requested": 45}}
+{"t": 1373.036, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 1381.671, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 1389.676, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 1399.237, "event": "volume", "payload": {"volume": 30, "requested": 30}}
+{"t": 1422.845, "event": "paused", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 1433.099, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1448.739, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 1451.734, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1459.765, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1471.745, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1477.761, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 1479.739, "event": "paused", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 1511.454, "event": "resumed", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 1532.449, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 1542.021, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1554.006, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1554.006, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 1556.663, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 1567.814, "event": "volume", "payload": {"volume": 60, "requested": 60}}
+{"t": 1584.905, "event": "volume", "payload": {"volume": 20, "requested": 20}}
+{"t": 1600.356, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 1603.36, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1612.033, "event": "paused", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}}}
+{"t": 1634.8, "event": "resumed", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}}}
+{"t": 1646.158, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1651.437, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1652.179, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1652.179, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 1664.369, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1682.188, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 1683.747, "event": "volume", "payload": {"volume": 20, "requested": 20}}
+{"t": 1698.765, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1707.23, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1707.23, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 1715.24, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 1720.627, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 1723.63, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1746.176, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1752.203, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 1762.865, "event": "paused", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 1782.62, "event": "resumed", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 1797.015, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 1807.138, "event": "volume", "payload": {"volume": 30, "requested": 30}}
+{"t": 1819.354, "event": "paused", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 1827.574, "event": "resumed", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 1830.254, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 1838.254, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 1846.578, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 1849.582, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1865.152, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1869.611, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 1869.612, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 1875.635, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 1882.714, "event": "paused", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 1907.055, "event": "volume", "payload": {"volume": 60, "requested": 60}}
+{"t": 1931.01, "event": "volume", "payload": {"volume": 30, "requested": 30}}
+{"t": 1968.25, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 2007.938, "event": "resumed", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 2024.218, "event": "paused", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 2033.426, "event": "resumed", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 2038.689, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 2038.689, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 2080.093, "event": "paused", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 2127.422, "event": "volume", "payload": {"volume": 20, "requested": 20}}
+{"t": 2164.899, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 2172.91, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 2187.08, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 2190.083, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 2196.247, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 2202.261, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 2234.502, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 2239.913, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 2256.1, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 2264.113, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 2278.848, "event": "volume", "payload": {"volume": 20, "requested": 20}}
+{"t": 2291.848, "event": "paused", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 2302.126, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 2305.128, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 2325.152, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 2325.702, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 2331.176, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 2331.176, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 2359.509, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 2382.084, "event": "paused", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 2402.196, "event": "volume", "payload": {"volume": 45, "requested": 45}}
