@@ -1,0 +1,2819 @@
+{
+  "scenario": "QA-VERIFY-01 исправление D-01",
+  "base_sha": "e0aa7a3580f1cda9f5d0f601451fa6dfcadbbc71",
+  "branch": "fix/qa-seek-readiness-01",
+  "media_dir": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/media-verify",
+  "position_tolerance_ms": 1000,
+  "mpv_probe_ok": true,
+  "next_seek": [
+    {
+      "index": 0,
+      "switch": "next",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 5.65,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18018.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18019
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "switch": "next",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 24.52,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14976.0,
+      "residual_ms": -24.0,
+      "latency_ms": 24.0,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 24,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14976
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "switch": "next",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 9.94,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4817.9,
+      "residual_ms": -9.1,
+      "latency_ms": 9.1,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 9,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4818
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "switch": "next",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.63,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "switch": "next",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.6,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "switch": "next",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.86,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11984
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "switch": "next",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.86,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "switch": "next",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 5.57,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18018.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18019
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "switch": "next",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 23.6,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14976.9,
+      "residual_ms": -23.1,
+      "latency_ms": 23.1,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 23,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14977
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "switch": "next",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 9.59,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4818.3,
+      "residual_ms": -8.7,
+      "latency_ms": 8.7,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 9,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4818
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "switch": "next",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.82,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.6,
+      "residual_ms": -5.4,
+      "latency_ms": 5.4,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "switch": "next",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.64,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "switch": "next",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 16.22,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.1,
+      "residual_ms": -15.9,
+      "latency_ms": 15.9,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11984
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "switch": "next",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.81,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "switch": "next",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 5.59,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18018.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18019
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "switch": "next",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 23.19,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14977.4,
+      "residual_ms": -22.6,
+      "latency_ms": 22.6,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 23,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14977
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "switch": "next",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 9.99,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4817.7,
+      "residual_ms": -9.3,
+      "latency_ms": 9.3,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 9,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4818
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "switch": "next",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.53,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "switch": "next",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.52,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "switch": "next",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.82,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11984
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "switch": "next",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 16.29,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.1,
+      "residual_ms": -15.9,
+      "latency_ms": 15.9,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "switch": "next",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 5.55,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18018.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18019
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "switch": "next",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 22.15,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14978.5,
+      "residual_ms": -21.5,
+      "latency_ms": 21.5,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 22,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14978
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "switch": "next",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 8.67,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4819.0,
+      "residual_ms": -8.0,
+      "latency_ms": 8.0,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 8,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4819
+        }
+      ]
+    },
+    {
+      "index": 24,
+      "switch": "next",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.54,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "switch": "next",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "switch": "next",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.89,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 11999.0,
+      "offset_ms": 11983.4,
+      "residual_ms": -16.6,
+      "latency_ms": 15.6,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 11999.0,
+          "delta_ms": 11999,
+          "offset_ms": 11983
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "switch": "next",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.89,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "switch": "next",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 5.58,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18018.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18019
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "switch": "next",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 21.9,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14978.7,
+      "residual_ms": -21.3,
+      "latency_ms": 21.3,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 21,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14979
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "switch": "next",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 8.24,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4819.1,
+      "residual_ms": -7.9,
+      "latency_ms": 7.9,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 8,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4819
+        }
+      ]
+    },
+    {
+      "index": 31,
+      "switch": "next",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.5,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 32,
+      "switch": "next",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.59,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 33,
+      "switch": "next",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 26.1,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11974.2,
+      "residual_ms": -25.8,
+      "latency_ms": 25.8,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 26,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11974
+        }
+      ]
+    },
+    {
+      "index": 34,
+      "switch": "next",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.81,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 35,
+      "switch": "next",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 5.54,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 17824.0,
+      "offset_ms": 17818.8,
+      "residual_ms": -205.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 17824.0,
+          "delta_ms": 17824,
+          "offset_ms": 17819
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "switch": "next",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 24.52,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14976.1,
+      "residual_ms": -23.9,
+      "latency_ms": 23.9,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 24,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14976
+        }
+      ]
+    },
+    {
+      "index": 37,
+      "switch": "next",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 9.11,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4818.3,
+      "residual_ms": -8.7,
+      "latency_ms": 8.7,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 9,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4818
+        }
+      ]
+    },
+    {
+      "index": 38,
+      "switch": "next",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.6,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 26821.0,
+      "offset_ms": 26815.7,
+      "residual_ms": -205.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 26821.0,
+          "delta_ms": 26821,
+          "offset_ms": 26816
+        }
+      ]
+    },
+    {
+      "index": 39,
+      "switch": "next",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.52,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 40,
+      "switch": "next",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.87,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11984
+        }
+      ]
+    },
+    {
+      "index": 41,
+      "switch": "next",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.75,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 15,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3585
+        }
+      ]
+    },
+    {
+      "index": 42,
+      "switch": "next",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 5.61,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18018.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18019
+        }
+      ]
+    },
+    {
+      "index": 43,
+      "switch": "next",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 22.93,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14977.6,
+      "residual_ms": -22.4,
+      "latency_ms": 22.4,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 22,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14978
+        }
+      ]
+    },
+    {
+      "index": 44,
+      "switch": "next",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 9.18,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4818.5,
+      "residual_ms": -8.5,
+      "latency_ms": 8.5,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 9,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4818
+        }
+      ]
+    },
+    {
+      "index": 45,
+      "switch": "next",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 46,
+      "switch": "next",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.63,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 47,
+      "switch": "next",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.86,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11984
+        }
+      ]
+    },
+    {
+      "index": 48,
+      "switch": "next",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.8,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 15,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3585
+        }
+      ]
+    },
+    {
+      "index": 49,
+      "switch": "next",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 5.53,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18018.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18019
+        }
+      ]
+    }
+  ],
+  "previous_seek": [
+    {
+      "index": 0,
+      "switch": "previous",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.83,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "switch": "previous",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.83,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11984
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "switch": "previous",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.53,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1600.0,
+      "offset_ms": 1594.7,
+      "residual_ms": -205.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1600.0,
+          "delta_ms": 1600,
+          "offset_ms": 1595
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "switch": "previous",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.51,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 26821.0,
+      "offset_ms": 26815.8,
+      "residual_ms": -205.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 26821.0,
+          "delta_ms": 26821,
+          "offset_ms": 26816
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "switch": "previous",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 5.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4821.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4822
+        }
+      ]
+    },
+    {
+      "index": 5,
+      "switch": "previous",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 21.89,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14978.6,
+      "residual_ms": -21.4,
+      "latency_ms": 21.4,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 21,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14979
+        }
+      ]
+    },
+    {
+      "index": 6,
+      "switch": "previous",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 9.09,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18015.3,
+      "residual_ms": -8.7,
+      "latency_ms": 8.7,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 9,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18015
+        }
+      ]
+    },
+    {
+      "index": 7,
+      "switch": "previous",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.84,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 8,
+      "switch": "previous",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 16.17,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 11999.0,
+      "offset_ms": 11983.2,
+      "residual_ms": -16.8,
+      "latency_ms": 15.8,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 11999.0,
+          "delta_ms": 11999,
+          "offset_ms": 11983
+        }
+      ]
+    },
+    {
+      "index": 9,
+      "switch": "previous",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 10,
+      "switch": "previous",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.58,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 11,
+      "switch": "previous",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 5.57,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4821.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4822
+        }
+      ]
+    },
+    {
+      "index": 12,
+      "switch": "previous",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 22.33,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14978.3,
+      "residual_ms": -21.7,
+      "latency_ms": 21.7,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 22,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14978
+        }
+      ]
+    },
+    {
+      "index": 13,
+      "switch": "previous",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 8.38,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18015.9,
+      "residual_ms": -8.1,
+      "latency_ms": 8.1,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 8,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18016
+        }
+      ]
+    },
+    {
+      "index": 14,
+      "switch": "previous",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 16.04,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.3,
+      "residual_ms": -15.7,
+      "latency_ms": 15.7,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 15,
+      "switch": "previous",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 21.1,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11979.3,
+      "residual_ms": -20.7,
+      "latency_ms": 20.7,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 21,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11979
+        }
+      ]
+    },
+    {
+      "index": 16,
+      "switch": "previous",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.53,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 17,
+      "switch": "previous",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.55,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 18,
+      "switch": "previous",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 5.59,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4821.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4822
+        }
+      ]
+    },
+    {
+      "index": 19,
+      "switch": "previous",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 23.41,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14977.4,
+      "residual_ms": -22.6,
+      "latency_ms": 22.6,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 23,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14977
+        }
+      ]
+    },
+    {
+      "index": 20,
+      "switch": "previous",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 9.42,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18015.3,
+      "residual_ms": -8.7,
+      "latency_ms": 8.7,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 9,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18015
+        }
+      ]
+    },
+    {
+      "index": 21,
+      "switch": "previous",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.79,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 15,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3585
+        }
+      ]
+    },
+    {
+      "index": 22,
+      "switch": "previous",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.87,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.4,
+      "residual_ms": -15.6,
+      "latency_ms": 15.6,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11984
+        }
+      ]
+    },
+    {
+      "index": 23,
+      "switch": "previous",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.55,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 24,
+      "switch": "previous",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.52,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 25,
+      "switch": "previous",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 5.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4821.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4822
+        }
+      ]
+    },
+    {
+      "index": 26,
+      "switch": "previous",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 24.76,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14975.8,
+      "residual_ms": -24.2,
+      "latency_ms": 24.2,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 24,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14976
+        }
+      ]
+    },
+    {
+      "index": 27,
+      "switch": "previous",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 9.49,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18015.2,
+      "residual_ms": -8.8,
+      "latency_ms": 8.8,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 9,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18015
+        }
+      ]
+    },
+    {
+      "index": 28,
+      "switch": "previous",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 16.31,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.2,
+      "residual_ms": -15.8,
+      "latency_ms": 15.8,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 29,
+      "switch": "previous",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 16.38,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.1,
+      "residual_ms": -15.9,
+      "latency_ms": 15.9,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11984
+        }
+      ]
+    },
+    {
+      "index": 30,
+      "switch": "previous",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.53,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1600.0,
+      "offset_ms": 1594.8,
+      "residual_ms": -205.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1600.0,
+          "delta_ms": 1600,
+          "offset_ms": 1595
+        }
+      ]
+    },
+    {
+      "index": 31,
+      "switch": "previous",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.58,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 32,
+      "switch": "previous",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 5.53,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4821.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4822
+        }
+      ]
+    },
+    {
+      "index": 33,
+      "switch": "previous",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 22.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14977.9,
+      "residual_ms": -22.1,
+      "latency_ms": 22.1,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 22,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14978
+        }
+      ]
+    },
+    {
+      "index": 34,
+      "switch": "previous",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 8.73,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18015.9,
+      "residual_ms": -8.1,
+      "latency_ms": 8.1,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 8,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18016
+        }
+      ]
+    },
+    {
+      "index": 35,
+      "switch": "previous",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.75,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 15,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3585
+        }
+      ]
+    },
+    {
+      "index": 36,
+      "switch": "previous",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.75,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 15,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11985
+        }
+      ]
+    },
+    {
+      "index": 37,
+      "switch": "previous",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 38,
+      "switch": "previous",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.52,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 39,
+      "switch": "previous",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 5.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4821.7,
+      "residual_ms": -5.3,
+      "latency_ms": 5.3,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4822
+        }
+      ]
+    },
+    {
+      "index": 40,
+      "switch": "previous",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 23.7,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14977.0,
+      "residual_ms": -23.0,
+      "latency_ms": 23.0,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 23,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14977
+        }
+      ]
+    },
+    {
+      "index": 41,
+      "switch": "previous",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 9.14,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18015.5,
+      "residual_ms": -8.5,
+      "latency_ms": 8.5,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 8,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18016
+        }
+      ]
+    },
+    {
+      "index": 42,
+      "switch": "previous",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.83,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    },
+    {
+      "index": 43,
+      "switch": "previous",
+      "track_before": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "track_after_switch": "qa_tone_g349_44k.wav",
+      "duration_ms": 20000,
+      "requested_ms": 12000,
+      "threshold_ms": 11000,
+      "seek_call_ms": 15.78,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 12000.0,
+      "offset_ms": 11984.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "qa_tone_g349_44k.wav",
+      "expected_filename": "qa_tone_g349_44k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 15,
+          "position_ms": 12000.0,
+          "delta_ms": 12000,
+          "offset_ms": 11985
+        }
+      ]
+    },
+    {
+      "index": 44,
+      "switch": "previous",
+      "track_before": "qa_tone_g349_44k.wav",
+      "track_after_switch": "qa_tone_e659_lossless.flac",
+      "duration_ms": 3000,
+      "requested_ms": 1800,
+      "threshold_ms": 800,
+      "seek_call_ms": 5.53,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 1800.0,
+      "offset_ms": 1794.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_e659_lossless.flac",
+      "expected_filename": "qa_tone_e659_lossless.flac",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 1800.0,
+          "delta_ms": 1800,
+          "offset_ms": 1795
+        }
+      ]
+    },
+    {
+      "index": 45,
+      "switch": "previous",
+      "track_before": "qa_tone_e659_lossless.flac",
+      "track_after_switch": "qa_tone_c523_320k.mp3",
+      "duration_ms": 45035,
+      "requested_ms": 27021,
+      "threshold_ms": 26021,
+      "seek_call_ms": 5.58,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 27021.0,
+      "offset_ms": 27015.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_c523_320k.mp3",
+      "expected_filename": "qa_tone_c523_320k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 27021.0,
+          "delta_ms": 27021,
+          "offset_ms": 27016
+        }
+      ]
+    },
+    {
+      "index": 46,
+      "switch": "previous",
+      "track_before": "qa_tone_c523_320k.mp3",
+      "track_after_switch": "qa_tone_b220_short.mp3",
+      "duration_ms": 8045,
+      "requested_ms": 4827,
+      "threshold_ms": 3827,
+      "seek_call_ms": 5.56,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 4827.0,
+      "offset_ms": 4821.8,
+      "residual_ms": -5.2,
+      "latency_ms": 5.2,
+      "filename_at_apply": "qa_tone_b220_short.mp3",
+      "expected_filename": "qa_tone_b220_short.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 5,
+          "position_ms": 4827.0,
+          "delta_ms": 4827,
+          "offset_ms": 4822
+        }
+      ]
+    },
+    {
+      "index": 47,
+      "switch": "previous",
+      "track_before": "qa_tone_b220_short.mp3",
+      "track_after_switch": "qa_tone_a880_48k.wav",
+      "duration_ms": 25000,
+      "requested_ms": 15000,
+      "threshold_ms": 14000,
+      "seek_call_ms": 22.59,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 15000.0,
+      "offset_ms": 14978.2,
+      "residual_ms": -21.8,
+      "latency_ms": 21.8,
+      "filename_at_apply": "qa_tone_a880_48k.wav",
+      "expected_filename": "qa_tone_a880_48k.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 22,
+          "position_ms": 15000.0,
+          "delta_ms": 15000,
+          "offset_ms": 14978
+        }
+      ]
+    },
+    {
+      "index": 48,
+      "switch": "previous",
+      "track_before": "qa_tone_a880_48k.wav",
+      "track_after_switch": "qa_tone_a440_128k.mp3",
+      "duration_ms": 30040,
+      "requested_ms": 18024,
+      "threshold_ms": 17024,
+      "seek_call_ms": 8.81,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 18024.0,
+      "offset_ms": 18015.5,
+      "residual_ms": -8.5,
+      "latency_ms": 8.5,
+      "filename_at_apply": "qa_tone_a440_128k.mp3",
+      "expected_filename": "qa_tone_a440_128k.mp3",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 8,
+          "position_ms": 18024.0,
+          "delta_ms": 18024,
+          "offset_ms": 18016
+        }
+      ]
+    },
+    {
+      "index": 49,
+      "switch": "previous",
+      "track_before": "qa_tone_a440_128k.mp3",
+      "track_after_switch": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "duration_ms": 6000,
+      "requested_ms": 3600,
+      "threshold_ms": 2600,
+      "seek_call_ms": 15.86,
+      "error": null,
+      "applied": true,
+      "applied_position_ms": 3600.0,
+      "offset_ms": 3584.5,
+      "residual_ms": -15.5,
+      "latency_ms": 15.5,
+      "filename_at_apply": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "expected_filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+      "wrong_track": false,
+      "jumps": [
+        {
+          "at_ms": 16,
+          "position_ms": 3600.0,
+          "delta_ms": 3600,
+          "offset_ms": 3584
+        }
+      ]
+    }
+  ],
+  "five_rapid_seeks": {
+    "targets_ms": [
+      5000,
+      10000,
+      15000,
+      20000,
+      25000
+    ],
+    "last_target_ms": 25000,
+    "position_at_measure_ms": 25992.0,
+    "elapsed_since_last_seek_ms": 1200.2,
+    "offset_ms": 24791.8,
+    "residual_ms": -208.2,
+    "errors": [],
+    "filename": "qa_tone_c523_320k.mp3",
+    "last_wins": true
+  },
+  "stop_then_seek": {
+    "seek_after_stop_error": null,
+    "position_ms": 0,
+    "status": "stopped",
+    "mpv_running": true,
+    "passed": true
+  },
+  "pending_seek_next_file": {
+    "switched_to": "qa_tone_c523_320k.mp3",
+    "pending_target_ms": 12000,
+    "max_position_ms": 2741.0,
+    "stale_seek_applied": false,
+    "filename": "qa_tone_c523_320k.mp3",
+    "expected_filename": "qa_tone_c523_320k.mp3",
+    "passed": true
+  },
+  "gui_close_during_load": {
+    "window_found": true,
+    "exit_code": 0,
+    "mpv_during": [
+      98272
+    ],
+    "mpv_after": [],
+    "orphan_mpv": false,
+    "sockets_after_2_5s": [
+      "neurowave-mpv-97734.sock"
+    ],
+    "sockets_after_5_5s": [
+      "neurowave-mpv-97734.sock"
+    ],
+    "passed": false
+  },
+  "events": {
+    "total": 109,
+    "track_events": 107,
+    "error_events": [],
+    "double_end_file_suspects": []
+  },
+  "after_run": {
+    "mpv_processes": [],
+    "stale_ipc_sockets": []
+  },
+  "summary": {
+    "next_seek": {
+      "total": 50,
+      "passed": 50,
+      "failures": 0,
+      "errors": 0,
+      "wrong_track": 0,
+      "not_applied": 0,
+      "off_tolerance": 0,
+      "latency_ms_max": 25.8,
+      "latency_ms_avg": 11.3,
+      "residual_ms_max": 205.3,
+      "error_samples": [],
+      "not_applied_samples": [],
+      "wrong_track_samples": []
+    },
+    "previous_seek": {
+      "total": 50,
+      "passed": 50,
+      "failures": 0,
+      "errors": 0,
+      "wrong_track": 0,
+      "not_applied": 0,
+      "off_tolerance": 0,
+      "latency_ms_max": 24.2,
+      "latency_ms_avg": 11.3,
+      "residual_ms_max": 205.3,
+      "error_samples": [],
+      "not_applied_samples": [],
+      "wrong_track_samples": []
+    },
+    "five_rapid_seeks": true,
+    "stop_then_seek": true,
+    "pending_seek_next_file": true,
+    "gui_close": false,
+    "no_orphan_mpv": true,
+    "no_stale_sockets": true,
+    "no_double_end_file": true,
+    "no_error_events": true
+  },
+  "verdict": "FAIL",
+  "criteria": {
+    "next_50_of_50": true,
+    "previous_50_of_50": true,
+    "position_within_1s": true,
+    "no_seek_on_wrong_track": true,
+    "no_exceptions": true
+  }
+}

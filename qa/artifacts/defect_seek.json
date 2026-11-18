@@ -1,0 +1,72 @@
+{
+  "scenario": "дефект seek",
+  "cases": [
+    {
+      "case": "seek на прогретом треке",
+      "ok": true,
+      "ms": 0.16
+    },
+    {
+      "case": "seek сразу после next (0 мс)",
+      "ok": true,
+      "ms": 0.12
+    },
+    {
+      "case": "seek сразу после next (повтор)",
+      "ok": true,
+      "ms": 0.0
+    },
+    {
+      "case": "seek через 1.5 с после next",
+      "ok": true,
+      "ms": 0.16
+    },
+    {
+      "case": "seek #0 во время воспроизведения",
+      "ok": true,
+      "ms": 0.31
+    },
+    {
+      "case": "seek #1 во время воспроизведения",
+      "ok": true,
+      "ms": 0.35
+    },
+    {
+      "case": "seek #2 во время воспроизведения",
+      "ok": true,
+      "ms": 0.27
+    },
+    {
+      "case": "seek #3 во время воспроизведения",
+      "ok": true,
+      "ms": 0.16
+    },
+    {
+      "case": "seek #4 во время воспроизведения",
+      "ok": true,
+      "ms": 0.16
+    },
+    {
+      "case": "seek во время паузы",
+      "ok": true,
+      "ms": 0.17
+    },
+    {
+      "case": "seek после stop",
+      "ok": true,
+      "ms": 0.02
+    },
+    {
+      "case": "seek после повторного play",
+      "ok": true,
+      "ms": 0.16
+    }
+  ],
+  "final_state": {
+    "status": "playing",
+    "position_ms": 4000,
+    "mpv_idle": false,
+    "mpv_pause": false
+  },
+  "errors": []
+}
