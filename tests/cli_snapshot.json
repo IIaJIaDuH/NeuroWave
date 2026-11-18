@@ -1,0 +1,964 @@
+{
+  "prog": "neurowave",
+  "description": "NeuroWave — музыкальное ядро для Linux (Яндекс Музыка).",
+  "help": "usage: neurowave [-h] [--version] [--home DIR] [--backend {mpv,null}] [--provider ID] [--json] {login,logout,me,search,wave,play,devices,connect,remote,library,playlists,playlist,tray,like,unlike,cache,sound,output,status,doctor,providers,app} ... NeuroWave — музыкальное ядро для Linux (Яндекс Музыка). positional arguments: {login,logout,me,search,wave,play,devices,connect,remote,library,playlists,playlist,tray,like,unlike,cache,sound,output,status,doctor,providers,app} login вход: OAuth Device Flow или API-ключ провайдера logout удалить сохранённый токен me аккаунт и статус подписки search поиск треков, артистов, альбомов wave включить «Мою волну» play воспроизвести найденные треки devices устройства Spotify Connect (режим «пульт») connect перенести воспроизведение на устройство remote управление чужим плеером (Spotify Connect) library понравившиеся треки playlists список плейлистов playlist воспроизвести плейлист tray трей и MPRIS поверх «Моей волны» like поставить лайк треку unlike убрать лайк cache управление дисковым кешем sound профиль звука: Pure/Enhanced, EQ, лимитер output аудиовыходы: Bluetooth/HDMI, кодек, выбор status состояние конфигурации и локальных данных doctor диагностика окружения (без токенов) providers провайдеры музыки: что подключено и что умеет app графическое окно (Qt): транспорт, громкость, звук, выход options: -h, --help show this help message and exit --version show program's version number and exit --home DIR изолированный каталог состояния (по умолчанию XDG- пути) --backend {mpv,null} аудиовыход; null — без звука (тесты/диагностика) --provider ID музыкальный провайдер (по умолчанию из настроек: yandex) --json машиночитаемый вывод",
+  "global_options": [
+    {
+      "dest": "help",
+      "option_strings": [
+        "-h",
+        "--help"
+      ],
+      "required": false,
+      "nargs": 0,
+      "choices": null,
+      "default": "<suppressed>",
+      "type": null,
+      "action": "_HelpAction",
+      "help": "show this help message and exit"
+    },
+    {
+      "dest": "version",
+      "option_strings": [
+        "--version"
+      ],
+      "required": false,
+      "nargs": 0,
+      "choices": null,
+      "default": "<suppressed>",
+      "type": null,
+      "action": "_VersionAction",
+      "help": "show program's version number and exit"
+    },
+    {
+      "dest": "home",
+      "option_strings": [
+        "--home"
+      ],
+      "required": false,
+      "nargs": null,
+      "choices": null,
+      "default": null,
+      "type": null,
+      "action": "_StoreAction",
+      "help": "изолированный каталог состояния (по умолчанию XDG-пути)"
+    },
+    {
+      "dest": "backend",
+      "option_strings": [
+        "--backend"
+      ],
+      "required": false,
+      "nargs": null,
+      "choices": [
+        "mpv",
+        "null"
+      ],
+      "default": null,
+      "type": null,
+      "action": "_StoreAction",
+      "help": "аудиовыход; null — без звука (тесты/диагностика)"
+    },
+    {
+      "dest": "provider",
+      "option_strings": [
+        "--provider"
+      ],
+      "required": false,
+      "nargs": null,
+      "choices": null,
+      "default": null,
+      "type": null,
+      "action": "_StoreAction",
+      "help": "музыкальный провайдер (по умолчанию из настроек: yandex)"
+    },
+    {
+      "dest": "json",
+      "option_strings": [
+        "--json"
+      ],
+      "required": false,
+      "nargs": 0,
+      "choices": null,
+      "default": false,
+      "type": null,
+      "action": "_StoreTrueAction",
+      "help": "машиночитаемый вывод"
+    }
+  ],
+  "commands": {
+    "login": {
+      "help": "",
+      "option_help": "usage: neurowave login [-h] [--token KEY] [--refresh-token TOKEN] [--client-id ID] options: -h, --help show this help message and exit --token KEY API-ключ провайдера (SoundCloud: client_id/access token; Spotify: access token) --refresh-token TOKEN Spotify: refresh token, чтобы пульт переживал истечение access token --client-id ID Spotify: client_id приложения, нужен вместе с refresh token",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "token",
+          "option_strings": [
+            "--token"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "API-ключ провайдера (SoundCloud: client_id/access token; Spotify: access token)"
+        },
+        {
+          "dest": "refresh_token",
+          "option_strings": [
+            "--refresh-token"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "Spotify: refresh token, чтобы пульт переживал истечение access token"
+        },
+        {
+          "dest": "client_id",
+          "option_strings": [
+            "--client-id"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "Spotify: client_id приложения, нужен вместе с refresh token"
+        }
+      ]
+    },
+    "logout": {
+      "help": "",
+      "option_help": "usage: neurowave logout [-h] options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        }
+      ]
+    },
+    "me": {
+      "help": "",
+      "option_help": "usage: neurowave me [-h] options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        }
+      ]
+    },
+    "search": {
+      "help": "",
+      "option_help": "usage: neurowave search [-h] [--limit LIMIT] query positional arguments: query options: -h, --help show this help message and exit --limit LIMIT",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "query",
+          "option_strings": [],
+          "required": true,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": ""
+        },
+        {
+          "dest": "limit",
+          "option_strings": [
+            "--limit"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": 20,
+          "type": "int",
+          "action": "_StoreAction",
+          "help": ""
+        }
+      ]
+    },
+    "wave": {
+      "help": "",
+      "option_help": "usage: neurowave wave [-h] [--seconds SECONDS] [--no-interactive] [--mpris] options: -h, --help show this help message and exit --seconds SECONDS остановиться через N секунд (для smoke-проверки) --no-interactive не читать команды из stdin --mpris опубликовать сессию в MPRIS (playerctl, медиа-клавиши, панель)",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "seconds",
+          "option_strings": [
+            "--seconds"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": "float",
+          "action": "_StoreAction",
+          "help": "остановиться через N секунд (для smoke-проверки)"
+        },
+        {
+          "dest": "no_interactive",
+          "option_strings": [
+            "--no-interactive"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "не читать команды из stdin"
+        },
+        {
+          "dest": "mpris",
+          "option_strings": [
+            "--mpris"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "опубликовать сессию в MPRIS (playerctl, медиа-клавиши, панель)"
+        }
+      ]
+    },
+    "play": {
+      "help": "",
+      "option_help": "usage: neurowave play [-h] [--id TRACK_ID] [--limit LIMIT] [--seconds SECONDS] [--no-interactive] [--mpris] [query] positional arguments: query поисковый запрос options: -h, --help show this help message and exit --id TRACK_ID ID трека --limit LIMIT --seconds SECONDS остановиться через N секунд (для smoke-проверки) --no-interactive не читать команды из stdin --mpris опубликовать сессию в MPRIS (playerctl, медиа-клавиши, панель)",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "query",
+          "option_strings": [],
+          "required": false,
+          "nargs": "?",
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "поисковый запрос"
+        },
+        {
+          "dest": "track_id",
+          "option_strings": [
+            "--id"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "ID трека"
+        },
+        {
+          "dest": "limit",
+          "option_strings": [
+            "--limit"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": 20,
+          "type": "int",
+          "action": "_StoreAction",
+          "help": ""
+        },
+        {
+          "dest": "seconds",
+          "option_strings": [
+            "--seconds"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": "float",
+          "action": "_StoreAction",
+          "help": "остановиться через N секунд (для smoke-проверки)"
+        },
+        {
+          "dest": "no_interactive",
+          "option_strings": [
+            "--no-interactive"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "не читать команды из stdin"
+        },
+        {
+          "dest": "mpris",
+          "option_strings": [
+            "--mpris"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "опубликовать сессию в MPRIS (playerctl, медиа-клавиши, панель)"
+        }
+      ]
+    },
+    "devices": {
+      "help": "",
+      "option_help": "usage: neurowave devices [-h] options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        }
+      ]
+    },
+    "connect": {
+      "help": "",
+      "option_help": "usage: neurowave connect [-h] device positional arguments: device id или имя устройства options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "device",
+          "option_strings": [],
+          "required": true,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "id или имя устройства"
+        }
+      ]
+    },
+    "remote": {
+      "help": "",
+      "option_help": "usage: neurowave remote [-h] [--uri URI] [--limit LIMIT] {play,pause,next,previous} [query] positional arguments: {play,pause,next,previous} query запрос для play options: -h, --help show this help message and exit --uri URI spotify:track:… вместо поиска --limit LIMIT",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "action",
+          "option_strings": [],
+          "required": true,
+          "nargs": null,
+          "choices": [
+            "play",
+            "pause",
+            "next",
+            "previous"
+          ],
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": ""
+        },
+        {
+          "dest": "query",
+          "option_strings": [],
+          "required": false,
+          "nargs": "?",
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "запрос для play"
+        },
+        {
+          "dest": "uri",
+          "option_strings": [
+            "--uri"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "spotify:track:… вместо поиска"
+        },
+        {
+          "dest": "limit",
+          "option_strings": [
+            "--limit"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": 5,
+          "type": "int",
+          "action": "_StoreAction",
+          "help": ""
+        }
+      ]
+    },
+    "library": {
+      "help": "",
+      "option_help": "usage: neurowave library [-h] [--limit LIMIT] options: -h, --help show this help message and exit --limit LIMIT",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "limit",
+          "option_strings": [
+            "--limit"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": 50,
+          "type": "int",
+          "action": "_StoreAction",
+          "help": ""
+        }
+      ]
+    },
+    "playlists": {
+      "help": "",
+      "option_help": "usage: neurowave playlists [-h] options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        }
+      ]
+    },
+    "playlist": {
+      "help": "",
+      "option_help": "usage: neurowave playlist [-h] [--seconds SECONDS] [--no-interactive] [--mpris] identifier positional arguments: identifier kind плейлиста options: -h, --help show this help message and exit --seconds SECONDS остановиться через N секунд (для smoke-проверки) --no-interactive не читать команды из stdin --mpris опубликовать сессию в MPRIS (playerctl, медиа-клавиши, панель)",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "identifier",
+          "option_strings": [],
+          "required": true,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "kind плейлиста"
+        },
+        {
+          "dest": "seconds",
+          "option_strings": [
+            "--seconds"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": "float",
+          "action": "_StoreAction",
+          "help": "остановиться через N секунд (для smoke-проверки)"
+        },
+        {
+          "dest": "no_interactive",
+          "option_strings": [
+            "--no-interactive"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "не читать команды из stdin"
+        },
+        {
+          "dest": "mpris",
+          "option_strings": [
+            "--mpris"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "опубликовать сессию в MPRIS (playerctl, медиа-клавиши, панель)"
+        }
+      ]
+    },
+    "tray": {
+      "help": "",
+      "option_help": "usage: neurowave tray [-h] [--no-mpris] options: -h, --help show this help message and exit --no-mpris не публиковать MPRIS",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "mpris",
+          "option_strings": [
+            "--no-mpris"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": true,
+          "type": null,
+          "action": "_StoreFalseAction",
+          "help": "не публиковать MPRIS"
+        }
+      ]
+    },
+    "like": {
+      "help": "",
+      "option_help": "usage: neurowave like [-h] track_id positional arguments: track_id options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "track_id",
+          "option_strings": [],
+          "required": true,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": ""
+        }
+      ]
+    },
+    "unlike": {
+      "help": "",
+      "option_help": "usage: neurowave unlike [-h] track_id positional arguments: track_id options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "track_id",
+          "option_strings": [],
+          "required": true,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": ""
+        }
+      ]
+    },
+    "cache": {
+      "help": "",
+      "option_help": "usage: neurowave cache [-h] {info,clear,evict} positional arguments: {info,clear,evict} options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "action",
+          "option_strings": [],
+          "required": true,
+          "nargs": null,
+          "choices": [
+            "info",
+            "clear",
+            "evict"
+          ],
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": ""
+        }
+      ]
+    },
+    "sound": {
+      "help": "",
+      "option_help": "usage: neurowave sound [-h] [--profile PROFILE] [--pure] [--enhanced] [--graph] [--profiles] options: -h, --help show this help message and exit --profile PROFILE id профиля (bluetooth, flat, hifi, night) --pure снять наши фильтры (Pure) --enhanced вернуть обработку (Enhanced) --graph показать lavfi-граф профиля --profiles список профилей, включая свои",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "profile",
+          "option_strings": [
+            "--profile"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "id профиля (bluetooth, flat, hifi, night)"
+        },
+        {
+          "dest": "pure",
+          "option_strings": [
+            "--pure"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "снять наши фильтры (Pure)"
+        },
+        {
+          "dest": "enhanced",
+          "option_strings": [
+            "--enhanced"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "вернуть обработку (Enhanced)"
+        },
+        {
+          "dest": "graph",
+          "option_strings": [
+            "--graph"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "показать lavfi-граф профиля"
+        },
+        {
+          "dest": "profiles",
+          "option_strings": [
+            "--profiles"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": false,
+          "type": null,
+          "action": "_StoreTrueAction",
+          "help": "список профилей, включая свои"
+        }
+      ]
+    },
+    "output": {
+      "help": "",
+      "option_help": "usage: neurowave output [-h] [--set SET_ID] options: -h, --help show this help message and exit --set SET_ID id выхода из списка (auto — системный выбор)",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        },
+        {
+          "dest": "set_id",
+          "option_strings": [
+            "--set"
+          ],
+          "required": false,
+          "nargs": null,
+          "choices": null,
+          "default": null,
+          "type": null,
+          "action": "_StoreAction",
+          "help": "id выхода из списка (auto — системный выбор)"
+        }
+      ]
+    },
+    "status": {
+      "help": "",
+      "option_help": "usage: neurowave status [-h] options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        }
+      ]
+    },
+    "doctor": {
+      "help": "",
+      "option_help": "usage: neurowave doctor [-h] options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        }
+      ]
+    },
+    "providers": {
+      "help": "",
+      "option_help": "usage: neurowave providers [-h] options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        }
+      ]
+    },
+    "app": {
+      "help": "",
+      "option_help": "usage: neurowave app [-h] options: -h, --help show this help message and exit",
+      "options": [
+        {
+          "dest": "help",
+          "option_strings": [
+            "-h",
+            "--help"
+          ],
+          "required": false,
+          "nargs": 0,
+          "choices": null,
+          "default": "<suppressed>",
+          "type": null,
+          "action": "_HelpAction",
+          "help": "show this help message and exit"
+        }
+      ]
+    }
+  }
+}
