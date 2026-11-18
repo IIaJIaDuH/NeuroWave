@@ -1,0 +1,31 @@
+{
+  "sha": "7a82119d23775f7ed02db14e232dcefbc8ade3d9",
+  "section": "qa04_network.section_local_after_failure (сценарий D-04 из PR #32)",
+  "result": {
+    "case_a_start_with_unavailable": {
+      "raised": true,
+      "error": "TrackUnavailable: трек недоступен",
+      "current": "broken",
+      "status": "buffering",
+      "local_played": false
+    },
+    "case_b_transition_to_unavailable": {
+      "current": "local-ok-2",
+      "status": "playing",
+      "track_events": 1,
+      "errors": [
+        {
+          "t": 3.103,
+          "event": "error",
+          "payload": {
+            "error": "трек недоступен"
+          }
+        }
+      ]
+    },
+    "mpv_alive": true,
+    "error_events_total": 1,
+    "error_events_after_2s": 1,
+    "no_infinite_retry": true
+  }
+}

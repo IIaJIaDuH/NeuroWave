@@ -1,0 +1,752 @@
+{
+  "scenario": "QA-VERIFY-02: приёмка исправления D-04",
+  "sha": "07733e1e26b5c38b3c64161f109bab9af662c5af",
+  "branch": "fix/qa-first-track-recovery-02",
+  "media": "<СТЕНД>/media-d04",
+  "monitor_source": "alsa_output.pci-0000_09_00.1.hdmi-stereo.monitor",
+  "default_sink_before": "bluez_output.59_19_70_A9_CF_F8.1",
+  "default_sink_during": "alsa_output.pci-0000_09_00.1.hdmi-stereo",
+  "sink_states_during": [
+    "76\talsa_output.pci-0000_09_00.1.hdmi-stereo\tPipeWire\ts32le 2-канальный 4800\tIDLE",
+    "5464\tbluez_output.59_19_70_A9_CF_F8.1\tPipeWire\ts16le 2-канальный 4800\tSUSPENDED"
+  ],
+  "files": {
+    "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+    "qa_signal_1234hz.wav": "qa_signal_1234hz.wav",
+    "qa_stress_00_300hz.mp3": "qa_stress_00_300hz.mp3",
+    "qa_stress_01_313hz.wav": "qa_stress_01_313hz.wav",
+    "qa_stress_02_326hz.flac": "qa_stress_02_326hz.flac",
+    "qa_stress_03_339hz.mp3": "qa_stress_03_339hz.mp3",
+    "qa_stress_04_352hz.wav": "qa_stress_04_352hz.wav",
+    "qa_stress_05_365hz.flac": "qa_stress_05_365hz.flac",
+    "qa_stress_06_378hz.mp3": "qa_stress_06_378hz.mp3",
+    "qa_stress_07_391hz.wav": "qa_stress_07_391hz.wav",
+    "qa_stress_08_404hz.flac": "qa_stress_08_404hz.flac",
+    "qa_stress_09_417hz.mp3": "qa_stress_09_417hz.mp3",
+    "qa_stress_10_430hz.wav": "qa_stress_10_430hz.wav",
+    "qa_stress_11_443hz.flac": "qa_stress_11_443hz.flac",
+    "qa_stress_12_456hz.mp3": "qa_stress_12_456hz.mp3",
+    "qa_stress_13_469hz.wav": "qa_stress_13_469hz.wav",
+    "qa_stress_14_482hz.flac": "qa_stress_14_482hz.flac",
+    "qa_stress_15_495hz.mp3": "qa_stress_15_495hz.mp3",
+    "qa_stress_16_508hz.wav": "qa_stress_16_508hz.wav",
+    "qa_stress_17_521hz.flac": "qa_stress_17_521hz.flac",
+    "qa_stress_18_534hz.mp3": "qa_stress_18_534hz.mp3",
+    "qa_stress_19_547hz.wav": "qa_stress_19_547hz.wav",
+    "qa_stress_20_560hz.flac": "qa_stress_20_560hz.flac",
+    "qa_stress_21_573hz.mp3": "qa_stress_21_573hz.mp3",
+    "qa_stress_22_586hz.wav": "qa_stress_22_586hz.wav",
+    "qa_stress_23_599hz.flac": "qa_stress_23_599hz.flac",
+    "qa_tone_a440_128k.mp3": "qa_tone_a440_128k.mp3",
+    "qa_tone_a880_48k.wav": "qa_tone_a880_48k.wav",
+    "qa_tone_b220_short.mp3": "qa_tone_b220_short.mp3",
+    "qa_tone_c523_320k.mp3": "qa_tone_c523_320k.mp3",
+    "qa_tone_e659_lossless.flac": "qa_tone_e659_lossless.flac",
+    "qa_tone_g349_44k.wav": "qa_tone_g349_44k.wav",
+    "local-ok-a": "qa_signal_1234hz.wav",
+    "local-ok-a2": "qa_tone_c523_320k.mp3",
+    "local-ok-b": "qa_tone_b220_short.mp3",
+    "local-ok-b2": "qa_tone_g349_44k.wav",
+    "local-ok-c": "qa_tone_a880_48k.wav",
+    "local-ok-e": "qa_tone_e659_lossless.flac",
+    "local-ok-f1": "qa_tone_a440_128k.mp3",
+    "local-ok-f2": "qa_tone_c523_320k.mp3",
+    "local-ok-f3": "qa_tone_b220_short.mp3",
+    "local-ok-g": "qa_tone_a440_128k.mp3"
+  },
+  "A": {
+    "scenario": "A_недоступный_первый_трек",
+    "expected_tone_hz": 1234,
+    "sink_inputs_before": [],
+    "signal_baseline": {
+      "peak_dbfs": -120.0,
+      "rms_dbfs": -120.0,
+      "samples": 147456,
+      "tones": {
+        "expected": 1234,
+        "dominant": 220,
+        "dominant_amplitude": 0.0,
+        "expected_amplitude": 0.0,
+        "max_other_amplitude": 0.0,
+        "margin_db": 0.0,
+        "all": {
+          "220": 0.0,
+          "349": 0.0,
+          "440": 0.0,
+          "523": 0.0,
+          "659": 0.0,
+          "880": 0.0,
+          "1234": 0.0
+        }
+      }
+    },
+    "raised": "TrackUnavailable: трек недоступен",
+    "state_after_1_5s": {
+      "status": "buffering",
+      "overlay": null,
+      "overlays": {},
+      "current_track_id": "broken-a",
+      "current_track_title": "Broken A",
+      "queue_ids": [
+        "broken-a",
+        "local-ok-a",
+        "local-ok-a2"
+      ],
+      "mpv_filename": null,
+      "mpv_position_ms": -1.0,
+      "backend_position_ms": 0,
+      "mpv_running": true
+    },
+    "signal": {
+      "peak_dbfs": -120.0,
+      "rms_dbfs": -120.0,
+      "samples": 163840,
+      "tones": {
+        "expected": 1234,
+        "dominant": 220,
+        "dominant_amplitude": 0.0,
+        "expected_amplitude": 0.0,
+        "max_other_amplitude": 0.0,
+        "margin_db": 0.0,
+        "all": {
+          "220": 0.0,
+          "349": 0.0,
+          "440": 0.0,
+          "523": 0.0,
+          "659": 0.0,
+          "880": 0.0,
+          "1234": 0.0
+        }
+      }
+    },
+    "sink_inputs_during": [],
+    "mpv_streams_during": [],
+    "signal_after_stop": {
+      "peak_dbfs": -120.0,
+      "rms_dbfs": -120.0,
+      "samples": 147456,
+      "tones": {
+        "expected": 1234,
+        "dominant": 220,
+        "dominant_amplitude": 0.0,
+        "expected_amplitude": 0.0,
+        "max_other_amplitude": 0.0,
+        "margin_db": 0.0,
+        "all": {
+          "220": 0.0,
+          "349": 0.0,
+          "440": 0.0,
+          "523": 0.0,
+          "659": 0.0,
+          "880": 0.0,
+          "1234": 0.0
+        }
+      }
+    },
+    "mpv_streams_after_stop": [],
+    "events": {
+      "error": 0,
+      "failed": 0,
+      "track": [],
+      "error_messages": []
+    },
+    "attribution": {
+      "baseline_expected_amplitude": 0.0,
+      "playing_expected_amplitude": 0.0,
+      "stopped_expected_amplitude": 0.0,
+      "ratio_playing_to_stopped": null,
+      "dominant_tone_while_playing": 220,
+      "margin_db_while_playing": 0.0,
+      "mpv_stream_on_hdmi_while_playing": false,
+      "mpv_stream_present_after_stop": false,
+      "signal_attributed_to_app": false
+    },
+    "passed": false
+  },
+  "B": {
+    "scenario": "B_недоступный_средний_трек",
+    "after_start": {
+      "status": "playing",
+      "overlay": null,
+      "overlays": {},
+      "current_track_id": "local-ok-b",
+      "current_track_title": "Local OK B",
+      "queue_ids": [
+        "local-ok-b",
+        "broken-b",
+        "local-ok-b2"
+      ],
+      "mpv_filename": "qa_tone_b220_short.mp3",
+      "mpv_position_ms": 1152.0,
+      "backend_position_ms": 1152,
+      "mpv_running": true
+    },
+    "after_next": {
+      "status": "playing",
+      "overlay": null,
+      "overlays": {},
+      "current_track_id": "local-ok-b2",
+      "current_track_title": "Local OK B 2",
+      "queue_ids": [
+        "local-ok-b",
+        "broken-b",
+        "local-ok-b2"
+      ],
+      "mpv_filename": "qa_tone_g349_44k.wav",
+      "mpv_position_ms": 1450.7,
+      "backend_position_ms": 1450,
+      "mpv_running": true
+    },
+    "raised": null,
+    "track_events": [
+      "local-ok-b2"
+    ],
+    "errors": [
+      "трек недоступен"
+    ],
+    "passed": true
+  },
+  "C": {
+    "scenario": "C_два_последовательных_отказа",
+    "state": {
+      "status": "buffering",
+      "overlay": null,
+      "overlays": {},
+      "current_track_id": "broken-c1",
+      "current_track_title": "Broken C1",
+      "queue_ids": [
+        "broken-c1",
+        "broken-c2",
+        "local-ok-c"
+      ],
+      "mpv_filename": null,
+      "mpv_position_ms": -1.0,
+      "backend_position_ms": 0,
+      "mpv_running": true
+    },
+    "errors_after_start": 0,
+    "errors_after_4s": 0,
+    "failed_events": 0,
+    "finished_events": 0,
+    "track_events": [],
+    "raised": "TrackUnavailable: трек недоступен",
+    "no_infinite_retry": true,
+    "passed": false
+  },
+  "D": {
+    "scenario": "D_единственный_недоступный_трек",
+    "state": {
+      "status": "buffering",
+      "overlay": null,
+      "overlays": {},
+      "current_track_id": "broken-d",
+      "current_track_title": "Broken D",
+      "queue_ids": [
+        "broken-d"
+      ],
+      "mpv_filename": null,
+      "mpv_position_ms": -1.0,
+      "backend_position_ms": 0,
+      "mpv_running": true
+    },
+    "raised": "TrackUnavailable: трек недоступен",
+    "events": {
+      "error": 0,
+      "failed": 0,
+      "finished": 0,
+      "track": [],
+      "error_messages": []
+    },
+    "failed_event_present": false,
+    "note": "Событие failed не отправляется: лимит MAX_CONSECUTIVE_FAILURES=2 не достигнут, очередь просто закончилась (известное замечание P2).",
+    "passed": false
+  },
+  "E": {
+    "scenario": "E_восстановление_после_отказов",
+    "state_after_failures": {
+      "status": "buffering",
+      "overlay": null,
+      "overlays": {},
+      "current_track_id": "broken-e1",
+      "current_track_title": "Broken E1",
+      "queue_ids": [
+        "broken-e1",
+        "broken-e2"
+      ],
+      "mpv_filename": null,
+      "mpv_position_ms": -1.0,
+      "backend_position_ms": 0,
+      "mpv_running": true
+    },
+    "raised": null,
+    "state_after_recovery": {
+      "status": "playing",
+      "overlay": null,
+      "overlays": {},
+      "current_track_id": "local-ok-e",
+      "current_track_title": "Local OK E",
+      "queue_ids": [
+        "local-ok-e"
+      ],
+      "mpv_filename": "qa_tone_e659_lossless.flac",
+      "mpv_position_ms": 1450.7,
+      "backend_position_ms": 1450,
+      "mpv_running": true
+    },
+    "new_errors": 0,
+    "track_events": [
+      "local-ok-e"
+    ],
+    "passed": true
+  },
+  "F": {
+    "scenario": "F_repeat_и_shuffle",
+    "cases": {
+      "repeat_one_broken_first": {
+        "repeat": "one",
+        "shuffle": false,
+        "queue": [
+          "broken-f1",
+          "local-ok-f1"
+        ],
+        "raised": "TrackUnavailable: трек недоступен",
+        "state_after_start": {
+          "status": "buffering",
+          "overlay": null,
+          "overlays": {},
+          "current_track_id": "broken-f1",
+          "current_track_title": "Broken broken-f1",
+          "queue_ids": [
+            "broken-f1",
+            "local-ok-f1"
+          ],
+          "mpv_filename": null,
+          "mpv_position_ms": -1.0,
+          "backend_position_ms": 0,
+          "mpv_running": true
+        },
+        "errors_start": 0,
+        "errors_after_4s": 0,
+        "errors_delta": 0,
+        "track_events": [],
+        "state_final": {
+          "status": "buffering",
+          "overlay": null,
+          "overlays": {},
+          "current_track_id": "broken-f1",
+          "current_track_title": "Broken broken-f1",
+          "queue_ids": [
+            "broken-f1",
+            "local-ok-f1"
+          ],
+          "mpv_filename": null,
+          "mpv_position_ms": -1.0,
+          "backend_position_ms": 0,
+          "mpv_running": true
+        },
+        "mpv_processes": 1,
+        "bounded_errors": true,
+        "passed": true
+      },
+      "repeat_all_broken_first": {
+        "repeat": "all",
+        "shuffle": false,
+        "queue": [
+          "broken-f2",
+          "local-ok-f2"
+        ],
+        "raised": "TrackUnavailable: трек недоступен",
+        "state_after_start": {
+          "status": "buffering",
+          "overlay": null,
+          "overlays": {},
+          "current_track_id": "broken-f2",
+          "current_track_title": "Broken broken-f2",
+          "queue_ids": [
+            "broken-f2",
+            "local-ok-f2"
+          ],
+          "mpv_filename": null,
+          "mpv_position_ms": -1.0,
+          "backend_position_ms": 0,
+          "mpv_running": true
+        },
+        "errors_start": 0,
+        "errors_after_4s": 0,
+        "errors_delta": 0,
+        "track_events": [],
+        "state_final": {
+          "status": "buffering",
+          "overlay": null,
+          "overlays": {},
+          "current_track_id": "broken-f2",
+          "current_track_title": "Broken broken-f2",
+          "queue_ids": [
+            "broken-f2",
+            "local-ok-f2"
+          ],
+          "mpv_filename": null,
+          "mpv_position_ms": -1.0,
+          "backend_position_ms": 0,
+          "mpv_running": true
+        },
+        "mpv_processes": 1,
+        "bounded_errors": true,
+        "passed": true
+      },
+      "shuffle_broken_first": {
+        "repeat": "off",
+        "shuffle": true,
+        "queue": [
+          "broken-f3",
+          "local-ok-f3"
+        ],
+        "raised": "TrackUnavailable: трек недоступен",
+        "state_after_start": {
+          "status": "buffering",
+          "overlay": null,
+          "overlays": {},
+          "current_track_id": "broken-f3",
+          "current_track_title": "Broken broken-f3",
+          "queue_ids": [
+            "broken-f3",
+            "local-ok-f3"
+          ],
+          "mpv_filename": null,
+          "mpv_position_ms": -1.0,
+          "backend_position_ms": 0,
+          "mpv_running": true
+        },
+        "errors_start": 0,
+        "errors_after_4s": 0,
+        "errors_delta": 0,
+        "track_events": [],
+        "state_final": {
+          "status": "buffering",
+          "overlay": null,
+          "overlays": {},
+          "current_track_id": "broken-f3",
+          "current_track_title": "Broken broken-f3",
+          "queue_ids": [
+            "broken-f3",
+            "local-ok-f3"
+          ],
+          "mpv_filename": null,
+          "mpv_position_ms": -1.0,
+          "backend_position_ms": 0,
+          "mpv_running": true
+        },
+        "mpv_processes": 1,
+        "bounded_errors": true,
+        "passed": true
+      }
+    },
+    "passed": true
+  },
+  "G": {
+    "scenario": "G_история_и_обратная_связь",
+    "raised": "TrackUnavailable: трек недоступен",
+    "state": {
+      "status": "buffering",
+      "overlay": null,
+      "overlays": {},
+      "current_track_id": "broken-g",
+      "current_track_title": "Broken G",
+      "queue_ids": [
+        "broken-g",
+        "local-ok-g"
+      ],
+      "mpv_filename": null,
+      "mpv_position_ms": -1.0,
+      "backend_position_ms": 0,
+      "mpv_running": true
+    },
+    "feedback": [],
+    "started_feedback_ids": [],
+    "broken_has_started_feedback": false,
+    "history_ids": [],
+    "history_has_broken": false,
+    "history_file_exists": true,
+    "passed": false
+  },
+  "H": {
+    "scenario": "H_стресс_20_итераций",
+    "rounds": [
+      {
+        "index": 0,
+        "file": "qa_stress_00_300hz.mp3",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h00",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 1,
+        "file": "qa_stress_01_313hz.wav",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h01",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 2,
+        "file": "qa_stress_02_326hz.flac",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h02",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 3,
+        "file": "qa_stress_03_339hz.mp3",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h03",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 4,
+        "file": "qa_stress_04_352hz.wav",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h04",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 5,
+        "file": "qa_stress_05_365hz.flac",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h05",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 6,
+        "file": "qa_stress_06_378hz.mp3",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h06",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 7,
+        "file": "qa_stress_07_391hz.wav",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h07",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 8,
+        "file": "qa_stress_08_404hz.flac",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h08",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 9,
+        "file": "qa_stress_09_417hz.mp3",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h09",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 10,
+        "file": "qa_stress_10_430hz.wav",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h10",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 11,
+        "file": "qa_stress_11_443hz.flac",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h11",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 12,
+        "file": "qa_stress_12_456hz.mp3",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h12",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 13,
+        "file": "qa_stress_13_469hz.wav",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h13",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 14,
+        "file": "qa_stress_14_482hz.flac",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h14",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 15,
+        "file": "qa_stress_15_495hz.mp3",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h15",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 16,
+        "file": "qa_stress_16_508hz.wav",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h16",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 17,
+        "file": "qa_stress_17_521hz.flac",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h17",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 18,
+        "file": "qa_stress_18_534hz.mp3",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h18",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      },
+      {
+        "index": 19,
+        "file": "qa_stress_19_547hz.wav",
+        "raised": "TrackUnavailable: трек недоступен",
+        "current_track_id": "broken-h19",
+        "mpv_filename": null,
+        "mpv_position_ms": -1.0,
+        "status": "buffering",
+        "new_errors": 0,
+        "new_track_events": 0,
+        "ok": false
+      }
+    ],
+    "passed_rounds": 0,
+    "total_rounds": 20,
+    "mpv_processes_final": 1,
+    "sockets_final": [
+      "neurowave-mpv-163521.sock"
+    ],
+    "errors_total": 0,
+    "track_events_total": 0,
+    "rss_kb_before": 46484.0,
+    "rss_kb_after": 46520.0,
+    "fds_before": 14,
+    "fds_after": 14,
+    "passed": false
+  },
+  "summary": {
+    "A": false,
+    "B": true,
+    "C": false,
+    "D": false,
+    "E": true,
+    "F": true,
+    "G": false,
+    "H": false
+  },
+  "criteria": {
+    "рабочие_треки_запускаются_после_недоступных": false,
+    "стресс_20_из_20": false,
+    "лимит_последовательных_ошибок": false,
+    "нет_бесконечной_рекурсии": true,
+    "нет_ложных_событий_успеха": false,
+    "нет_осиротевших_mpv_и_сокетов": true,
+    "состояние_не_застревает_в_buffering": false,
+    "нет_регрессий_в_воспроизведении": false
+  },
+  "verdict": "FAIL",
+  "default_sink_restored": "bluez_output.59_19_70_A9_CF_F8.1"
+}

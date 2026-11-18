@@ -1,0 +1,43 @@
+{
+  "scenario": "рост ресурсов mpv при 40 сменах трека",
+  "rounds": 40,
+  "errors": 0,
+  "samples": [
+    {
+      "round": 10,
+      "rss_kb": 69284.0,
+      "fds": 19,
+      "threads": 18.0,
+      "mpv_processes": 1,
+      "sockets": 1,
+      "cpu_ticks": 23.0
+    },
+    {
+      "round": 20,
+      "rss_kb": 73900.0,
+      "fds": 19,
+      "threads": 18.0,
+      "mpv_processes": 1,
+      "sockets": 1,
+      "cpu_ticks": 38.0
+    },
+    {
+      "round": 30,
+      "rss_kb": 74268.0,
+      "fds": 19,
+      "threads": 18.0,
+      "mpv_processes": 1,
+      "sockets": 1,
+      "cpu_ticks": 54.0
+    },
+    {
+      "round": 40,
+      "rss_kb": 84160.0,
+      "fds": 19,
+      "threads": 18.0,
+      "mpv_processes": 1,
+      "sockets": 1,
+      "cpu_ticks": 68.0
+    }
+  ]
+}
