@@ -1195,21 +1195,40 @@ def _cmd_cache(args: argparse.Namespace) -> int:
     return 0
 
 
+#: Минимальная проверенная версия неофициальной библиотеки Яндекс Музыки:
+#: контракт ошибок (404/400/429) в более старых версиях другой.
+YANDEX_MUSIC_MIN_VERSION = (3, 2)
+
+
+def _version_pair(value: object) -> tuple[int, int]:
+    """Первые два числа версии; ``0.0``, если версия не распознана."""
+    numbers: list[int] = []
+    for chunk in str(value or "").split(".")[:2]:
+        digits = "".join(char for char in chunk if char.isdigit())
+        numbers.append(int(digits) if digits else 0)
+    while len(numbers) < 2:
+        numbers.append(0)
+    return numbers[0], numbers[1]
+
+
 def _provider_dependency_checks(provider_id: str) -> list[tuple[str, bool, str]]:
     """Проверить только то, что нужно выбранному провайдеру."""
     if provider_id == "yandex":
         try:
             import yandex_music
-
+        except ImportError:
+            return [("yandex-music", False, "pip install yandex-music")]
+        version = getattr(yandex_music, "__version__", "") or ""
+        minimum = ".".join(str(part) for part in YANDEX_MUSIC_MIN_VERSION)
+        if version and _version_pair(version) < YANDEX_MUSIC_MIN_VERSION:
             return [
                 (
                     "yandex-music",
-                    True,
-                    getattr(yandex_music, "__version__", "установлена"),
+                    False,
+                    f"версия {version}: нужна ≥ {minimum} — pip install -U yandex-music",
                 )
             ]
-        except ImportError:
-            return [("yandex-music", False, "pip install yandex-music")]
+        return [("yandex-music", True, version or "установлена")]
     if provider_id == "local":
         try:
             import tinytag

@@ -1,0 +1,20 @@
+{
+  "_comment": "Обезличенный снимок ответа search после десериализации yandex-music 3.2.2. Идентификаторы и названия синтетические, токенов нет.",
+  "tracks": {
+    "results": [
+      {
+        "id": 1001,
+        "title": "Anonymized Song",
+        "artists": [{"id": 501, "name": "Anonymized Artist"}],
+        "albums": [{"id": 601, "title": "Anonymized Album"}],
+        "duration_ms": 187000,
+        "available": true
+      }
+    ]
+  },
+  "artists": {"results": [{"id": 501, "name": "Anonymized Artist"}]},
+  "albums": {"results": [{"id": 601, "title": "Anonymized Album", "year": 2021}]},
+  "playlists": {
+    "results": [{"owner": {"uid": 42}, "kind": 3, "title": "Anonymized Playlist"}]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "_comment": "Обезличенный снимок rotor_station_tracks («Моя волна»).",
+  "batch_id": "batch-anon-1",
+  "sequence": [
+    {
+      "track": {
+        "id": 1002,
+        "title": "Anonymized Wave Song",
+        "artists": [{"id": 502, "name": "Anonymized Artist"}],
+        "albums": [{"id": 602, "title": "Anonymized Album"}],
+        "duration_ms": 201000,
+        "available": true
+      },
+      "liked": true
+    },
+    {"not_a_track": true}
+  ]
+}
