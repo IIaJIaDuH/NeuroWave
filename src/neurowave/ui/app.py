@@ -84,12 +84,14 @@ def _build_window(vm: PlayerViewModel) -> Any:
     stop_button = QPushButton("⏹")
     wave_button = QPushButton("Волна")
     lab_button = QPushButton("Sound Lab")
+    mixtape_button = QPushButton("USB Mixtape")
     wave_button.setMinimumHeight(36)
     for button in (prev_button, play_button, next_button, stop_button):
         button.setMinimumHeight(36)
         transport.addWidget(button)
     transport.addWidget(wave_button)
     transport.addWidget(lab_button)
+    transport.addWidget(mixtape_button)
     layout.addLayout(transport)
 
     volume_row = QHBoxLayout()
@@ -208,6 +210,18 @@ def _build_window(vm: PlayerViewModel) -> Any:
         refresh()
 
     lab_button.clicked.connect(open_lab)
+
+    def open_mixtape() -> None:
+        # Намеренно не захватываем само окно: цикл «окно → кнопка → замыкание →
+        # окно» роняет процесс при завершении. Диалог живёт у Qt-родителя.
+        try:
+            from .mixtape import open_mixtape as show_mixtape
+
+            show_mixtape(mixtape_button.window())
+        except Exception as exc:
+            status.setText(f"USB Mixtape: {exc}")
+
+    mixtape_button.clicked.connect(open_mixtape)
     volume.valueChanged.connect(lambda value: guarded("Громкость", lambda: vm.set_volume(value)))
     seek.sliderPressed.connect(lambda: state.__setitem__("dragging", True))
     seek.sliderReleased.connect(lambda: _seek_released())

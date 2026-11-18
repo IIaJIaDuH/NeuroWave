@@ -1,6 +1,6 @@
 # USB Mixtape — архитектура, контракты и структура проекта
 
-**Статус:** Proposed; **ни один из описанных пакетов пока не создан**.  
+**Статус:** USB-01…USB-06 (models/planner, LocalExportSource, устройства, writer, транскод/M3U8/Car, headless CLI) реализованы; Qt UI — план.
 **Совместимость:** существующие Track / LocalMusicAdapter / Database / ProviderRouter без breaking changes; ADR-0004 и ADR-0005.
 
 ## 1. Схема компонентов
@@ -49,10 +49,13 @@ src/neurowave/mixtape/
     filenames.py           # filename / path / charset validation
     writer.py              # limited-buffer streaming copy and temp commit
     transcoder.py          # optional external ffmpeg, bounded workers
-    manifest.py            # schema and JSON persistence
-    verify.py              # sha256 of destination and playlist consistency
+    manifest.py           # schema and JSON persistence
+    verify.py             # sha256 of destination and task-level completeness
+  service.py              # единственный план/запись/verify для CLI и GUI
+  bridge.py               # Qt-free bridge: preview, progress, cancel, eject
+  jobs.py                 # job journal 0600 and cancel marker
   errors.py                # stable error codes
-src/neurowave/integrations/mixtape_bridge.py  # future Qt-only bridge
+src/neurowave/ui/mixtape.py                    # Qt-экран поверх mixtape/bridge.py
 tests/mixtape/
   test_planner.py
   test_rights.py
@@ -149,7 +152,7 @@ class ExportSource(Protocol):
 class UsbDeviceService(Protocol):
     def list_removable_writable_filesystems(self) -> Sequence[DeviceIdentity]: ...
     def revalidate(self, expected: DeviceIdentity) -> DeviceIdentity: ...
-    def safely_eject(self, expected: DeviceIdentity) -> None: ...
+    def safely_eject(self, expected: DeviceIdentity) -> DeviceIdentity: ...
 
 class MixtapeService(Protocol):
     def plan(self, request: MixtapeRequest) -> MixtapePlan: ...
@@ -182,6 +185,10 @@ NEW → PLANNING → PLANNED → AWAITING_CONFIRMATION
 
 CANCELLED, FAILED are terminal for that attempt.
 PARTIAL is a final report status when some items skipped/failed but job finishes.
+
+Мост (`mixtape/bridge.py`) отдаёт в GUI те же четыре исхода: COMPLETE → `done`,
+PARTIAL → `partial`, FAILED → `failed`, CANCELLED → `cancelled`; сообщение
+содержит `verified/failed/skipped`, а не безусловное «готово».
 ~~~
 
 **State transition gate:** выбор нового устройства или изменение плана после подтверждения возвращает к AWAITING_CONFIRMATION. READY/COMPLETE означает: все заявленные готовые файлы реально проверены и final manifest последовательно записан, а не только отправлен в write().
@@ -201,9 +208,9 @@ PARTIAL is a final report status when some items skipped/failed but job finishes
 
 ## 7. Хранение и восстановление
 
-- Локальный журнал: XDG_DATA_HOME/neurowave/mixtape/jobs/<uuid>.json (права 0600, atomically replaced).
+- Локальный журнал: XDG_DATA_HOME/neurowave/mixtape/jobs/<job_id>.json (права 0600, atomically replaced). `job_id` уникален для запуска, `plan_id` внутри записи — id содержимого плана; старые журналы под `plan_id` читаются как прежде.
 - На USB: MUSIC/NeuroWave/.neurowave-job-<uuid>/ временные данные; MUSIC/NeuroWave/manifest.json с schema_version и перечнем **файлов, которыми владеет именно эта задача**, не всех данных тома.
-- В manifest: job_id, version, consented target fingerprint, source identifiers (без токенов/ссылок), relative paths, status, source/destination hash, bytes, timestamps. Хешировать конфиденциальные абсолютные пути в публичном export-report при необходимости.
+- В manifest: job_id, playlist (имя собственного M3U8 или пусто), version, consented target fingerprint, source identifiers (без токенов/ссылок), relative paths, status, source/destination hash, bytes, timestamps. Хешировать конфиденциальные абсолютные пути в публичном export-report при необходимости.
 - Любые пути, прочитанные из manifest на USB, считаются недоверенными; парсинг с размерным лимитом, schema check и собственной проверкой path containment.
 - Resume возможен только при совпадении identity тома, plan revision и валидных уже записанных файлов. Без совпадения → новый план и подтверждение.
 - При отмене удалять только собственные временные файлы по подтверждённому пути и валидированному job-id; готовые файлы сохранять, если пользователь не запросил безопасную уборку.
@@ -247,7 +254,7 @@ score = 3*user_liked + log1p(play_count) + 1*recentness
 
 - D-Bus UDisks2 как основной API Linux. libudev/pyudev допустим только как вспомогательный сигнал, не как основание для записи.
 - FFmpeg внешний подпроцесс с ограничением аргументов, timeout, kill на cancel, **без shell=True**, никаких URL в команды MVP.
-- CLI и Qt используют один MixtapeService, никаких двух алгоритмов записи.
+- CLI и Qt идут через один `MixtapeService` (план, сверка `plan_id`, запись, verify); `mixtape/bridge.py` выносит эти вызовы в фоновый поток и отдаёт окну снимок состояния — никаких двух алгоритмов записи и блокировки GUI.
 - Отдельная очередь задач не нужна MVP; **одна активная запись**, остальные показывать busy.
 - Первоначальное хранение собственного журнала в JSON достаточно; SQLite migration для фичи **не нужна** без доказанной необходимости.
 

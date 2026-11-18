@@ -91,19 +91,66 @@
 - **NFR-09:** ошибки источников и накопителя классифицированы, диагностируемы и возвращаются в CLI --json.
 - **NFR-10:** операции записи opt-in; никакого «вставил — сразу пошла запись» без включённого режима и явного подтверждения.
 
-## 5. Минимальный публичный CLI (контракт, НЕ реализован)
+## 5. Минимальный публичный CLI (реализован в USB-06)
 
 ~~~text
 neurowave mixtape devices --json
-neurowave mixtape plan --profile road --hours 4 --format mp3 --json
-neurowave mixtape export --plan <id> --target <udisks-object-id> --confirm
+neurowave mixtape plan --profile road --hours 4 --format mp3 \
+    --confirm-local-rights --save plan.json --json
+neurowave mixtape export --plan plan.json --target <udisks-object-id> --confirm
 neurowave mixtape status --job <id> --json
 neurowave mixtape cancel --job <id>
-neurowave mixtape verify --job <id>
-neurowave mixtape eject --target <udisks-object-id>
+neurowave mixtape verify --job <id> --json
+neurowave mixtape eject --target <udisks-object-id> --confirm
 ~~~
 
-Путь к mountpoint не может заменять проверенный object ID. Синтаксис CLI уточнить после проектирования сервиса; **не** добавлять флаг, обходящий подтверждение/проверку устройства.
+Путь к mountpoint не может заменять проверенный object ID. План хранится в
+файле 0600 и содержит `plan_id`; export пересобирает план и отказывается при
+расхождении. **Нет** флага, обходящего подтверждение/проверку устройства:
+`export` требует `--confirm` и план с `--confirm-local-rights`, `eject` —
+отдельный `--confirm` и завершённую задачу; `eject --job` дополнительно
+проверяет, что задача относится к тому же object path, что и `--target`.
+
+`plan_id` — идентификатор содержимого плана, `job_id` — конкретного запуска
+(`<plan_id>-<UTC>-<token>`, уникален для каждого export). Журнал, `status`,
+`cancel`, `verify` и `eject --job` работают с `job_id`; старые журналы,
+сохранённые под `plan_id`, остаются читаемыми, миграция не требуется.
+
+`playlist.m3u8` считается своим только при совпадении manifest этой задачи
+(поле `playlist`): первый экспорт пишется no-clobber, чужой/подменённый файл не
+перезаписывается и не удаляется, а попадает в `playlist_error`. Обновление
+своей записи не заменяет файл: следующая версия создаётся рядом
+(`playlist-2.m3u8`, `playlist-3.m3u8`, ...), поэтому окна TOCTOU между
+проверкой inode и заменой нет. Пустой план — не успех: экспорт без файлов
+возвращает `failed`.
+
+`manifest.json` и playlist пишутся и читаются относительно открытого каталога
+назначения (`openat` + `O_NOFOLLOW`), а перед каждой такой записью том
+перепроверяется: после размонтирования USB ни один байт не уйдёт в каталог на
+диске хоста. В USB-manifest `job_id` — это id запуска, тот же, что в локальном
+журнале; `plan_id` остаётся id содержимого плана. Manifest старого формата
+(без `playlist`, с `job_id == plan_id`) читается без миграции.
+
+`verify` возвращает `ok=true` только для задачи в статусе `complete`, все
+пункты которой `verified` и совпали по sha256/size: `partial`/`failed`/
+`cancelled`, а также `failed`/`skipped`-файлы внутри задачи считаются
+расхождением (`not_verified:<status>`) с кодом выхода 1.
+
+## 5a. Qt-экран и мост (USB-07)
+
+План и запись живут в одном `mixtape/service.py` (`plan/export/verify`,
+коды `library_missing`, `rights_not_confirmed`, `plan_changed`,
+`target_not_found`): CLI и GUI вызывают его, а не свои копии шагов. Экран
+`ui/mixtape.py` — тонкий слой над Qt-независимым `mixtape/bridge.py`, так
+что та же логика работает без PySide6 и проверяется обычными тестами. Мост
+отдаёт неизменяемый снимок (`status`, `devices`, `preview`, `progress`,
+`summary`, `verification`, `can_*`) и выполняет план/запись/проверку/извлечение
+в отдельном потоке; отрисовка идёт по таймеру GUI-потока (NFR-03), окно не
+трогает аудио и mpv. До записи видны том, папка, число разрешённых файлов,
+оценка байт и причины пропуска; прогресс показывает проценты, файлы, байты,
+скорость и оценку остатка (FR-035). Согласие сохраняется: без отметки прав и
+подтверждения диалога экспорт не стартует, `eject` доступен только после
+завершения worker'а.
 
 ## 6. Критерии приёмки MVP
 

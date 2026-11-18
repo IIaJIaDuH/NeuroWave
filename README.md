@@ -20,9 +20,10 @@
 - локальные файлы из своей папки (`--provider local`) без аккаунта, сети и кеша;
 - SoundCloud (`--provider soundcloud`): поиск и поток доступных треков в mpv,
   атрибуция автора и отключённый кеш; ключ — `login --token`;
-- Spotify как «пульт» (`--provider spotify`): каталог и Spotify Connect —
-  `devices`, `connect`, `remote play|pause|next|previous`; поток остаётся в
-  приложении Spotify, кеша нет; токен обновляется по refresh token;
+- Spotify как «пульт» (`--provider spotify`): вход по OAuth PKCE в браузере
+  (`login --client-id`), каталог и Spotify Connect — `devices`, `connect`,
+  `remote play|pause|next|previous`; поток остаётся в приложении Spotify,
+  кеша нет; токен обновляется по refresh token;
 - квалифицированные ID `provider:track_id` в очереди, истории и кеше;
 - MPRIS и системный трей: пауза, next/prev и качество источника из панели,
   `playerctl` и медиа-клавиш, без окна.
@@ -35,7 +36,7 @@
 - футуристичный тёмный интерфейс и настоящий спектроанализатор;
 - ИИ-диджей: предложения треков по настроению, анализ предпочтений, плейлисты, голосовые команды;
 - экспериментальная генерация **собственной** музыки отдельным необязательным модулем.
-- **USB Mixtape (проектируется):** персональная сборка из файлов, разрешённых к экспорту, запись/проверка/безопасное извлечение USB; без обхода потоковых ограничений. [ТЗ и архитектура](docs/features/usb-mixtape/README.md).
+- **USB Mixtape:** персональная подборка из файлов, разрешённых к экспорту, с preview, записью, проверкой и безопасным извлечением — headless CLI и Qt-экран (USB Mixtape в главном окне); реальная аппаратная проверка — следующий этап. [ТЗ и архитектура](docs/features/usb-mixtape/README.md).
 
 Доступность Lossless, синхронизации между устройствами, текстов песен и некоторых других функций будет проверяться на прототипе. Неофициальные API могут меняться.
 
@@ -58,7 +59,7 @@
 - [ADR-0006: Лицензия](docs/decisions/0006-license.md) — принято: MIT, замена `mutagen` на `tinytag`
 - [Бета-чеклист](docs/BETA-CHECKLIST.md) — что проверено, что открыто, замеры soak и памяти
 - [Сторонние лицензии и условия поставки](docs/THIRD-PARTY-NOTICES.md) — инвентаризация зависимостей и гейты релиза
-- [USB Mixtape: ТЗ, безопасность, архитектура, план PR](docs/features/usb-mixtape/README.md) — **документы, функция ещё не реализована**
+- [USB Mixtape: ТЗ, безопасность, архитектура, план PR](docs/features/usb-mixtape/README.md) — **headless CLI и Qt-экран реализованы (USB-01…USB-07); железо — план**
 - [ADR-0007: USB Mixtape](docs/decisions/0007-usb-mixtape.md) — предложенная архитектура автономного экспорта
 - [Smoke-тест Sprint 1 на Mint](docs/SMOKE-SPRINT1.md)
 
@@ -84,8 +85,9 @@ neurowave --provider soundcloud login --token <client_id>  # ключ SoundCloud
 neurowave --provider soundcloud play "запрос"              # поток в mpv
 neurowave --provider spotify devices                     # устройства Spotify Connect
 neurowave --provider spotify remote play "запрос"         # играть на устройстве Spotify
+neurowave --provider spotify login --client-id <id>     # OAuth PKCE в браузере
 neurowave --provider spotify login --token <access> \
-  --refresh-token <refresh> --client-id <id>            # чтобы пульт не отваливался
+  --refresh-token <refresh> --client-id <id>            # запасной путь без браузера
 neurowave output        # выходы: Bluetooth/HDMI, реальный кодек, текущий маршрут
 neurowave output --set pulse/bluez_output.…   # выбрать выход (систему не меняем)
 neurowave sound         # профиль звука: режим, полосы, лимитер, lavfi-граф

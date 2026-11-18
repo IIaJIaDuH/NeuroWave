@@ -33,6 +33,11 @@ PREMIUM_HINT = (
     "Spotify: управление воспроизведением требует Premium и активного устройства. "
     "Проверьте подписку и откройте приложение Spotify."
 )
+SCOPES_HINT = (
+    "Spotify: токену не хватает прав. Нужны scopes user-read-playback-state, "
+    "user-modify-playback-state и user-read-currently-playing — получите токен "
+    "заново с этими разрешениями."
+)
 NO_DEVICE_HINT = (
     "Spotify: нет активного устройства. Посмотрите `neurowave devices` и "
     "перенесите воспроизведение через `neurowave connect <имя>`."
@@ -137,6 +142,7 @@ class SpotifyClient:
         self._rng = rng or random.Random()
         self._api_root = api_root.rstrip("/")
         self._token_url = token_url
+        self._refresh_count = 0
 
     @property
     def token(self) -> str | None:
@@ -160,7 +166,14 @@ class SpotifyClient:
 
     def verify(self) -> None:
         """Проверить токен дешёвым запросом при входе (с обновлением, если нужно)."""
+        refreshes = self._refresh_count
         self.me()
+        # Проверяем и refresh token сразу: иначе неверный refresh всплывёт
+        # только через час, когда access token истечёт. Если `me()` уже
+        # обновлял токен, refresh token тем самым уже проверен — второй
+        # обмен не нужен.
+        if self._credentials.can_refresh and self._refresh_count == refreshes:
+            self._refresh()
 
     def search_tracks(self, query: str, limit: int = 20) -> list[dict[str, Any]]:
         payload = self._request(
@@ -252,9 +265,12 @@ class SpotifyClient:
                     continue
                 raise self._expired_error()
             if response.status == 403:
-                raise SubscriptionRequired(
-                    _error_message(response) or PREMIUM_HINT
-                )
+                message = _error_message(response)
+                if "scope" in message.casefold() or "permission" in message.casefold():
+                    raise AuthError(
+                        f"{message}. {SCOPES_HINT}" if message else SCOPES_HINT
+                    )
+                raise SubscriptionRequired(message or PREMIUM_HINT)
             if response.status == 404:
                 raise ApiError(_error_message(response) or NO_DEVICE_HINT)
             if response.status == 429:
@@ -327,6 +343,7 @@ class SpotifyClient:
                 "Не удалось обновить токен Spotify: проверьте refresh token и "
                 f"client_id. {REFRESH_HINT}"
             )
+        self._refresh_count += 1
         credentials.access_token = str(payload["access_token"])
         rotated = payload.get("refresh_token")
         if rotated:

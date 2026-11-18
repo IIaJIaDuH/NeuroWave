@@ -43,15 +43,21 @@
 
 Подробности и обоснования — в [отчёте](REPORT-2026-11-16.md#технический-долг-и-хвосты).
 
-- [ ] Spotify: OAuth PKCE с браузером вместо ручного `--token/--refresh-token/--client-id`.
-- [ ] Spotify: проверять refresh token при входе и подсказывать недостающие scopes при `403`.
-- [ ] Spotify: `remote --device`, чтобы не делать `connect` отдельной командой.
-- [ ] SoundCloud: обновление ключа без повторного входа; кеш метаданных доступа в памяти.
-- [ ] `doctor`: не требовать `mpv` у провайдеров без `DIRECT_STREAM`.
-- [ ] `me`: не ходить в сеть каждый раз (последнее известное состояние).
-- [ ] Кеш: предупреждение, если свободного места меньше квоты.
+- [x] Spotify: OAuth PKCE с браузером вместо ручного `--token/--refresh-token/--client-id`
+  (`login --client-id`, callback на `127.0.0.1`, проверка `state`; ручной токен — запасной путь).
+- [x] Spotify: проверять refresh token при входе и подсказывать недостающие scopes при `403`
+  (`verify()` пробно обновляет токен; `403` с упоминанием scope называет нужные права).
+- [x] Spotify: `remote --device`, чтобы не делать `connect` отдельной командой.
+- [ ] SoundCloud: обновление ключа без повторного входа — у ключа приложения
+  нет механизма обновления, повторный `login --token` остаётся штатным.
+- [x] SoundCloud: кеш метаданных доступа в памяти (TTL 300 с, не больше 256 треков).
+- [x] `doctor`: не требовать `mpv` у провайдеров без `DIRECT_STREAM`.
+- [x] `me`: без сети показывает последнее известное состояние аккаунта
+  (файл `account.<provider>.json`, без токенов) вместо ошибки.
+- [x] Кеш: предупреждение, если свободного места меньше квоты.
 - [ ] MPRIS/трей: проверка на живой панели Cinnamon; интеграционный тест с настоящим `mpv`.
-- [ ] CI и тег релиза; выбор лицензии; проверка установки стороннего пакета через entry points.
+- [ ] Тег релиза `0.1.0`; проверка установки стороннего пакета через entry points.
+  CI (pytest 3.10–3.12, mpv, Qt offscreen) и лицензия MIT уже есть.
 
 ## Sprint 2 — Sound
 - [x] Выбран движок: отдельный mpv + IPC + lavfi ([ADR-0005](decisions/0005-audio-engine.md)).
@@ -107,14 +113,18 @@
 
 ## Опциональная фича: USB Mixtape
 
-**Статус: спецификация на отдельной ветке, код не реализован.** Не блокирует Sound Lab, GUI и ближайший релиз.
+**Статус: USB-00 — спецификация; USB-01…USB-06 (планировщик, источник, устройства, writer, транскод/M3U8/Car, headless CLI) реализованы; остальное — план.** Не блокирует Sound Lab, GUI и ближайший релиз.
 
 - [x] Подготовлены [ТЗ, архитектура и безопасность](features/usb-mixtape/README.md) как предложение к ревью.
 - [ ] Принять [ADR-0007](decisions/0007-usb-mixtape.md): независимый модуль, только разрешённые аудиофайлы.
-- [ ] Offline planner + LocalExportSource (без LLM и стриминговых загрузок).
-- [ ] Safe UDisks2 device detection и USB writer с checksum, resume, no-clobber.
-- [ ] CLI, профили автомагнитол, MP3/Original/FLAC-only и M3U8.
-- [ ] Qt экран, аппаратный Linux Mint smoke, тесты unplug/ENOSPC/path traversal.
+- [x] Офлайн-планировщик USB-01: неизменяемые модели, дедупликация, бюджет времени/байт, shortage, профили, preview JSON.
+- [x] LocalExportSource и политика прав (USB-02): approved root, path containment, `ExportRight`.
+- [x] Протокол устройства, fake USB и UDisks2 detection (USB-03): removable/writable, системные тома, revalidate.
+- [x] Safe writer, manifest и resume (USB-04): no-clobber, sha256, ENOSPC, cancel/resume.
+- [x] Транскод, M3U8 и Car-профиль (USB-05): опциональный ffmpeg, проверка probe, относительные пути.
+- [x] CLI headless (USB-06): devices/plan/export/status/cancel/verify/eject, JSON, отмена и явное подтверждение записи/извлечения.
+- [x] Qt экран USB Mixtape (USB-07) без блокировки playback: `mixtape/bridge.py` (план, прогресс, отмена, eject в фоне) и `ui/mixtape.py`.
+- [ ] Аппаратная проверка USB-08: реальный UDisks2, FAT32/exFAT, unplug/ENOSPC, Linux Mint smoke.
 - [ ] Опциональные **только официально разрешённые** загрузки и AI-подбор — после отдельного review.
 
 План последовательных PR: [USB-00…USB-10](features/usb-mixtape/DELIVERY.md).

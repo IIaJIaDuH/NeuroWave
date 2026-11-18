@@ -1,6 +1,6 @@
 # USB Mixtape — реализация по PR, зависимости, чек-листы
 
-**Статус:** план (не реализовано) · 2026-11-16.  
+**Статус:** USB-00 — спецификация; USB-01…USB-07 (планировщик, источник, устройства, writer, транскод/M3U8/Car, headless CLI, Qt-экран и bridge) реализованы · 2026-11-17.
 **Ветка спецификации:** feature/usb-mixtape-spec  
 **База:** main по состоянию на SHA 1baf6de3b8d30f453c1a4feb2af30a9b2e6c13aa.  
 **Приоритет относительно NeuroWave 0.2:** дополнительная фича. Не блокирует ADR-0005, Sound Lab и Qt Desktop.
@@ -29,52 +29,136 @@
 
 **Не считать USB-09 и USB-10 обязательными для USB MVP.** Планировать зависимости функционально, не по «красивым» срокам.
 
+**Сделано в USB-01:** `src/neurowave/mixtape` — неизменяемые модели,
+matcher, протокол `ExportSource` и `MixtapePlanner`; `tests/test_mixtape_planner.py`
+(47 тестов). Файловых, сетевых и USB-операций в модуле нет.
+
+**Сделано в USB-02:** `sources/local.py` (`LocalExportSource`) и `rights.py`
+(`LocalExportRights`, `ExportRight`); `tests/test_mixtape_local_source.py`
+(32 теста). Экспорт возможен только из approved root и только после явного
+подтверждения прав; абсолютные пути, `..`, NUL, скрытые сегменты, симлинки
+наружу и stream-only провайдеры отклоняются.
+
+**Сделано в USB-03:** `devices/base.py` (протокол, `DeviceIdentity`,
+`UsbDeviceError`), `devices/fake.py` и `devices/udisks2.py` (чистый маппер +
+ленивый D-Bus, без `/dev`); `tests/test_mixtape_devices.py` (35 тестов,
+T-001…T-005). Eject и CLI добавлены в USB-06; живая шина — USB-08.
+
+**Сделано в USB-04:** `export/` — `SafeWriter`, `manifest.py`, `filenames.py`,
+ошибки; `tests/test_mixtape_writer.py` (26 тестов, T-006…T-015 и
+T-020…T-026): streaming copy с sha256, no-clobber commit, manifest и resume,
+cancel, ENOSPC/EROFS/EIO, выдёргивание fake-устройства, rename race и отказ
+чужому/битому manifest. Реальная запись — USB-08.
+
+**Сделано в USB-05:** `export/transcoder.py` (ffmpeg/ffprobe через argv без
+shell, таймаут, внедряемый runner), `export/playlist.py` (M3U8 только по
+verified-файлам), `car.py` (нумерация, портативные имена, транслитерация);
+writer умеет TRANSCODE с проверкой формата/длительности. `tests/test_mixtape_transcode.py`
+(17 тестов на синтетическом WAV) плюс EIO/rename-race в writer-тестах.
+
+**Сделано в USB-06:** `mixtape/cli.py` — команды `devices`, `plan`, `export`,
+`status`, `cancel`, `verify`, `eject` с JSON, интеграцией `MixtapePlanner`,
+`LocalExportSource`, fake/UDisks2-устройств и `SafeWriter`; `mixtape/jobs.py` —
+локальный журнал 0600 и cancel-marker, проверяемый writer'ом между чанками.
+`export` без `--confirm` и план без `--confirm-local-rights` не пишут ничего;
+`eject` требует отдельного `--confirm`, вызывает `safely_eject` (Filesystem.Unmount)
+только после revalidate и не трогает незавершённую задачу (а `eject --job`
+сверяет object path задачи с `--target`). CLI работает без провайдера, сети и
+GUI. `verify` возвращает `ok=true` только для статуса `complete`: `partial` и
+файлы `failed`/`skipped` — расхождение. `tests/test_mixtape_cli.py`
+(27 офлайн-тестов на fake-USB и временной библиотеке). Реальная запись и
+живой UDisks2 — USB-08.
+
+**Сделано в USB-07:** `mixtape/service.py` — один путь плана и записи для CLI и
+GUI (`plan/export/verify/eject_target`, коды `library_missing`,
+`rights_not_confirmed`, `plan_changed`, `target_not_found`), поэтому логика
+больше не дублируется. `mixtape/bridge.py` — Qt-независимый мост: список томов,
+preview (треки, байты, причины пропуска), экспорт/отмена/verify/eject в фоновом
+потоке, снимки `BridgeState` для окна. `ui/mixtape.py` — экран Qt Widgets
+(устройство, папка, профиль, часы, формат, права, таблица треков, прогресс,
+кнопки записи/отмены/проверки/извлечения; кнопка «USB Mixtape» в главном окне).
+`export/verify.py` и `mixtape/jobs.py` вынесли общую логику verify и записи
+журнала из CLI, `SafeWriter.write(progress=...)` отдаёт байты, номер и число
+файлов для процентов/скорости/ETA без блокировки GUI. Согласие не обходится:
+без `--confirm`-эквивалента (диалог подтверждения), прав и выбранного object
+path запись не стартует; `eject` возможен только когда worker свободен.
+Тесты: `tests/test_mixtape_service.py` (10 — общий сервис),
+`tests/test_mixtape_bridge.py` (18 офлайн, без Qt) и `tests/test_ui_mixtape.py`
+(6 offscreen Qt), плюс прогресс writer'а (2). Без PySide6 или без системных
+библиотек Qt-файлы помечаются skipped (`tests/conftest.require_qt`), а не
+падают ошибкой сбора.
+Снимок и проценты проверены на fake-USB; живой UDisks2/ffmpeg и физическая
+запись — USB-08.
+
 ## 2. Отдельные acceptance gates
 
 ### G1. Планировщик (после USB-01)
 
-- [ ] Выдаёт одинаковый результат при одинаковых seed, библиотеке и весах.
-- [ ] Показывает целевую и фактическую длительность; никого не «докачивает» без прав.
-- [ ] Умеет формировать подборку 1–12 часов в пределах доступного каталога и размера.
-- [ ] Дубликаты с разных провайдеров не дублируются как один Track.id; настоящий другой ремастер не отбрасывается без оснований.
-- [ ] Рекомендательный профиль не зависит от обязательного API/LLM.
+- [x] Выдаёт одинаковый результат при одинаковых seed, библиотеке и весах.
+- [x] Показывает целевую и фактическую длительность; никого не «докачивает» без прав.
+- [x] Умеет формировать подборку 1–12 часов в пределах доступного каталога и размера.
+- [x] Дубликаты с разных провайдеров не дублируются как один Track.id; настоящий другой ремастер не отбрасывается без оснований.
+- [x] Рекомендательный профиль не зависит от обязательного API/LLM.
+
+Все пять пунктов закрыты офлайн-тестами USB-01; preview — `MixtapePlan.to_dict()`
+(JSON без абсолютных путей и прав).
 
 ### G2. Резолвинг файлов (после USB-02)
 
-- [ ] На каждый файл в плане есть ExportAsset с разрешённым provenance и фактическим локальным доступом.
-- [ ] Любой stream_url, Spotify Connect и MediaCache — не основание на экспорт.
-- [ ] При неполной библиотеке система честно показывает shortage.
-- [ ] Источник может ошибаться/пропасть без потери корректной части плана.
+- [x] На каждый файл в плане есть ExportAsset с разрешённым provenance и фактическим локальным доступом.
+- [x] Любой stream_url, Spotify Connect и MediaCache — не основание на экспорт.
+- [x] При неполной библиотеке система честно показывает shortage.
+- [x] Источник может ошибаться/пропасть без потери корректной части плана.
+
+Все четыре пункта закрыты офлайн-тестами USB-02: approved root, политика
+`ExportRight`, path containment и интеграция с планировщиком.
 
 ### G3. USB Device (после USB-03)
 
-- [ ] Не предлагает системные разделы как записываемые USB.
-- [ ] Выбранный drive перепроверяется непосредственно перед записью.
-- [ ] Две флешки или смена mountpoint требуют нового выбора/согласия.
-- [ ] Все UDisks2 операции необязательны для обычного плеера.
+- [x] Не предлагает системные разделы как записываемые USB.
+- [x] Выбранный drive перепроверяется непосредственно перед записью.
+- [x] Две флешки или смена mountpoint требуют нового выбора/согласия.
+- [x] Все UDisks2 операции необязательны для обычного плеера.
+- [x] Eject — только после revalidate и завершённого writer; CLI требует `--confirm`.
+
+Пункты закрыты офлайн-тестами USB-03 на fake-сервисе и managed objects;
+живой UDisks2 проверяется на целевой машине (USB-08).
 
 ### G4. Writer (после USB-04)
 
-- [ ] Тесты на symlink swap, traversal, ENOSPC, EIO, EROFS, unplug, rename races.
-- [ ] Нет записи вне одобренного target root; нет silent overwrite.
-- [ ] Finished означает проверенную контрольную сумму; Partial означает неполный список.
-- [ ] Repeat job не создаёт дубли, не переписывает чужой каталог.
-- [ ] Pause/Cancel/Resume не забирает управление у аудиодвижка.
+- [x] Тесты на symlink swap, traversal, ENOSPC, EIO, EROFS, unplug, rename races.
+- [x] Нет записи вне одобренного target root; нет silent overwrite.
+- [x] Finished означает проверенную контрольную сумму; Partial означает неполный список.
+- [x] Repeat job не создаёт дубли, не переписывает чужой каталог.
+- [x] Pause/Cancel/Resume не забирает управление у аудиодвижка.
+
+USB-04 закрывает symlink/traversal, ENOSPC, EROFS, unplug, cancel/resume и
+проверку sha256; EIO, rename races и интеграция с playback — USB-05/08.
 
 ### G5. Transcode (после USB-05)
 
-- [ ] FFmpeg доступен только при установленной разрешённой сборке; иначе disable transcode.
-- [ ] Никакого заведомого lossy→FLAC под видом Hi-Fi, MP3 320 не обещает качество источника.
-- [ ] M3U8 работает на выбранном профиле, пути относительные и проверенные.
-- [ ] Все конвертации идут ограниченными ресурсами, без shell=True.
+- [x] FFmpeg доступен только при установленной разрешённой сборке; иначе disable transcode.
+- [x] Никакого заведомого lossy→FLAC под видом Hi-Fi, MP3 320 не обещает качество источника.
+- [x] M3U8 работает на выбранном профиле, пути относительные и проверенные.
+- [x] Все конвертации идут ограниченными ресурсами, без shell=True.
+
+FFmpeg-путь проверен через внедряемый runner и fake-транскодер; реальный
+ffmpeg/ffprobe и FAT32/exFAT проверяются на аппаратном этапе USB-08.
 
 ### G6. UI и аппаратная проверка (после USB-07/08)
 
-- [ ] UI остаётся отзывчивым и не блокирует mpv при копировании.
-- [ ] Device, folder, разрешённые треки, estimated bytes, skip reasons видны до записи.
-- [ ] Полноценный «отключить USB» вызывается только после завершения worker.
+- [x] CLI показывает device, папку, оценку байт и причины пропуска до записи.
+- [x] CLI export/eject без явного подтверждения отказывают и не меняют носитель.
+- [x] UI остаётся отзывчивым и не блокирует mpv при копировании.
+- [x] Device, folder, разрешённые треки, estimated bytes, skip reasons видны до записи.
+- [x] Полноценный «отключить USB» вызывается только после завершения worker.
 - [ ] На реальном USB корректны физическая запись, чтение другим устройством, безопасное извлечение.
 - [ ] Учет реального CPU/PSS и underrun на той же системе, что Sprint 0, с оговоркой об условиях.
+
+Первые три пункта закрыты USB-07: экран рисует снимки `MixtapeBridge` по
+таймеру GUI-потока, а план/запись/проверка/извлечение идут в фоновом потоке
+(`tests/test_mixtape_bridge.py`, `tests/test_ui_mixtape.py` offscreen);
+мост не знает о плеере и mpv. Физическая запись и замеры — USB-08.
 
 ## 3. Межкомпонентные зависимости
 
@@ -170,3 +254,27 @@ AI recommendations NEVER call Safe writer or OS APIs directly.
 - Готовый ZIP/USB содержит **только музыку и минимум метаданных**, никаких ключей и приватных профилей.
 
 После MVP можно планировать smart update, playlist cover, device profiles, optional official download plugin и optional AI. Но каждое отдельно.
+
+## Ревью-фиксы перед merge (USB-FIX-01…08)
+
+Ревью коммита `000d646` заблокировало merge: расширение функций остановлено,
+исправлялись только безопасность записи, статусы, задачи и CI. Повторное
+ревью `8ff94e4` потребовало закрыть TOCTOU плейлиста, перевести manifest на
+directory-fd и согласовать `job_id` — это USB-FIX-08.
+
+| Пункт | Статус | Где |
+|---|---|---|
+| USB-FIX-01 чужой playlist | исправлено | `export/manifest.py` (поле `playlist`), `export/writer.py::_write_playlist` |
+| USB-FIX-02 no-clobber без гонки | исправлено | `export/writer.py::_commit` / `_rename_noreplace`, код `no_atomic_replace` |
+| USB-FIX-03 проверка тома до записи | исправлено | `export/writer.py::_assert_mountpoint`, `devices/udisks2.py::assert_mountpoint` |
+| USB-FIX-04 честные статусы GUI | исправлено | `mixtape/bridge.py` (COMPLETE/PARTIAL/FAILED/CANCELLED), пустой план = failed |
+| USB-FIX-05 `job_id` ≠ `plan_id` | исправлено | `mixtape/service.py::make_job_id`, `jobs.py::job_record` |
+| USB-FIX-06 жизненный цикл Qt-диалога | исправлено | `ui/mixtape.py::closeEvent`, отмена с ожиданием и `bridge.close()` |
+| USB-FIX-07 Qt в CI без ложных skip | исправлено | `.github/workflows/tests.yml` (Qt-job + падение на `skipped`) |
+| USB-FIX-08 TOCTOU плейлиста | исправлено | `export/writer.py::_write_playlist`: no-clobber + версии `playlist-N.m3u8`, `os.replace` больше не используется |
+| USB-FIX-08 manifest и размонтирование | исправлено | `export/manifest.py::read_manifest`, `export/writer.py::_flush`: `openat`+`O_NOFOLLOW`, no-clobber создание, сверка identity, `_reassert_mount` перед каждой записью |
+| USB-FIX-08 `job_id` в USB-manifest | исправлено | `export/writer.py::_flush` (`job_id` из сервиса), `service.py::export`; старые manifest читаются |
+
+Офлайн fake-USB и offscreen-Qt прогоны зелёные; живой UDisks2, физическая
+запись на FAT32/exFAT и аппаратная проверка по-прежнему не выполнялись и
+остаются отдельным шагом после merge-разблокировки.

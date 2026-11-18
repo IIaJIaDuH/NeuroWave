@@ -67,7 +67,7 @@ neurowave wave              # «Моя волна», управление из �
 |---|---|
 | `neurowave --json doctor` | окружение: Python, зависимости выбранного провайдера, mpv, keyring, каталоги, токен, сеть |
 | `neurowave login` / `logout` | вход по Device Flow и удаление токена |
-| `neurowave me` | аккаунт и признак подписки Плюс |
+| `neurowave me` | аккаунт и подписка; без сети — последнее известное состояние |
 | `neurowave search "запрос"` | треки, исполнители, альбомы, плейлисты |
 | `neurowave wave [--seconds N]` | непрерывная «Моя волна» с feedback |
 | `neurowave wave --mpris` | то же + публикация в MPRIS (панель, `playerctl`, медиа-клавиши) |
@@ -82,7 +82,7 @@ neurowave wave              # «Моя волна», управление из �
 | `neurowave providers` | провайдеры: что подключено, что умеет, что не подключено и почему |
 | `neurowave devices` | устройства Spotify Connect (`*` — активное) |
 | `neurowave connect "имя"` | перенести воспроизведение на устройство Spotify |
-| `neurowave remote play\|pause\|next\|previous` | управление чужим плеером (`--uri` для play) |
+| `neurowave remote play\|pause\|next\|previous` | управление чужим плеером (`--uri` для play, `--device` переносит звук) |
 | `neurowave --json status` | конфигурация, провайдер, кеш, недавняя история |
 | `neurowave --provider local play "запрос"` | воспроизведение файлов из локальной папки |
 | `neurowave --provider local wave` | случайная выборка из локальной библиотеки |
@@ -99,14 +99,14 @@ neurowave wave              # «Моя волна», управление из �
 ## Провайдеры музыки
 
 Провайдер — это не «сервис вообще», а набор явных возможностей
-(`src/neurowave/providers`). Подключены два:
+(`src/neurowave/providers`). Подключены четыре:
 
 | Провайдер | Возможности | Вход | Кеш |
 |---|---|---|---|
 | `yandex` | `CATALOG`, `LIBRARY`, `PLAYLISTS`, `PERSONAL_RADIO`, `DIRECT_STREAM` | OAuth Device Flow | да |
 | `local` | `CATALOG`, `DIRECT_STREAM`, `SHUFFLE_LIBRARY` | не требуется | нет |
 | `soundcloud` | `CATALOG`, `DIRECT_STREAM` | API-ключ (`login --token`) | нет |
-| `spotify` | `CATALOG`, `DELEGATED_PLAYBACK` | OAuth access token (`login --token`) | нет |
+| `spotify` | `CATALOG`, `DELEGATED_PLAYBACK` | OAuth PKCE в браузере (запасной путь — `login --token`) | нет |
 
 ```bash
 neurowave providers                    # что подключено и что умеет
@@ -115,6 +115,7 @@ neurowave --provider yandex wave       # провайдер на сессию
 neurowave --provider local wave        # случайная выборка, не персональный поток
 neurowave --provider soundcloud login --token <client_id>   # ключ приложения
 neurowave --provider soundcloud play "запрос"               # поток playable-треков в mpv
+neurowave --provider spotify login --client-id <id>        # вход по PKCE
 neurowave --provider spotify devices                       # устройства Spotify Connect
 neurowave --provider spotify connect "Kitchen"             # перенести воспроизведение
 neurowave --provider spotify remote play "запрос"          # играть на устройстве Spotify
@@ -124,7 +125,7 @@ neurowave --provider spotify remote play "запрос"          # играть 
 Токен у каждого провайдера свой: запись keyring `<provider>-oauth` или файл
 `token.<provider>` с правами 0600 (для Яндекса — исторические имена);
 провайдерам с `AuthKind.API_TOKEN` ключ передаётся через `login --token`
-(в вывод не попадает);
+(в вывод не попадает); у `AuthKind.OAUTH_BROWSER` (Spotify) — вход по PKCE;
 провайдерам с `AuthKind.NONE` токен не нужен, и `login` так и говорит.
 
 ### Квалифицированные ID
@@ -176,16 +177,46 @@ play` для Spotify отвечает «не поддерживает: пото�
 входа.
 
 ```bash
-neurowave --provider spotify login --token <access token> \
-  --refresh-token <refresh token> --client-id <client_id>
+neurowave --provider spotify login --client-id <client_id>
 neurowave --provider spotify devices
 neurowave --provider spotify connect "Living Room"
 neurowave --provider spotify remote play "запрос"     # или --uri spotify:track:…
 neurowave --provider spotify remote pause|next|previous
 ```
 
-Токен проверяется запросом `/me` при входе; `403` переводится в понятное
-требование Premium, `404` — в «нет активного устройства». `me` показывает
+### Вход Spotify по PKCE
+
+Основной вход — OAuth 2.0 Authorization Code + PKCE: client secret не нужен и
+не хранится, браузер возвращает код на loopback, токены не печатаются.
+
+```bash
+neurowave --provider spotify login --client-id <client_id>
+neurowave --provider spotify login --client-id <id> --port 8899  # если 8888 занят
+```
+
+Что нужно зарегистрировать в Spotify:
+
+1. Открыть [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
+   и создать приложение (Web API).
+2. В Settings → Redirect URIs добавить ровно
+   `http://127.0.0.1:8888/callback` (при другом `--port` — соответствующий
+   адрес). Spotify допускает `http` только для loopback `127.0.0.1`;
+   остальные адреса должны быть `https`.
+3. Скопировать **Client ID**. Client secret для PKCE не нужен и не должен
+   попадать в репозиторий или настройки.
+4. Войти и подтвердить доступ: access и refresh token лягут в `TokenStore`, а
+   `client_id` — в `config.json`, чтобы следующий вход не требовал флага.
+
+Запрашиваемые scopes: `user-read-playback-state`, `user-modify-playback-state`,
+`user-read-currently-playing`, `user-read-private`. Параметр `state`
+проверяется, callback слушает только `127.0.0.1`, код и `code_verifier`
+никуда не выводятся. Ручной вход
+`login --token <access> --refresh-token <refresh> --client-id <id>` остаётся
+запасным путём для headless-окружений.
+
+Токен проверяется запросом `/me` при входе (и пробным обновлением refresh
+token, если он есть); `403` переводится в понятное требование Premium или
+недостающих scopes, `404` — в «нет активного устройства». `me` показывает
 подписку Premium, если сервис вернул `product=premium`. Кеша нет
 (`cache_allowed=False`): хранить нечего, звук остаётся в Spotify. Сеть
 изолирована в `spotify/client.py`, транспорт подменяется в тестах.
@@ -221,6 +252,108 @@ soundcloud = "my_provider:spec"
   «пульт» через Spotify Connect;
 * у VK Музыки публичного музыкального API нет (аудио-методы закрыты с 2016),
   YouTube Music отдельного API не имеет, а извлечение аудио запрещено политикой.
+
+## USB Mixtape: планировщик подборки (USB-01)
+
+Реализован только офлайновый планировщик из [плана USB Mixtape](features/usb-mixtape/DELIVERY.md):
+пакет `src/neurowave/mixtape` (`models`, `match`, `taste`, `sources/base`,
+`planner`) строит неизменяемый `MixtapePlan` из метаданных каталога и
+разрешённых файлов источников. Файловых, сетевых, SQLite- и USB-операций в
+модуле нет: `LocalExportSource`, UDisks2, writer и CLI — следующие этапы
+(USB-02…USB-06).
+
+* **Детерминизм.** Одинаковые кандидаты, seed и веса профиля дают тот же
+  `plan_id`; seed влияет только на tie-break равных score.
+* **Бюджет.** Целевая длительность 1–12 часов и, опционально, `max_bytes`;
+  лишнее попадает в `skipped` с причиной, а не выкидывается молча.
+* **Дедупликация.** Нормализованные исполнитель/название и допуск 3 с;
+  ремастер с другой длительностью остаётся отдельным треком. `Track.key` сам
+  по себе правом на файл не считается.
+* **Права.** Экспортируются только `ExportAsset` с `rights=PERMITTED` и
+  `eligible=True`; `UNKNOWN`/`DENIED`, отсутствие файла и stream-only
+  кандидаты дают `rights_unknown`/`rights_denied`/`no_asset`.
+* **Профили.** `car`, `road`, `party`, `chill`, `favorites` — данные с весами
+  и лимитом треков на исполнителя. Причина (`reason`) объясняет выбор:
+  «лайк», «часто слушаешь», «недавно слушал», «из локальной библиотеки».
+* **Preview.** `MixtapePlan.to_dict()` — JSON без абсолютных путей, токенов
+  и прав; `shortage_ms` и `skipped` показывают реальную нехватку.
+
+**USB-02 — локальный источник.** `LocalExportSource` принимает только явно
+одобренный root и по локальным трекам создаёт `ExportAsset` с фактическим
+размером, форматом и lossless-флагом. Абсолютные пути, `..`, NUL, скрытые
+сегменты, не-аудио файлы и симлинки за пределы root отклоняются; симлинк
+внутри root разрешён, пустой файл — нет. `LocalExportRights(confirmed=False)`
+по умолчанию даёт `UNKNOWN`: без подтверждения пользователя планировщик не
+берёт файл. `rights_status` отвечает только за реально выданные этим
+источником asset id, а не за произвольную строку `local-...`.
+
+**USB-03 — устройства.** `DeviceIdentity` фиксирует UDisks2 object path,
+block device (только диагностика), mountpoint, UUID, drive id, removable,
+writable, объёмы и системный флаг. `UDisks2DeviceService` строит список через
+`ObjectManager.GetManagedObjects`: принимаются removable- или USB-тома,
+отбрасываются swap/шифрованные и немонтированные, системные mountpoint и
+`HintSystem` помечаются и не предлагаются. Штатные точки монтирования Mint
+(`/media/...`) и Fedora (`/run/media/...`) разрешены; системными считаются
+только `/run`, `/run/lock` и `/run/user`. `revalidate()` заново читает шину
+и отклоняет исчезнувший, изменённый, read-only или системный том.
+`FakeUsbDeviceService` воспроизводит те же правила без D-Bus; `dbus-next`
+импортируется лениво, запись в `/dev` отсутствует.
+
+**USB-04 — writer.** `SafeWriter` копирует потоково с ограниченным буфером,
+считает sha256, делает fsync и проверяет временный файл до commit. Все
+операции идут относительно открытого каталога с `O_NOFOLLOW`, поэтому
+симлинк-подмена и `..` не выводят запись за target root. Существующий файл не
+перезаписывается: commit через no-clobber link с fallback для FAT, иначе
+честный `exists`. `manifest.json` пишется атомарно после каждого файла и
+позволяет resume: verified-файлы перепроверяются по sha256, пропавшие —
+копируются заново, несовпавшие не затираются. Cancel, ENOSPC, EROFS, EIO и
+пропажа устройства дают `cancelled`/`partial`/`failed` без ложного complete;
+чужой или битый manifest приводит к отказу, а не к оптимистичному resume.
+
+**USB-05 — транскод, M3U8, Car.** `FfmpegTranscoder` вызывает внешние
+`ffmpeg`/`ffprobe` argv-списком без `shell=True`, URL и интерактива, с
+таймаутом; без ffmpeg writer отклоняет `TRANSCODE` (`transcode_unavailable`),
+а режим Original продолжает работать. Выход проверяется ffprobe (формат MP3 и
+длительность в допуске), затем sha256 и commit. `playlist.m3u8` пишется
+атомарно только по verified-файлам, UTF-8 и с относительными путями.
+Car-профиль: `car_filename`/`car_destination` с нумерацией `001…`, портативными
+именами и опциональной транслитерацией.
+
+**USB-06 — headless CLI.** `neurowave mixtape` даёт команды `devices`, `plan`,
+`export`, `status`, `cancel`, `verify`, `eject` с `--json` и работает без
+провайдера, сети и Qt. `plan` строит `MixtapePlan` из `LocalMusicAdapter`,
+`LocalExportSource` и `MixtapePlanner`, показывает библиотеку, оценку байт и
+причины пропуска, а `devices` — доступные writable-тома; `plan` может
+сохранить план (0600). `export` требует и
+`--confirm`, и план, созданный с `--confirm-local-rights`; затем пересобирает
+план, сверяет `plan_id`, перепроверяет выбранный UDisks2 object path и пишет
+через `SafeWriter`. Журнал задач и cancel-marker лежат в XDG data (0600),
+`cancel` проверяется writer'ом между чанками. `verify` сверяет sha256 и размер
+записанных файлов и возвращает `ok=true` только для задачи в статусе `complete`:
+`partial`/`failed`/`cancelled` и файлы в статусе `failed`/`skipped` считаются
+расхождением. `eject` требует `--confirm`, вызывает `Filesystem.Unmount`
+только после revalidate и отказывает, пока задача в статусе `running`, или
+если `--job` относится к другому object path (`target_mismatch`).
+
+**USB-07 — общий сервис, Qt-экран и bridge.** `mixtape/service.py` — единственный
+путь плана и записи для CLI и GUI: `plan()` (библиотека → `PlanBuild` с
+кандидатами, разрешёнными файлами и `MixtapePlan`), `export()` (сверка
+`plan_id`, revalidate тома, журнал, `SafeWriter`, отчёт) и `verify()`; отказы
+кодируются `MixtapeServiceError` (`library_missing`, `rights_not_confirmed`,
+`plan_changed`, `target_not_found`, `job_not_found`). `mixtape/bridge.py` — Qt-независимый мост:
+неизменяемый `BridgeState` (`status`, `devices`, `selected`, `preview`,
+`progress`, `summary`, `verification`, `can_*`) и команды
+`request_plan/start_export/request_cancel/request_verify/eject`. План, запись,
+проверка и извлечение идут в отдельном потоке, поэтому GUI и mpv не
+блокируются; `SafeWriter.write(progress=...)` отдаёт байты и номер файла, а мост
+считает проценты, скорость и оценку остатка. Согласие не обходится: без отметки
+прав, подтверждения в диалоге и выбранного object path экспорт не стартует, а
+`eject` отказывает, пока worker занят или в журнале есть running-задача для этого
+тома. `ui/mixtape.py` — тонкий экран Qt Widgets (том, папка, профиль, часы,
+формат, права, таблица треков, причины пропуска, прогресс, отмена/проверка/
+извлечение) плюс кнопка «USB Mixtape» в главном окне. Общие части вынесены из
+CLI: `export/verify.py` (правило «только complete»), `jobs.job_record`/
+`jobs.CancelSignal` и `service.MixtapeService` (план/запись/verify целиком).
 
 ## MPRIS и системный трей
 
@@ -266,9 +399,14 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - **Аудио не ждёт UI и сеть.** Аудиовыход — отдельный процесс `mpv`; ядро
   только отдаёт ссылку и команды.
 - **Приватность.** В логах и `doctor` нет токена, заголовков и истории
-  прослушивания; данные аккаунта не отправляются наружу.
+  прослушивания; данные аккаунта не отправляются наружу. `me` пишет только
+  последнее известное состояние аккаунта в файл `0600` без токенов и
+  использует его, когда сети нет.
+- **`doctor` не врёт о зависимостях.** `mpv` требуется только у провайдеров
+  с `DIRECT_STREAM`; у Spotify-пульта он отмечен как необязательный.
 - **Кеш ограничен.** Квота по умолчанию 2 ГБ, LRU-вытеснение, TTL 7 дней,
-  ручная очистка; кеш не превращается в офлайн-библиотеку.
+  ручная очистка; кеш не превращается в офлайн-библиотеку. `cache info`
+  предупреждает, если свободного места на диске меньше квоты.
 - **Корректное состояние.** Переходы плеера валидируются
   (`idle → ready → buffering → playing ↔ paused → stopped`), ошибки живут в
   отдельных overlay-состояниях и не подменяют состояние воспроизведения.
@@ -286,10 +424,14 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 - тексты песен, подкасты, Ynison;
 - ИИ-диджей, профиль вкуса, голос, TTS, студия генерации;
 - AppImage и упаковка;
+- USB Mixtape: есть планировщик, `LocalExportSource`, UDisks2-детект, writer,
+  опциональный транскод, M3U8, Car-имена, headless CLI, Qt-экран и bridge;
+  нет записи тегов/обложек и аппаратной проверки;
 - выбор аудиоустройства Bluetooth/HDMI из приложения (используется системный
   маршрут PipeWire/PulseAudio).
 
-Проверено в этом окружении: 227 unit-тестов ядра, интеграций и провайдеров,
+Проверено в этом окружении: 635 офлайн-тестов ядра, интеграций, провайдеров,
+планировщика, источника, устройств, writer и экспорта,
 запуск CLI
 (`doctor`, `status`, `cache`, `tray --help`, обработка отсутствия токена),
 импорт и сборка пакета, работа MPRIS на отдельном сессионном шине
@@ -302,7 +444,7 @@ busctl --user introspect org.mpris.MediaPlayer2.neurowave /org/mpris/MediaPlayer
 ## Тесты
 
 ```bash
-python -m pytest        # 227 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры
+python -m pytest        # 635 тестов: очередь, состояния, плеер, кеш, SQLite и миграция, адаптеры, маршрутизация, CLI, MPRIS, провайдеры, PKCE, USB-планировщик, LocalExportSource, устройства, mixtape CLI, service и bridge (с PySide6 — 651)
 ```
 
 Тесты не ходят в сеть: адаптер проверяется на фейковом клиенте, аудиовыход —
@@ -313,6 +455,20 @@ SoundCloud — на фейковом транспорте: поиск, отбр�
 `401/403/429/5xx`, адрес CDN и отключённый кеш. Spotify — так же: URL, Bearer,
 тела `PUT`/`POST`, `204` без тела, устройства, каталог и отказы без потока,
 обновление по `expires_at` и `401`, ротация refresh token и запись credentials.
+USB Mixtape проверяется 218 офлайн-тестами: планировщик (USB-01) — seed и
+порядок кандидатов, бюджет времени и байт, dedup между провайдерами,
+shortage, права, профили и preview JSON; локальный источник (USB-02) —
+approved root, path containment, симлинки и политика `ExportRight`;
+устройства (USB-03) — T-001…T-005 на fake-сервисе и managed objects;
+writer (USB-04) — T-006…T-015 и T-020…T-026 на временном fake-USB;
+транскод, M3U8 и Car (USB-05) — на синтетическом WAV и внедряемом runner;
+CLI (USB-06) — devices/plan/export/status/cancel/verify/eject на fake-USB,
+временной библиотеке и локальном журнале, включая отказ без подтверждения,
+требование статуса `complete` в `verify` и привязку `eject --job` к object path —
+без сети и реальных носителей; service (USB-07) — общий план/запись/verify для CLI и GUI; bridge (USB-07) —
+план, прогресс, отмена, `plan_changed`, verify и eject в фоновом потоке без Qt; экран (USB-07) —
+offscreen-тесты Qt на fake-USB (том, треки, причины пропуска, прогресс,
+кнопки) без реальной записи.
 Интеграции проверяются без D-Bus-демона и без дисплея: MPRIS-логика
 тестируется на заглушке, а `tests/test_integrations_optional.py` отдельными
 процессами проверяет, что импорт не тянет `dbus-next`/`PySide6` и что

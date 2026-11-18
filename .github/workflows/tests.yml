@@ -32,8 +32,9 @@ jobs:
         # чтобы тесты не зависели от keyring окружения.
         env:
           NEUROWAVE_KEYRING: "off"
-        # Qt-тесты требуют PySide6: они вынесены в отдельную джобу.
-        run: python -m pytest -q -m "not integration" --ignore=tests/test_ui_qt.py
+        # Qt-тесты требуют PySide6: они вынесены в отдельную джобу, где
+        # пропуск считается провалом.
+        run: python -m pytest -q -m "not integration" --ignore=tests/test_ui_qt.py --ignore=tests/test_ui_mixtape.py
 
   # Окно проверяется в offscreen-режиме: без X/Wayland, но с настоящими
   # виджетами и настоящим Qt.
@@ -55,11 +56,26 @@ jobs:
           sudo apt-get install -y --no-install-recommends libegl1 libxkbcommon0
           pip install -e '.[dev,local,mpris,ui]'
 
-      - name: Smoke-тест окна
+      - name: Тесты окна и USB Mixtape
         env:
           NEUROWAVE_KEYRING: "off"
           QT_QPA_PLATFORM: "offscreen"
-        run: python -m pytest -q tests/test_ui_qt.py
+        # Здесь PySide6 и системные библиотеки установлены обязательно:
+        # пропуск или xfail Qt-тестов не считается успешной проверкой.
+        run: |
+          set -euo pipefail
+          LOG="${RUNNER_TEMP}/qt-pytest.log"
+          python -m pytest -q -o addopts="" tests/test_ui_qt.py tests/test_ui_mixtape.py 2>&1 | tee "$LOG"
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            echo "::error::Qt-тесты упали (код $status)"
+            exit "$status"
+          fi
+          if grep -Eq "[0-9]+ (skipped|xfailed|errors?)" "$LOG"; then
+            echo "::error::Qt-тесты пропущены: в этой джобе PySide6 обязателен"
+            exit 1
+          fi
+          grep -Eq "[0-9]+ passed" "$LOG"
 
   # Слой mpv проверяется настоящим mpv, а не двойником: звук уходит в
   # --ao=null, поэтому звуковая карта не нужна.
