@@ -255,10 +255,12 @@ AI recommendations NEVER call Safe writer or OS APIs directly.
 
 После MVP можно планировать smart update, playlist cover, device profiles, optional official download plugin и optional AI. Но каждое отдельно.
 
-## Ревью-фиксы перед merge (USB-FIX-01…07)
+## Ревью-фиксы перед merge (USB-FIX-01…08)
 
 Ревью коммита `000d646` заблокировало merge: расширение функций остановлено,
-исправлялись только безопасность записи, статусы, задачи и CI.
+исправлялись только безопасность записи, статусы, задачи и CI. Повторное
+ревью `8ff94e4` потребовало закрыть TOCTOU плейлиста, перевести manifest на
+directory-fd и согласовать `job_id` — это USB-FIX-08.
 
 | Пункт | Статус | Где |
 |---|---|---|
@@ -269,6 +271,9 @@ AI recommendations NEVER call Safe writer or OS APIs directly.
 | USB-FIX-05 `job_id` ≠ `plan_id` | исправлено | `mixtape/service.py::make_job_id`, `jobs.py::job_record` |
 | USB-FIX-06 жизненный цикл Qt-диалога | исправлено | `ui/mixtape.py::closeEvent`, отмена с ожиданием и `bridge.close()` |
 | USB-FIX-07 Qt в CI без ложных skip | исправлено | `.github/workflows/tests.yml` (Qt-job + падение на `skipped`) |
+| USB-FIX-08 TOCTOU плейлиста | исправлено | `export/writer.py::_write_playlist`: no-clobber + версии `playlist-N.m3u8`, `os.replace` больше не используется |
+| USB-FIX-08 manifest и размонтирование | исправлено | `export/manifest.py::read_manifest`, `export/writer.py::_flush`: `openat`+`O_NOFOLLOW`, no-clobber создание, сверка identity, `_reassert_mount` перед каждой записью |
+| USB-FIX-08 `job_id` в USB-manifest | исправлено | `export/writer.py::_flush` (`job_id` из сервиса), `service.py::export`; старые manifest читаются |
 
 Офлайн fake-USB и offscreen-Qt прогоны зелёные; живой UDisks2, физическая
 запись на FAT32/exFAT и аппаратная проверка по-прежнему не выполнялись и

@@ -7,6 +7,7 @@
 
 from __future__ import annotations
 
+import json
 import math
 import struct
 import wave
@@ -191,6 +192,10 @@ def test_export_writes_files_and_journal(service, library, usb, tmp_path):
     assert saved is not None and saved["status"] == "complete"
     assert saved["job_id"] == outcome.job_id
     assert saved["plan_id"] == build.plan.plan_id
+    # USB-FIX-08: USB-manifest и локальный журнал описывают один запуск.
+    manifest = json.loads((usb / SUB / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["job_id"] == outcome.job_id
+    assert manifest["plan_id"] == build.plan.plan_id
 
 
 def test_verify_after_export(service, library, usb):

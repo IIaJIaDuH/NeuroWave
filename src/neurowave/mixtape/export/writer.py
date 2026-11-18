@@ -19,6 +19,7 @@ import hashlib
 import os
 import platform
 import secrets
+import stat
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -35,10 +36,11 @@ from neurowave.mixtape.export.manifest import (
     MANIFEST_NAME,
     Manifest,
     ManifestEntry,
+    ManifestRead,
     device_fingerprint,
-    load_manifest,
+    manifest_payload,
     path_is_within,
-    write_manifest_atomic,
+    read_manifest,
 )
 from neurowave.mixtape.export.playlist import PLAYLIST_NAME, PlaylistEntry, render_m3u8
 from neurowave.mixtape.export.transcoder import TranscoderError, TranscoderUnavailable
@@ -46,6 +48,8 @@ from neurowave.mixtape.models import ExportAsset, ExportOperation, MixtapePlan, 
 
 BUFFER_SIZE = 1024 * 1024
 TEMP_PREFIX = ".neurowave-part-"
+# Версии плейлиста: обновление никогда не перезаписывает существующий файл.
+PLAYLIST_MAX_ATTEMPTS = 100
 _ABORT_CODES = {
     ExportErrorCode.ENOSPC,
     ExportErrorCode.READ_ONLY,
@@ -201,12 +205,16 @@ class SafeWriter:
         expected_device: Any | None = None,
         buffer_size: int = BUFFER_SIZE,
         transcoder: Any | None = None,
+        job_id: str = "",
     ) -> None:
         self._target = Path(target).expanduser()
         self._device = device_service
         self._expected = expected_device
         self._buffer = max(1, int(buffer_size))
         self._transcoder = transcoder
+        # Конкретный запуск для USB-manifest; пусто — fallback на plan_id
+        # ради старых вызовов и manifest без job_id.
+        self._job_id = str(job_id or "")
 
     def write(
         self,
@@ -222,9 +230,18 @@ class SafeWriter:
         # доступен, и writer создал бы там подкаталог и manifest.
         self._ensure_device()
         self._assert_mountpoint()
-        target = self._target.resolve()
+        try:
+            target = self._target.resolve(strict=True)
+        except OSError as error:
+            raise ExportError(
+                ExportErrorCode.TARGET_MISSING, "Целевой каталог USB не найден"
+            ) from error
         if not target.is_dir():
             raise ExportError(ExportErrorCode.TARGET_MISSING, "Целевой каталог USB не найден")
+        # Дальше работаем только с разрешённым путём: он же сверяется с открытым
+        # fd перед каждой записью manifest, чтобы размонтирование не увело
+        # запись в каталог на хостовом диске.
+        self._target = target
         subdir = str(plan.request.destination_subdir or "").strip("/")
         subdir_parts = tuple(part for part in subdir.split("/") if part)
         if not subdir_parts:
@@ -232,66 +249,59 @@ class SafeWriter:
         subdir_path = target.joinpath(*subdir_parts)
         if not path_is_within(target, subdir_path):
             raise ExportError(ExportErrorCode.PATH_ESCAPE, "Целевой каталог вне USB")
-
-        root_fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-        try:
-            _ensure_dir_fd(root_fd, subdir_parts)
-        except OSError as error:
-            os.close(root_fd)
-            raise ExportError(
-                ExportErrorCode.PATH_ESCAPE, "Целевой каталог подменён симлинком"
-            ) from error
-        finally:
-            try:
-                os.close(root_fd)
-            except OSError:
-                pass
-
         manifest_path = subdir_path / MANIFEST_NAME
-        if manifest_path.exists() or manifest_path.is_symlink():
-            if not resume:
-                raise ExportError(ExportErrorCode.MANIFEST_EXISTS, "manifest уже существует")
-            existing = load_manifest(manifest_path)
-            if existing is None or not self._compatible(existing, plan, subdir):
-                raise ExportError(
-                    ExportErrorCode.FOREIGN_MANIFEST,
-                    "manifest принадлежит другой задаче или устройству",
-                )
-        else:
-            existing = None
-        # Владельцем playlist считаемся только тогда, когда наш manifest прямо
-        # это утверждает для текущего плана; иначе чужой файл не трогаем.
-        playlist_owned = bool(existing and existing.playlist == PLAYLIST_NAME)
-        playlist_record = PLAYLIST_NAME if playlist_owned else ""
 
-        entries: dict[str, ManifestEntry] = {
-            entry.track_key: entry for entry in existing.entries
-        } if existing else {}
-        seen = {
-            entry.destination.casefold()
-            for entry in entries.values()
-            if entry.status == ItemStatus.VERIFIED.value
-        }
-        assets_by_id = {asset.asset_id: asset for asset in assets}
-        meter = (
-            _Meter(
-                progress,
-                len(plan.items),
-                sum(max(0, int(item.estimated_bytes)) for item in plan.items),
-            )
-            if progress is not None
-            else None
-        )
-        results: list[ItemReport] = []
-        order: list[str] = []
-        verified = 0
-        cancelled = False
-        aborted = False
-
-        playlist_path = ""
-        playlist_error = ""
         target_fd = os.open(target, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:
+            manifest_state = self._read_manifest(target_fd, subdir_parts)
+            manifest_identity: tuple[int, int] | None = None
+            if manifest_state is not None:
+                if not resume:
+                    raise ExportError(
+                        ExportErrorCode.MANIFEST_EXISTS, "manifest уже существует"
+                    )
+                if not self._compatible(manifest_state.manifest, plan, subdir):
+                    raise ExportError(
+                        ExportErrorCode.FOREIGN_MANIFEST,
+                        "manifest принадлежит другой задаче или устройству",
+                    )
+                existing = manifest_state.manifest
+                manifest_identity = (manifest_state.st_dev, manifest_state.st_ino)
+            else:
+                existing = None
+            # Владельцем playlist считаемся только тогда, когда в каталоге наш
+            # manifest (он совпал по плану/устройству). Manifest старого формата
+            # без поля ``playlist`` тоже даёт право на версионирование: файл всё
+            # равно не перезаписывается, а только рядом появляется новый.
+            playlist_owned = existing is not None
+            playlist_record = existing.playlist if playlist_owned else ""
+
+            entries: dict[str, ManifestEntry] = {
+                entry.track_key: entry for entry in existing.entries
+            } if existing else {}
+            seen = {
+                entry.destination.casefold()
+                for entry in entries.values()
+                if entry.status == ItemStatus.VERIFIED.value
+            }
+            assets_by_id = {asset.asset_id: asset for asset in assets}
+            meter = (
+                _Meter(
+                    progress,
+                    len(plan.items),
+                    sum(max(0, int(item.estimated_bytes)) for item in plan.items),
+                )
+                if progress is not None
+                else None
+            )
+            results: list[ItemReport] = []
+            order: list[str] = []
+            verified = 0
+            cancelled = False
+            aborted = False
+
+            playlist_path = ""
+            playlist_error = ""
             if _cancelled(cancel):
                 cancelled = True
             else:
@@ -318,12 +328,13 @@ class SafeWriter:
                         verified += 1
                         seen.add(report.destination.casefold())
                     entries[item.track_key] = _entry(report)
-                    self._flush(
+                    manifest_identity = self._flush(
+                        target_fd,
+                        subdir_parts,
                         plan,
-                        subdir,
                         entries,
                         order,
-                        manifest_path,
+                        identity=manifest_identity,
                         playlist=playlist_record,
                     )
                     if report.status is ItemStatus.CANCELLED:
@@ -341,20 +352,20 @@ class SafeWriter:
                     playlist_error = str(error)
                 else:
                     if playlist_path:
-                        playlist_record = PLAYLIST_NAME
+                        playlist_record = playlist_path.rsplit("/", 1)[-1]
+            status = self._status(plan, verified, cancelled, aborted)
+            self._flush(
+                target_fd,
+                subdir_parts,
+                plan,
+                entries,
+                order,
+                identity=manifest_identity,
+                status=status,
+                playlist=playlist_record,
+            )
         finally:
             os.close(target_fd)
-
-        status = self._status(plan, verified, cancelled, aborted)
-        self._flush(
-            plan,
-            subdir,
-            entries,
-            order,
-            manifest_path,
-            status=status,
-            playlist=playlist_record,
-        )
         failed = sum(1 for item in results if item.status is ItemStatus.FAILED)
         skipped = sum(1 for item in results if item.status is ItemStatus.SKIPPED)
         return ExportReport(
@@ -393,7 +404,8 @@ class SafeWriter:
             meter.start_item(index, destination)
 
         try:
-            self._ensure_device()
+            # Перед каждой записью: том всё ещё смонтирован туда, куда открыт fd.
+            self._reassert_mount(target_fd)
             previous = entries.get(item.track_key)
             if previous is not None and previous.status == ItemStatus.VERIFIED.value:
                 existing = Path(self._target.resolve(), destination)
@@ -643,11 +655,13 @@ class SafeWriter:
         *,
         owned: bool,
     ) -> tuple[str, str]:
-        """Записать M3U8, не перезаписывая чужой файл.
+        """Записать M3U8, никогда не перезаписывая существующий файл.
 
-        Новый playlist создаётся атомарным no-clobber коммитом. Обновление
-        разрешено только для файла, который подтверждён нашим manifest
-        (``owned``) и не подменён между проверкой и заменой (сверка inode).
+        Атомарного «заменить, если inode тот же» в POSIX нет, поэтому обновление
+        своей записи идёт версионированием: первый файл — ``playlist.m3u8``,
+        следующие — ``playlist-2.m3u8`` и далее, каждый публикуется no-clobber.
+        Чужой файл и его symlink не трогаются, а гонка на выбранное имя
+        разрешается следующим свободным.
         """
 
         by_key = {item.track_key: item for item in plan.items}
@@ -670,26 +684,22 @@ class SafeWriter:
             return "", ""
         text = render_m3u8(entries, subdir)
         parts = tuple(part for part in subdir.split("/") if part)
-        temporary = ".neurowave-playlist-" + secrets.token_hex(8)
-        destination = f"{subdir}/{PLAYLIST_NAME}"
         try:
             dir_fd = _ensure_dir_fd(target_fd, parts)
         except OSError as error:
             raise ExportError(ExportErrorCode.PATH_ESCAPE, str(error)) from error
-        existing_identity: tuple[int, int] | None = None
+        temporary = ".neurowave-playlist-" + secrets.token_hex(8)
         try:
-            try:
-                stat = os.lstat(PLAYLIST_NAME, dir_fd=dir_fd)
-            except FileNotFoundError:
-                stat = None
-            if stat is not None:
+            self._reassert_mount(target_fd)
+            name = PLAYLIST_NAME
+            if _lexists(dir_fd, PLAYLIST_NAME):
                 if not owned:
                     raise ExportError(
                         ExportErrorCode.PLAYLIST_EXISTS,
-                        f"{destination} уже существует и не принадлежит этой задаче",
-                        path=destination,
+                        f"{subdir}/{PLAYLIST_NAME} уже существует и не принадлежит этой задаче",
+                        path=f"{subdir}/{PLAYLIST_NAME}",
                     )
-                existing_identity = (stat.st_dev, stat.st_ino)
+                name = self._free_playlist_name(dir_fd, subdir)
             fd = os.open(
                 temporary,
                 os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
@@ -701,33 +711,26 @@ class SafeWriter:
                 os.fsync(fd)
             finally:
                 os.close(fd)
-            if existing_identity is None:
+            for _ in range(PLAYLIST_MAX_ATTEMPTS):
+                destination = f"{subdir}/{name}"
                 try:
-                    _commit(dir_fd, temporary, PLAYLIST_NAME, destination)
+                    _commit(dir_fd, temporary, name, destination)
                 except ExportError as error:
-                    if error.code is ExportErrorCode.EXISTS:
+                    if error.code is not ExportErrorCode.EXISTS:
+                        raise
+                    if name == PLAYLIST_NAME:
                         raise ExportError(
                             ExportErrorCode.PLAYLIST_EXISTS,
                             f"{destination} появился во время записи: файл не тронут",
                             path=destination,
                         ) from error
-                    raise
-            else:
-                try:
-                    current = os.lstat(PLAYLIST_NAME, dir_fd=dir_fd)
-                except FileNotFoundError as error:
-                    raise ExportError(
-                        ExportErrorCode.PLAYLIST_EXISTS,
-                        f"{destination} исчез во время записи: обновление отменено",
-                        path=destination,
-                    ) from error
-                if (current.st_dev, current.st_ino) != existing_identity:
-                    raise ExportError(
-                        ExportErrorCode.PLAYLIST_EXISTS,
-                        f"{destination} подменён во время записи: файл не тронут",
-                        path=destination,
-                    )
-                os.replace(temporary, PLAYLIST_NAME, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
+                    name = self._free_playlist_name(dir_fd, subdir)
+                    continue
+                return destination, ""
+            raise ExportError(
+                ExportErrorCode.PLAYLIST_EXISTS,
+                "Не удалось выбрать свободное имя плейлиста: файл не записан",
+            )
         except ExportError:
             raise
         except OSError as error:
@@ -738,7 +741,19 @@ class SafeWriter:
             except OSError:
                 pass
             os.close(dir_fd)
-        return destination, ""
+
+    @staticmethod
+    def _free_playlist_name(dir_fd: int, subdir: str) -> str:
+        """Следующее имя версии, которого ещё нет; symlink тоже считается занятым."""
+
+        for version in range(2, PLAYLIST_MAX_ATTEMPTS + 2):
+            candidate = f"playlist-{version}.m3u8"
+            if not _lexists(dir_fd, candidate):
+                return candidate
+        raise ExportError(
+            ExportErrorCode.PLAYLIST_EXISTS,
+            f"В {subdir} слишком много версий плейлиста: файл не записан",
+        )
 
     def _verify_temp(
         self, dir_fd: int, temporary: str, size: int, digest: str, destination: str
@@ -820,37 +835,136 @@ class SafeWriter:
             return False
         return manifest.device == device_fingerprint(self._expected)
 
+    def _read_manifest(
+        self, target_fd: int, parts: Sequence[str]
+    ) -> ManifestRead | None:
+        """Прочитать manifest через открытый каталог, а не через путь."""
+
+        try:
+            dir_fd = _ensure_dir_fd(target_fd, parts)
+        except OSError as error:
+            raise ExportError(
+                ExportErrorCode.PATH_ESCAPE, "Целевой каталог подменён симлинком"
+            ) from error
+        try:
+            return read_manifest(dir_fd)
+        finally:
+            os.close(dir_fd)
+
+    def _reassert_mount(self, target_fd: int) -> None:
+        """Том всё ещё смонтирован в тот же каталог, который открыт для записи.
+
+        Вызывается перед каждым файлом, записью manifest и плейлиста: после
+        размонтирования путь уже смотрит в каталог хостовой системы, а fd —
+        в отсоединённый inode, поэтому сверяются и устройство, и inode.
+        """
+
+        self._ensure_device()
+        self._assert_mountpoint()
+        try:
+            current = os.stat(self._target)
+        except OSError as error:
+            raise ExportError(
+                ExportErrorCode.DEVICE, "Точка монтирования недоступна"
+            ) from error
+        held = os.fstat(target_fd)
+        if (current.st_dev, current.st_ino) != (held.st_dev, held.st_ino):
+            raise ExportError(
+                ExportErrorCode.DEVICE,
+                "Каталог назначения больше не является точкой монтирования",
+            )
+
     def _flush(
         self,
+        target_fd: int,
+        subdir_parts: Sequence[str],
         plan: MixtapePlan,
-        subdir: str,
         entries: Mapping[str, ManifestEntry],
         order: Sequence[str],
-        manifest_path: Path,
         *,
+        identity: tuple[int, int] | None,
         status: str = "writing",
         playlist: str = "",
-    ) -> None:
-        if not path_is_within(self._target, manifest_path.parent):
-            raise ExportError(ExportErrorCode.PATH_ESCAPE, "Каталог manifest подменён симлинком")
+    ) -> tuple[int, int]:
+        """Обновить manifest только через открытый каталог.
+
+        Пока файла нет, публикация идёт no-clobber: параллельно созданный чужой
+        manifest не перезаписывается. Дальше заменяется только файл с
+        подтверждённой identity — исчезновение или подмена означают отказ.
+        """
+
+        self._reassert_mount(target_fd)
         ordered = [
             entries[key]
             for key in order
             if key in entries and entries[key].destination
         ]
-        write_manifest_atomic(
-            manifest_path,
+        payload = manifest_payload(
             Manifest(
-                job_id=plan.plan_id,
+                job_id=self._job_id or plan.plan_id,
                 plan_id=plan.plan_id,
                 revision=plan.revision,
-                destination_subdir=subdir,
+                destination_subdir="/".join(subdir_parts),
                 status=status,
                 entries=tuple(ordered),
                 device=device_fingerprint(self._expected),
                 playlist=playlist,
-            ),
+            )
         )
+        try:
+            dir_fd = _ensure_dir_fd(target_fd, subdir_parts)
+        except OSError as error:
+            raise ExportError(
+                ExportErrorCode.PATH_ESCAPE, "Каталог manifest подменён симлинком"
+            ) from error
+        temporary = f".{MANIFEST_NAME}.tmp-{secrets.token_hex(8)}"
+        try:
+            fd = os.open(
+                temporary,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                0o600,
+                dir_fd=dir_fd,
+            )
+            try:
+                _write_bytes(fd, payload)
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+            if identity is None:
+                try:
+                    _commit(dir_fd, temporary, MANIFEST_NAME, MANIFEST_NAME)
+                except ExportError as error:
+                    if error.code is ExportErrorCode.EXISTS:
+                        raise ExportError(
+                            ExportErrorCode.MANIFEST_EXISTS,
+                            "manifest создан параллельно: файл не тронут",
+                        ) from error
+                    if error.code is not ExportErrorCode.NO_ATOMIC_REPLACE:
+                        raise
+                    # ФС без link/renameat2: создаём эксклюзивно, без перезаписи.
+                    # Цена — manifest может остаться недописанным при аварии;
+                    # на такой ФС writer и так отказывается писать аудио.
+                    _create_manifest_exclusive(dir_fd, payload)
+            else:
+                _require_manifest_identity(dir_fd, identity)
+                os.replace(
+                    temporary,
+                    MANIFEST_NAME,
+                    src_dir_fd=dir_fd,
+                    dst_dir_fd=dir_fd,
+                )
+            stat_result = os.lstat(MANIFEST_NAME, dir_fd=dir_fd)
+        except OSError as error:
+            raise ExportError(
+                ExportErrorCode.IO, f"manifest не записан: {error}"
+            ) from error
+        finally:
+            try:
+                os.unlink(temporary, dir_fd=dir_fd)
+            except OSError:
+                pass
+            os.close(dir_fd)
+        return stat_result.st_dev, stat_result.st_ino
 
     def _status(
         self, plan: MixtapePlan, verified: int, cancelled: bool, aborted: bool
@@ -885,6 +999,66 @@ def _ensure_dir_fd(root_fd: int, parts: Sequence[str]) -> int:
         except OSError:
             pass
         raise
+
+
+def _lexists(dir_fd: int, name: str) -> bool:
+    """Существует ли имя в каталоге, включая symlink (за ним не следуем)."""
+
+    try:
+        os.lstat(name, dir_fd=dir_fd)
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def _require_manifest_identity(dir_fd: int, identity: tuple[int, int]) -> None:
+    """Убедиться, что заменяем именно свой manifest, а не чужой файл."""
+
+    try:
+        current = os.lstat(MANIFEST_NAME, dir_fd=dir_fd)
+    except FileNotFoundError as error:
+        raise ExportError(
+            ExportErrorCode.FOREIGN_MANIFEST,
+            "manifest исчез во время записи: обновление отменено",
+        ) from error
+    if not stat.S_ISREG(current.st_mode):
+        raise ExportError(
+            ExportErrorCode.FOREIGN_MANIFEST,
+            "manifest подменён симлинком: обновление отменено",
+        )
+    if (current.st_dev, current.st_ino) != identity:
+        raise ExportError(
+            ExportErrorCode.FOREIGN_MANIFEST,
+            "manifest подменён во время записи: чужой файл не тронут",
+        )
+
+
+def _create_manifest_exclusive(dir_fd: int, payload: bytes) -> None:
+    """Создать manifest без перезаписи там, где нет link/renameat2."""
+
+    try:
+        fd = os.open(
+            MANIFEST_NAME,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+            0o600,
+            dir_fd=dir_fd,
+        )
+    except FileExistsError as error:
+        raise ExportError(
+            ExportErrorCode.MANIFEST_EXISTS,
+            "manifest создан параллельно: файл не тронут",
+        ) from error
+    try:
+        _write_bytes(fd, payload)
+        os.fsync(fd)
+    except BaseException:
+        try:
+            os.unlink(MANIFEST_NAME, dir_fd=dir_fd)
+        except OSError:
+            pass
+        raise
+    finally:
+        os.close(fd)
 
 
 def _commit(dir_fd: int, temporary: str, name: str, destination: str) -> None:

@@ -273,7 +273,9 @@ def test_t010_enospc_aborts_partial_and_cleans_temp(usb, library, monkeypatch):
     writer, _, _ = writer_for(usb)
 
     def no_space(fd, data):
-        raise OSError(errno.ENOSPC, "No space left on device")
+        # Симулируем отказ записи аудио, а не маленького manifest.
+        if not data.startswith(b"{"):
+            raise OSError(errno.ENOSPC, "No space left on device")
 
     monkeypatch.setattr(writer_mod, "_write_bytes", no_space)
 
@@ -291,7 +293,8 @@ def test_eio_aborts_partial_and_cleans_temp(usb, library, monkeypatch):
     writer, _, _ = writer_for(usb)
 
     def io_error(fd, data):
-        raise OSError(errno.EIO, "Input/output error")
+        if not data.startswith(b"{"):
+            raise OSError(errno.EIO, "Input/output error")
 
     monkeypatch.setattr(writer_mod, "_write_bytes", io_error)
 
@@ -310,14 +313,15 @@ def test_rename_race_never_overwrites_appearing_file(usb, library, monkeypatch):
     real_link = os.link
 
     def racing_link(src, dst, *, src_dir_fd=None, dst_dir_fd=None, follow_symlinks=True):
-        fd = os.open(
-            dst,
-            os.O_WRONLY | os.O_CREAT | os.O_EXCL,
-            0o600,
-            dir_fd=dst_dir_fd,
-        )
-        os.write(fd, b"user appeared")
-        os.close(fd)
+        if dst.endswith(".mp3"):
+            fd = os.open(
+                dst,
+                os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+                0o600,
+                dir_fd=dst_dir_fd,
+            )
+            os.write(fd, b"user appeared")
+            os.close(fd)
         return real_link(
             src,
             dst,
@@ -341,7 +345,8 @@ def test_read_only_target_is_reported(usb, library, monkeypatch):
     writer, _, _ = writer_for(usb)
 
     def read_only(fd, data):
-        raise OSError(errno.EROFS, "Read-only file system")
+        if not data.startswith(b"{"):
+            raise OSError(errno.EROFS, "Read-only file system")
 
     monkeypatch.setattr(writer_mod, "_write_bytes", read_only)
 
@@ -538,6 +543,8 @@ def test_t020_cancel_mid_file_removes_temp_and_keeps_previous(usb, library):
 
     def cancel_after_chunk(fd, data):
         original(fd, data)
+        if data.startswith(b"{"):
+            return
         calls["count"] += 1
         if calls["count"] >= 2:
             cancel.set()
@@ -724,19 +731,25 @@ def test_usb_fix01_playlist_symlink_is_refused(usb, library, tmp_path):
 
 
 def test_usb_fix01_own_playlist_is_updated_after_resume(usb, library):
+    """USB-FIX-08: обновление своей записи не перезаписывает файл, а версионирует."""
+
     source = audio(library / "one.mp3", b"one")
     writer, _, _ = writer_for(usb)
     first = writer.write(make_plan([make_item()]), [make_asset(source)])
+    canonical = usb / SUB / "playlist.m3u8"
+    original = canonical.read_text(encoding="utf-8")
     assert first.playlist_path == f"{SUB}/playlist.m3u8"
     assert manifest_of(usb)["playlist"] == "playlist.m3u8"
 
     second = writer.write(make_plan([make_item()]), [make_asset(source)])
 
     assert second.playlist_error == ""
-    assert second.playlist_path == f"{SUB}/playlist.m3u8"
-    assert "001 - Artist - Song 1.mp3" in (usb / SUB / "playlist.m3u8").read_text(
+    assert second.playlist_path == f"{SUB}/playlist-2.m3u8"
+    assert canonical.read_text(encoding="utf-8") == original
+    assert "001 - Artist - Song 1.mp3" in (usb / SUB / "playlist-2.m3u8").read_text(
         encoding="utf-8"
     )
+    assert manifest_of(usb)["playlist"] == "playlist-2.m3u8"
 
 
 def test_usb_fix01_concurrent_playlist_creation_is_not_clobbered(usb, library, monkeypatch):
@@ -914,6 +927,159 @@ def test_usb_fix03_manifest_and_playlist_are_written_only_after_check(usb, libra
 
     assert not (usb / SUB).exists()
     assert not (usb / SUB / MANIFEST_NAME).exists()
+
+
+# --- USB-FIX-08: manifest через dir_fd, плейлист без перезаписи ----------
+
+
+def test_usb_fix08_playlist_race_gets_next_free_version(usb, library, monkeypatch):
+    """Гонка на выбранное имя версии разрешается следующим свободным."""
+
+    source = audio(library / "one.mp3")
+    writer, _, _ = writer_for(usb)
+    writer.write(make_plan([make_item()]), [make_asset(source)])
+    racer = usb / SUB / "playlist-2.m3u8"
+    real_commit = writer_mod._commit
+
+    def commit_with_race(dir_fd, temporary, name, destination):
+        if name == "playlist-2.m3u8" and not racer.exists():
+            racer.write_text("чужой", encoding="utf-8")
+        return real_commit(dir_fd, temporary, name, destination)
+
+    monkeypatch.setattr(writer_mod, "_commit", commit_with_race)
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert report.playlist_error == ""
+    assert report.playlist_path == f"{SUB}/playlist-3.m3u8"
+    assert racer.read_text(encoding="utf-8") == "чужой"
+
+
+def test_usb_fix08_unmount_after_preflight_blocks_manifest(usb, library):
+    """Флешку выдернули после preflight и до flush: manifest не пишется никуда."""
+
+    source = audio(library / "one.mp3")
+    writer, service, device = writer_for(usb)
+
+    def unmount_after_first_item(update):
+        if update.items_done >= 1:
+            service.unmount(device.udisks_object_path)
+
+    with pytest.raises(ExportError) as caught:
+        writer.write(
+            make_plan([make_item()]),
+            [make_asset(source)],
+            progress=unmount_after_first_item,
+        )
+
+    assert caught.value.code is ExportErrorCode.DEVICE
+    assert not (usb / SUB / MANIFEST_NAME).exists()
+    assert not list((usb / SUB).glob(".manifest.json.tmp-*"))
+
+
+def test_usb_fix08_manifest_symlink_is_refused(usb, library, tmp_path):
+    """manifest-симлинк не читается и не перезаписывается."""
+
+    (usb / SUB).mkdir(parents=True)
+    victim = tmp_path / "victim.json"
+    victim.write_text("не трогать", encoding="utf-8")
+    (usb / SUB / MANIFEST_NAME).symlink_to(victim)
+    source = audio(library / "one.mp3")
+    writer, _, _ = writer_for(usb)
+
+    with pytest.raises(ExportError) as caught:
+        writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert caught.value.code is ExportErrorCode.MANIFEST_INVALID
+    assert victim.read_text(encoding="utf-8") == "не трогать"
+    assert music_files(usb) == []
+
+
+def test_usb_fix08_concurrent_manifest_creation_is_not_clobbered(usb, library):
+    """manifest, созданный параллельно до первого flush, не перезаписывается."""
+
+    source = audio(library / "one.mp3")
+    folder = usb / SUB
+    folder.mkdir(parents=True)
+    foreign = folder / MANIFEST_NAME
+    writer, _, _ = writer_for(usb)
+
+    def create_foreign_manifest(update):
+        if update.items_done >= 1 and not foreign.exists():
+            foreign.write_text("чужой manifest", encoding="utf-8")
+
+    with pytest.raises(ExportError) as caught:
+        writer.write(
+            make_plan([make_item()]),
+            [make_asset(source)],
+            progress=create_foreign_manifest,
+        )
+
+    assert caught.value.code is ExportErrorCode.MANIFEST_EXISTS
+    assert foreign.read_text(encoding="utf-8") == "чужой manifest"
+
+
+def test_usb_fix08_manifest_swap_during_export_is_refused(usb, library, tmp_path):
+    """Подмена своего manifest между flush'ами: чужой файл не трогается."""
+
+    first = audio(library / "one.mp3", b"one")
+    second = audio(library / "two.mp3", b"two")
+    writer, _, _ = writer_for(usb)
+    foreign = tmp_path / "foreign.json"
+    foreign.write_text("чужой manifest", encoding="utf-8")
+    target = usb / SUB / MANIFEST_NAME
+
+    def swap_after_second_item(update):
+        if update.items_done >= 2 and target.exists() and not target.is_symlink():
+            target.unlink()
+            target.symlink_to(foreign)
+
+    with pytest.raises(ExportError) as caught:
+        writer.write(
+            make_plan([make_item(1), make_item(2)]),
+            [make_asset(first, 1), make_asset(second, 2)],
+            progress=swap_after_second_item,
+        )
+
+    assert caught.value.code is ExportErrorCode.FOREIGN_MANIFEST
+    assert foreign.read_text(encoding="utf-8") == "чужой manifest"
+
+
+def test_usb_fix08_manifest_keeps_job_and_plan_id_apart(usb, library):
+    """USB-manifest: job_id — запуск, plan_id — содержимое плана."""
+
+    source = audio(library / "one.mp3")
+    device = identity_for(usb)
+    writer = SafeWriter(
+        usb,
+        device_service=FakeUsbDeviceService([device]),
+        expected_device=device,
+        job_id="mixtape-test-20261118T000000-abcdef",
+    )
+
+    writer.write(make_plan([make_item()], plan_id="mixtape-content"), [make_asset(source)])
+
+    manifest = manifest_of(usb)
+    assert manifest["job_id"] == "mixtape-test-20261118T000000-abcdef"
+    assert manifest["plan_id"] == "mixtape-content"
+
+
+def test_usb_fix08_legacy_manifest_without_playlist_is_readable(usb, library):
+    """Manifest старого образца (job_id=plan_id, без поля playlist) продолжает работать."""
+
+    source = audio(library / "one.mp3", b"one")
+    writer, _, _ = writer_for(usb)
+    writer.write(make_plan([make_item()]), [make_asset(source)])
+    path = usb / SUB / MANIFEST_NAME
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    payload.pop("playlist", None)
+    payload["job_id"] = payload["plan_id"]
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    report = writer.write(make_plan([make_item()]), [make_asset(source)])
+
+    assert report.status is ExportStatus.COMPLETE
+    assert report.playlist_path == f"{SUB}/playlist-2.m3u8"
 
 
 # --- пустой план ----------------------------------------------------------

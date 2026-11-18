@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import stat
 import time
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
@@ -71,21 +72,76 @@ class Manifest:
         }
 
 
-def load_manifest(path: Path) -> Manifest | None:
-    """Прочитать manifest; отсутствие — ``None``, порча — ошибка."""
+@dataclass(frozen=True)
+class ManifestRead:
+    """manifest вместе с identity inode: по ней writer отличает свой файл."""
+
+    manifest: Manifest
+    st_dev: int
+    st_ino: int
+
+
+def manifest_payload(manifest: Manifest) -> bytes:
+    return (json.dumps(manifest.to_dict(), ensure_ascii=False, indent=2) + "\n").encode(
+        "utf-8"
+    )
+
+
+def read_manifest(dir_fd: int, name: str = MANIFEST_NAME) -> ManifestRead | None:
+    """Прочитать manifest относительно открытого каталога.
+
+    Ни один шаг не использует путь и не следует симлинкам: имя открывается
+    через ``dir_fd`` с ``O_NOFOLLOW``, а размер проверяется по ``lstat``.
+    """
 
     try:
-        stat = path.lstat()
+        stat_result = os.lstat(name, dir_fd=dir_fd)
     except FileNotFoundError:
         return None
-    if not path.is_file() or path.is_symlink():
+    except OSError as error:
+        raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest не читается") from error
+    if not stat.S_ISREG(stat_result.st_mode):
         raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest не является обычным файлом")
-    if stat.st_size > MAX_MANIFEST_BYTES:
+    if stat_result.st_size > MAX_MANIFEST_BYTES:
         raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest слишком большой")
     try:
-        raw = path.read_text(encoding="utf-8")
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=dir_fd)
+    except OSError as error:
+        raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest не открывается") from error
+    try:
+        with os.fdopen(fd, "rb") as handle:
+            raw = handle.read(MAX_MANIFEST_BYTES + 1)
+    except OSError as error:
+        raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest не читается") from error
+    if len(raw) > MAX_MANIFEST_BYTES:
+        raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest слишком большой")
+    return ManifestRead(parse_manifest(raw), stat_result.st_dev, stat_result.st_ino)
+
+
+def load_manifest(path: Path) -> Manifest | None:
+    """Прочитать manifest по пути; отсутствие — ``None``, порча — ошибка."""
+
+    try:
+        stat_result = path.lstat()
+    except FileNotFoundError:
+        return None
+    if not stat.S_ISREG(stat_result.st_mode):
+        raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest не является обычным файлом")
+    if stat_result.st_size > MAX_MANIFEST_BYTES:
+        raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest слишком большой")
+    try:
+        raw = path.read_bytes()
+    except OSError as error:
+        raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest не читается") from error
+    return parse_manifest(raw)
+
+
+def parse_manifest(raw: bytes) -> Manifest:
+    """Разобрать и провалидировать содержимое manifest; ошибки — fail-closed."""
+
+    try:
         data = json.loads(raw)
-    except (OSError, UnicodeError, json.JSONDecodeError) as error:
+    except (UnicodeError, json.JSONDecodeError) as error:
         raise ExportError(ExportErrorCode.MANIFEST_INVALID, "manifest не читается") from error
 
     if not isinstance(data, dict):
@@ -155,11 +211,11 @@ def write_manifest_atomic(path: Path, manifest: Manifest) -> None:
 
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.parent / f".{path.name}.tmp-{os.getpid()}"
-    payload = json.dumps(manifest.to_dict(), ensure_ascii=False, indent=2) + "\n"
+    payload = manifest_payload(manifest)
     try:
         fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
         try:
-            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            with os.fdopen(fd, "wb") as handle:
                 handle.write(payload)
                 handle.flush()
                 os.fsync(handle.fileno())

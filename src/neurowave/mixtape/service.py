@@ -230,6 +230,8 @@ class MixtapeService:
             device_service=self.device_service,
             expected_device=identity,
             transcoder=self._transcoder if self._transcoder is not None else FfmpegTranscoder(),
+            # USB-FIX-08: один и тот же job_id в журнале и USB-manifest.
+            job_id=job_id,
         )
         try:
             report = writer.write(
