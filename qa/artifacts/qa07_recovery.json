@@ -1,0 +1,134 @@
+{
+  "scenario": "QA-07 восстановление после сбоев",
+  "bad_path": {
+    "no_raise": false,
+    "error": "TrackUnavailable: Некорректный путь к локальному файлу",
+    "status": "buffering",
+    "overlay": "None",
+    "events": [],
+    "mpv_alive": true
+  },
+  "deleted_file": {
+    "file": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/media/temp/qa_tone_b220_short.mp3",
+    "deleted_while_playing": true,
+    "track_events_after_delete": 3,
+    "status": "playing",
+    "errors": [],
+    "still_alive": true
+  },
+  "bad_output": {
+    "accepted": false,
+    "error": "PlayerError: Нет такого аудиовыхода: pulse/alsa_output.does-not-exist. Доступны: alsa, alsa/front:CARD=Generic,DEV=0, alsa/jack, alsa/lavrate, alsa/oss, alsa/pipewire, alsa/samplerate, alsa/speex, alsa/speexrate, alsa/surround21:CARD=Generic,DEV=0, alsa/surround40:CARD=Generic,DEV=0, alsa/surround41:CARD=Generic,DEV=0, alsa/surround50:CARD=Generic,DEV=0, alsa/surround51:CARD=Generic,DEV=0, alsa/surround71:CARD=Generic,DEV=0, alsa/sysdefault:CARD=Generic, alsa/upmix, alsa/usbstream:CARD=Generic, alsa/usbstream:CARD=NVidia, alsa/vdownmix, auto, pulse/alsa_output.pci-0000_09_00.1.hdmi-stereo",
+    "mpv_state": {
+      "running": true,
+      "idle": false,
+      "time_pos": 2.474696,
+      "pause": false,
+      "volume": 30.0,
+      "audio_device": "auto",
+      "audio_params": {
+        "samplerate": 44100,
+        "channel-count": 1,
+        "channels": "mono",
+        "hr-channels": "mono",
+        "format": "float"
+      },
+      "af": null,
+      "entry_id": 5,
+      "last_error": null
+    },
+    "status": "playing",
+    "overlay": "None",
+    "position_ms": 2474,
+    "restored": true
+  },
+  "crash_restart": {
+    "start_line": "started",
+    "mpv_before_kill": [
+      45365
+    ],
+    "sockets_before_kill": [
+      "neurowave-mpv-45364.sock"
+    ],
+    "mpv_after_kill": [
+      45365
+    ],
+    "sockets_after_kill": [
+      "neurowave-mpv-45364.sock"
+    ],
+    "restart_line": "started",
+    "mpv_after_restart": [
+      45365,
+      45430
+    ],
+    "sockets_after_restart": [
+      "neurowave-mpv-45429.sock"
+    ],
+    "mpv_final": [
+      45365,
+      45430
+    ],
+    "sockets_final": [
+      "neurowave-mpv-45429.sock"
+    ]
+  },
+  "broken_settings": {
+    "невалидный JSON": {
+      "status_code": 2,
+      "status_out": "",
+      "status_err": "Ошибка: Не удалось прочитать /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa07_settings/config/config.json: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)",
+      "search_code": 2,
+      "search_out": "",
+      "search_err": "Ошибка: Не удалось прочитать /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa07_settings/config/config.json: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)"
+    },
+    "пустой объект": {
+      "status_code": 0,
+      "status_out": "NeuroWave 0.1.0\nКаталог состояния: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa07_settings\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
+      "status_err": "",
+      "search_code": 0,
+      "search_out": "Треки не найдены.",
+      "search_err": ""
+    },
+    "неверные типы": {
+      "status_code": 1,
+      "status_out": "",
+      "status_err": "Traceback (most recent call last):\n  File \"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave\", line 6, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/src/neurowave/cli.py\", line 231, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/zoz/.deepai-code/scra",
+      "search_code": 1,
+      "search_out": "",
+      "search_err": "Traceback (most recent call last):\n  File \"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave\", line 6, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/src/neurowave/cli.py\", line 231, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/zoz/.deepai-code/scra"
+    },
+    "неизвестный провайдер": {
+      "status_code": 2,
+      "status_out": "",
+      "status_err": "Ошибка: Неизвестный провайдер «нет-такого». Доступны: local, soundcloud, spotify, yandex. Список: neurowave providers",
+      "search_code": 0,
+      "search_out": "Треки не найдены.",
+      "search_err": ""
+    },
+    "битый local_music_dir": {
+      "status_code": 0,
+      "status_out": "NeuroWave 0.1.0\nКаталог состояния: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa07_settings\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
+      "status_err": "",
+      "search_code": 0,
+      "search_out": "Треки не найдены.",
+      "search_err": ""
+    }
+  },
+  "no_token": {
+    "wave": {
+      "code": 2,
+      "stdout": "",
+      "stderr": "Ошибка: Требуется вход в Яндекс Музыка. Выполните: neurowave login"
+    },
+    "me": {
+      "code": 2,
+      "stdout": "",
+      "stderr": "Ошибка: Требуется вход в Яндекс Музыка. Выполните: neurowave login"
+    },
+    "play --provider yandex test": {
+      "code": 2,
+      "stdout": "",
+      "stderr": "usage: neurowave [-h] [--version] [--home DIR] [--backend {mpv,null}]\n                 [--provider ID] [--json]\n                 {login,logout,me,search,wave,play,devices,connect,remote,library,playlists,playlist,tray,like,unlike,cache,sound,output,status,doctor,providers,app}\n                 ...\nn"
+    }
+  }
+}

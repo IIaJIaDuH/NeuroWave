@@ -1,0 +1,461 @@
+{
+  "scenario": "QA-05 GUI",
+  "real_display": {
+    "windows": [
+      "0x07c00007  0 zz NeuroWave"
+    ],
+    "window_found": true,
+    "captures": [
+      {
+        "code": 0,
+        "stderr": "",
+        "file": "real_display_0.png",
+        "exists": true,
+        "size": 636030
+      }
+    ],
+    "process_alive": true,
+    "mpv_started_with_app": 7,
+    "after_close_alive": false,
+    "mpv_after_close": [
+      47643,
+      47983,
+      48568,
+      48863,
+      49227,
+      49560
+    ],
+    "sockets_after_close": [],
+    "mpv_final": [
+      47643,
+      47983,
+      48568,
+      48863,
+      49227,
+      49560
+    ],
+    "sockets_final": []
+  },
+  "widget_audit": {
+    "shots": [
+      "01_empty.png",
+      "02_playing.png",
+      "03_long_title.png",
+      "04_error.png",
+      "04b_sound_lab.png",
+      "05_min_size.png",
+      "06_wide.png"
+    ],
+    "states": [
+      {
+        "state": "пустой плеер",
+        "shot": {
+          "file": "01_empty.png",
+          "size": [
+            570,
+            360
+          ],
+          "bytes": 22936
+        }
+      },
+      {
+        "state": "воспроизведение",
+        "shot": {
+          "file": "02_playing.png",
+          "size": [
+            1624,
+            360
+          ],
+          "bytes": 47972
+        },
+        "snapshot": {
+          "title": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов",
+          "subtitle": "",
+          "quality": "PCM 706 kbps",
+          "status_text": null,
+          "volume": 30,
+          "applied_volume": 30,
+          "volume_limited": false,
+          "profile_id": "flat",
+          "profile_mode": "pure",
+          "dsp_confirmed": true,
+          "output_id": "auto",
+          "is_playing": true,
+          "position_ms": 0,
+          "duration_ms": 6000
+        }
+      },
+      {
+        "state": "длинное название",
+        "shot": {
+          "file": "03_long_title.png",
+          "size": [
+            1624,
+            360
+          ],
+          "bytes": 47972
+        },
+        "snapshot": {
+          "title": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов",
+          "subtitle": "",
+          "quality": "PCM 706 kbps",
+          "status_text": null,
+          "volume": 30,
+          "applied_volume": 30,
+          "volume_limited": false,
+          "profile_id": "flat",
+          "profile_mode": "pure",
+          "dsp_confirmed": true,
+          "output_id": "auto",
+          "is_playing": true,
+          "position_ms": 0,
+          "duration_ms": 6000
+        },
+        "overflow": {
+          "labels": [
+            {
+              "text": "QA экран длинное название трека для проверки переполнения строки загол",
+              "text_px": 1583,
+              "label_px": 1584,
+              "clipped": false
+            },
+            {
+              "text": "Источник: PCM 706 kbps",
+              "text_px": 142,
+              "label_px": 1584,
+              "clipped": false
+            },
+            {
+              "text": "0:00 / 0:06",
+              "text_px": 59,
+              "label_px": 1584,
+              "clipped": false
+            },
+            {
+              "text": "Громкость",
+              "text_px": 61,
+              "label_px": 62,
+              "clipped": false
+            },
+            {
+              "text": "30 %",
+              "text_px": 27,
+              "label_px": 27,
+              "clipped": false
+            },
+            {
+              "text": "Звук",
+              "text_px": 28,
+              "label_px": 28,
+              "clipped": false
+            },
+            {
+              "text": "Выход",
+              "text_px": 37,
+              "label_px": 38,
+              "clipped": false
+            },
+            {
+              "text": "track · Неизвестный исполнитель — QA экран длинное название трека для ",
+              "text_px": 1025,
+              "label_px": 1584,
+              "clipped": false
+            }
+          ]
+        }
+      },
+      {
+        "state": "ошибка",
+        "shot": {
+          "file": "04_error.png",
+          "size": [
+            1624,
+            360
+          ],
+          "bytes": 34054
+        },
+        "snapshot": {
+          "title": "Недоступный трек",
+          "subtitle": "",
+          "quality": "",
+          "status_text": null,
+          "volume": 30,
+          "applied_volume": 30,
+          "volume_limited": false,
+          "profile_id": "flat",
+          "profile_mode": "pure",
+          "dsp_confirmed": true,
+          "output_id": "auto",
+          "is_playing": false,
+          "position_ms": 0,
+          "duration_ms": null
+        }
+      },
+      {
+        "state": "Sound Lab",
+        "shot": {
+          "file": "04b_sound_lab.png",
+          "size": [
+            760,
+            520
+          ],
+          "bytes": 44610
+        },
+        "info": {
+          "title": "Sound Lab",
+          "size": [
+            760,
+            520
+          ],
+          "widgets": 0
+        }
+      },
+      {
+        "state": "минимальное окно 320x240",
+        "shot": {
+          "file": "05_min_size.png",
+          "size": [
+            570,
+            338
+          ],
+          "bytes": 31541
+        },
+        "overflow": {
+          "labels": [
+            {
+              "text": "Недоступный трек",
+              "text_px": 216,
+              "label_px": 530,
+              "clipped": false
+            },
+            {
+              "text": "Волна ещё не запущена",
+              "text_px": 141,
+              "label_px": 530,
+              "clipped": false
+            },
+            {
+              "text": "0:00 / 0:06",
+              "text_px": 59,
+              "label_px": 530,
+              "clipped": false
+            },
+            {
+              "text": "Громкость",
+              "text_px": 61,
+              "label_px": 62,
+              "clipped": false
+            },
+            {
+              "text": "30 %",
+              "text_px": 27,
+              "label_px": 27,
+              "clipped": false
+            },
+            {
+              "text": "Звук",
+              "text_px": 28,
+              "label_px": 28,
+              "clipped": false
+            },
+            {
+              "text": "Выход",
+              "text_px": 37,
+              "label_px": 38,
+              "clipped": false
+            },
+            {
+              "text": "track · Неизвестный исполнитель — QA экран длинное название трека для ",
+              "text_px": 1025,
+              "label_px": 530,
+              "clipped": true
+            }
+          ]
+        }
+      },
+      {
+        "state": "1920x1040",
+        "shot": {
+          "file": "06_wide.png",
+          "size": [
+            1920,
+            1040
+          ],
+          "bytes": 40030
+        }
+      }
+    ],
+    "error_state_reason": "TrackUnavailable: Файл не найден: broken.mp3",
+    "keyboard": {
+      "buttons": [
+        {
+          "text": "⏮",
+          "focus_policy": 11,
+          "enabled": true,
+          "shortcut": "",
+          "accessible_name": "",
+          "tooltip": "",
+          "minimum_size": [
+            0,
+            36
+          ]
+        },
+        {
+          "text": "⏸",
+          "focus_policy": 11,
+          "enabled": true,
+          "shortcut": "",
+          "accessible_name": "",
+          "tooltip": "",
+          "minimum_size": [
+            0,
+            36
+          ]
+        },
+        {
+          "text": "⏭",
+          "focus_policy": 11,
+          "enabled": true,
+          "shortcut": "",
+          "accessible_name": "",
+          "tooltip": "",
+          "minimum_size": [
+            0,
+            36
+          ]
+        },
+        {
+          "text": "⏹",
+          "focus_policy": 11,
+          "enabled": true,
+          "shortcut": "",
+          "accessible_name": "",
+          "tooltip": "",
+          "minimum_size": [
+            0,
+            36
+          ]
+        },
+        {
+          "text": "Волна",
+          "focus_policy": 11,
+          "enabled": true,
+          "shortcut": "",
+          "accessible_name": "",
+          "tooltip": "",
+          "minimum_size": [
+            0,
+            36
+          ]
+        },
+        {
+          "text": "Sound Lab",
+          "focus_policy": 11,
+          "enabled": true,
+          "shortcut": "",
+          "accessible_name": "",
+          "tooltip": "",
+          "minimum_size": [
+            0,
+            0
+          ]
+        }
+      ],
+      "buttons_without_text": [],
+      "buttons_without_tooltip_or_name": [
+        "⏮",
+        "⏸",
+        "⏭",
+        "⏹",
+        "Волна",
+        "Sound Lab"
+      ],
+      "focus_chain": [
+        "0:00 / 0:06",
+        "⏮",
+        "⏸",
+        "⏭",
+        "⏹",
+        "Волна",
+        "Sound Lab",
+        "Громкость",
+        "QSlider",
+        "30 %",
+        "",
+        "Звук",
+        "QComboBox",
+        "Pure (без обработки)",
+        "Выход",
+        "QComboBox",
+        "track · Неизвестный исполнитель — QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов"
+      ],
+      "initial_focus": null
+    },
+    "contrast": {
+      "background": "#efefef",
+      "labels": [
+        {
+          "text": "Недоступный трек",
+          "color": "#000000",
+          "contrast_ratio": 18.26,
+          "passes_aa_normal": true,
+          "passes_aa_large": true
+        },
+        {
+          "text": "Волна ещё не запущена",
+          "color": "#8b97a8",
+          "contrast_ratio": 2.58,
+          "passes_aa_normal": false,
+          "passes_aa_large": false
+        },
+        {
+          "text": "0:00 / 0:06",
+          "color": "#8b97a8",
+          "contrast_ratio": 2.58,
+          "passes_aa_normal": false,
+          "passes_aa_large": false
+        },
+        {
+          "text": "Громкость",
+          "color": "#000000",
+          "contrast_ratio": 18.26,
+          "passes_aa_normal": true,
+          "passes_aa_large": true
+        },
+        {
+          "text": "30 %",
+          "color": "#000000",
+          "contrast_ratio": 18.26,
+          "passes_aa_normal": true,
+          "passes_aa_large": true
+        },
+        {
+          "text": "Звук",
+          "color": "#000000",
+          "contrast_ratio": 18.26,
+          "passes_aa_normal": true,
+          "passes_aa_large": true
+        },
+        {
+          "text": "Выход",
+          "color": "#000000",
+          "contrast_ratio": 18.26,
+          "passes_aa_normal": true,
+          "passes_aa_large": true
+        },
+        {
+          "text": "track · Неизвестный исполнитель — QA экр",
+          "color": "#8b97a8",
+          "contrast_ratio": 2.58,
+          "passes_aa_normal": false,
+          "passes_aa_large": false
+        }
+      ]
+    },
+    "refresh_errors": [
+      "TypeError: unsupported operand type(s) for //: 'NoneType' and 'int'",
+      "TypeError: unsupported operand type(s) for //: 'NoneType' and 'int'",
+      "TypeError: unsupported operand type(s) for //: 'NoneType' and 'int'"
+    ]
+  }
+}

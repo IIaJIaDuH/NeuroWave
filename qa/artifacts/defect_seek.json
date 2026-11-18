@@ -1,0 +1,94 @@
+{
+  "scenario": "дефект seek",
+  "cases": [
+    {
+      "case": "seek на прогретом треке",
+      "ok": true,
+      "ms": 0.18
+    },
+    {
+      "case": "seek сразу после next (0 мс)",
+      "ok": false,
+      "ms": 0.06,
+      "error": "PlayerError: mpv отклонил seek: error running command"
+    },
+    {
+      "case": "seek сразу после next (повтор)",
+      "ok": false,
+      "ms": 0.04,
+      "error": "PlayerError: mpv отклонил seek: error running command"
+    },
+    {
+      "case": "seek через 1.5 с после next",
+      "ok": true,
+      "ms": 0.17
+    },
+    {
+      "case": "seek #0 во время воспроизведения",
+      "ok": true,
+      "ms": 0.32
+    },
+    {
+      "case": "seek #1 во время воспроизведения",
+      "ok": true,
+      "ms": 0.31
+    },
+    {
+      "case": "seek #2 во время воспроизведения",
+      "ok": true,
+      "ms": 0.48
+    },
+    {
+      "case": "seek #3 во время воспроизведения",
+      "ok": true,
+      "ms": 0.14
+    },
+    {
+      "case": "seek #4 во время воспроизведения",
+      "ok": true,
+      "ms": 0.14
+    },
+    {
+      "case": "seek во время паузы",
+      "ok": true,
+      "ms": 0.2
+    },
+    {
+      "case": "seek после stop",
+      "ok": false,
+      "ms": 0.19,
+      "error": "PlayerError: mpv отклонил seek: error running command"
+    },
+    {
+      "case": "seek после повторного play",
+      "ok": true,
+      "ms": 0.21
+    }
+  ],
+  "final_state": {
+    "status": "playing",
+    "position_ms": 4000,
+    "mpv_idle": false,
+    "mpv_pause": false
+  },
+  "errors": [
+    {
+      "case": "seek сразу после next (0 мс)",
+      "ok": false,
+      "ms": 0.06,
+      "error": "PlayerError: mpv отклонил seek: error running command"
+    },
+    {
+      "case": "seek сразу после next (повтор)",
+      "ok": false,
+      "ms": 0.04,
+      "error": "PlayerError: mpv отклонил seek: error running command"
+    },
+    {
+      "case": "seek после stop",
+      "ok": false,
+      "ms": 0.19,
+      "error": "PlayerError: mpv отклонил seek: error running command"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "window_id": "0x06e00007",
+  "geometry": {
+    "x": 50,
+    "y": 82,
+    "width": 693,
+    "height": 360
+  },
+  "capture": {
+    "code": 0,
+    "stderr": "",
+    "file": "real_display_window.png",
+    "bytes": 19000
+  },
+  "mpv_after": [
+    56736
+  ]
+}

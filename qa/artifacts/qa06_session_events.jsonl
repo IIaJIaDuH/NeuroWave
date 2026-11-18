@@ -1,0 +1,32 @@
+{"t": 0.005, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 0.005, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 6.028, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 23.678, "event": "paused", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}}}
+{"t": 37.509, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 58.303, "event": "paused", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 72.786, "event": "volume", "payload": {"volume": 60, "requested": 60}}
+{"t": 92.715, "event": "resumed", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 96.951, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 104.951, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 112.229, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 115.234, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 124.126, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 135.255, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 138.418, "event": "paused", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}}}
+{"t": 151.101, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}
+{"t": 168.792, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 181.101, "event": "track", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}, "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)", "from_cache": false}}
+{"t": 183.426, "event": "paused", "payload": {"track": {"id": "qa_tone_a880_48k.wav", "provider": "local", "duration_ms": 25000, "title_hash": "e83a73505d"}}}
+{"t": 201.342, "event": "track", "payload": {"track": {"id": "qa_tone_b220_short.mp3", "provider": "local", "duration_ms": 8045, "title_hash": "33cc3ce9e0"}, "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)", "from_cache": false}}
+{"t": 209.346, "event": "track", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}, "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)", "from_cache": false}}
+{"t": 217.742, "event": "paused", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 226.614, "event": "volume", "payload": {"volume": 30, "requested": 30}}
+{"t": 251.258, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 275.012, "event": "resumed", "payload": {"track": {"id": "qa_tone_c523_320k.mp3", "provider": "local", "duration_ms": 45035, "title_hash": "eaa1c2a6b8"}}}
+{"t": 297.268, "event": "volume", "payload": {"volume": 45, "requested": 45}}
+{"t": 324.386, "event": "dsp_applied", "payload": {"status": "dict"}}
+{"t": 340.035, "event": "track", "payload": {"track": {"id": "qa_tone_e659_lossless.flac", "provider": "local", "duration_ms": 3000, "title_hash": "3d42ff581e"}, "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)", "from_cache": false}}
+{"t": 343.053, "event": "track", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 343.337, "event": "paused", "payload": {"track": {"id": "qa_tone_g349_44k.wav", "provider": "local", "duration_ms": 20000, "title_hash": "a2641813a2"}}}
+{"t": 379.678, "event": "track", "payload": {"track": {"id": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav", "provider": "local", "duration_ms": 6000, "title_hash": "ab77b46976"}, "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)", "from_cache": false}}
+{"t": 385.698, "event": "track", "payload": {"track": {"id": "qa_tone_a440_128k.mp3", "provider": "local", "duration_ms": 30040, "title_hash": "ea9fa89e09"}, "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)", "from_cache": false}}

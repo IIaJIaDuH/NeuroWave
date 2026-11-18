@@ -1,0 +1,38 @@
+{
+  "scenario": "QA-01 жизненный цикл GUI",
+  "window_opened": true,
+  "mpv_during_play": [
+    56736,
+    62482
+  ],
+  "app_alive_after_close": false,
+  "play_alive_after_close": false,
+  "mpv_after_close": [
+    56736
+  ],
+  "sockets_after_close": [
+    "neurowave-mpv-56735.sock"
+  ],
+  "restart_window_opened": true,
+  "restart_alive": true,
+  "mpv_after_restart_close": [
+    56736
+  ],
+  "mpris_without_service": {
+    "code": 1,
+    "stdout": "",
+    "note": "нет сервиса — ожидаемый отказ"
+  },
+  "mpris_with_tray": {
+    "code": 1,
+    "stdout": ""
+  },
+  "mpris_introspect": {
+    "code": 1,
+    "stdout": ""
+  },
+  "tray_alive": false,
+  "mpv_final": [
+    56736
+  ]
+}

@@ -1,0 +1,140 @@
+{
+  "scenario": "QA-01 CLI / установка / ярлык",
+  "base_sha": "7a82119d23775f7ed02db14e232dcefbc8ade3d9",
+  "cli": {
+    "version": {
+      "argv": [
+        "--version"
+      ],
+      "code": 0,
+      "stdout": "NeuroWave 0.1.0",
+      "stderr": "",
+      "seconds": 0.08
+    },
+    "doctor": {
+      "argv": [
+        "doctor"
+      ],
+      "code": 0,
+      "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa01_cli/profile\n✓ yandex-music: 3.2.2\n✓ Провайдер: yandex — Яндекс Музыка\n✓ Токен: нет — нужен neurowave login\n✓ Сеть до API: api.music.yandex.net:443 доступен\n\nОкружение готово к работе (звук проверяется на реальном устройстве).",
+      "stderr": "",
+      "seconds": 0.25
+    },
+    "status": {
+      "argv": [
+        "status"
+      ],
+      "code": 0,
+      "stdout": "NeuroWave 0.1.0\nКаталог состояния: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa01_cli/profile\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
+      "stderr": "",
+      "seconds": 0.09
+    },
+    "providers": {
+      "argv": [
+        "providers"
+      ],
+      "code": 0,
+      "stdout": "Провайдеры:\n  local      Локальные файлы — вход не требуется, поток в mpv\n    Файлы из локальной папки: без сети, аккаунта и DRM\n    возможности: каталог и поиск, поток в mpv, случайная выборка из библиотеки\n    ограничения: Кеш не используется — файл уже на диске. Теги читаются через tinytag (MIT) (extras [local]); без него берутся «Исполнитель - Название» и папка альбома. «Волна» здесь — случайная выборка, а не персонализация.\n  soundcloud SoundCloud — нужен вход, поток в mpv\n    Поиск и поток доступных треков в mpv; нужен ключ приложения (Artist Pro)\n    возможности: каталог и поиск, поток в mpv\n    ограничения: Кеш отключён: условия API запрещают постоянное хранение. Превью и заблокированные треки не попадают в очередь, у треков сохраняется ссылка на страницу автора — атрибуция обязательна.\n  spotify    Spotify — нужен вход, без прямого потока\n    Каталог и пульт Spotify Connect: звук остаётся в приложении Spotify\n    возможности: каталог и поиск, управление устройством сервиса\n    ограничения: Web API не отдаёт ссылку на поток, поэтому mpv не участвует и кеша нет. Управление воспроизведением требует Premium и активного устройства; Linux-SDK Spotify нет, поэтому включён только режим «пульт».\n* yandex     Яндекс Музыка — нужен вход, поток в mpv\n    «Моя волна», поиск, библиотека и playlists; поток играет mpv\n    возможности: каталог и поиск, библиотека и лайки, плейлисты, персональный поток, поток в mpv\n    ограничения: Неофициальный API: функции могут меняться. Lossless показывается только по фактическому кодеку потока.\n\nИзвестны, но не подключены:\n  deezer         Deezer\n    Каталог и библиотека; REST отдаёт только 30-секундные превью\n    ограничения: Полное воспроизведение — только через официальный плеер/SDK Deezer.\n  tidal          TIDAL\n    Каталог и метаданные; поток — только внутри официального Player SDK\n    ограничения: Условия разработчика ограничивают некоммерческое использование и интеграции.\n  youtube-music  YouTube Music\n    Официального API именно",
+      "stderr": "",
+      "seconds": 0.08
+    },
+    "wave_no_auth": {
+      "argv": [
+        "wave"
+      ],
+      "code": 2,
+      "stdout": "",
+      "stderr": "Ошибка: Требуется вход в Яндекс Музыка. Выполните: neurowave login",
+      "seconds": 0.08
+    },
+    "me_no_auth": {
+      "argv": [
+        "me"
+      ],
+      "code": 2,
+      "stdout": "",
+      "stderr": "Ошибка: Требуется вход в Яндекс Музыка. Выполните: neurowave login",
+      "seconds": 0.08
+    },
+    "library_no_auth": {
+      "argv": [
+        "library"
+      ],
+      "code": 2,
+      "stdout": "",
+      "stderr": "Ошибка: Требуется вход в Яндекс Музыка. Выполните: neurowave login",
+      "seconds": 0.08
+    },
+    "output": {
+      "argv": [
+        "output"
+      ],
+      "code": 0,
+      "stdout": "Autoselect device  [авто]\n    id=auto\n* HDA NVidia Цифровой стерео (HDMI)  [HDMI]\n    id=pulse/alsa_output.pci-0000_09_00.1.hdmi-stereo\nВыбор: auto → HDA NVidia Цифровой стерео (HDMI)",
+      "stderr": "",
+      "seconds": 0.16
+    },
+    "sound_profiles": {
+      "argv": [
+        "sound",
+        "--profiles"
+      ],
+      "code": 0,
+      "stdout": "* Без обработки · flat (встроенный)\n  Hi-Fi: ровно · hifi (встроенный)\n  Bluetooth: компенсация · bluetooth (встроенный)\n  Ночь: тихо и без скачков · night (встроенный)",
+      "stderr": "",
+      "seconds": 0.08
+    }
+  },
+  "wheel_install": {
+    "build": {
+      "code": 0,
+      "stdout": "s.py'\nadding 'neurowave/integrations/tray.py'\nadding 'neurowave/local/__init__.py'\nadding 'neurowave/local/adapter.py'\nadding 'neurowave/providers/__init__.py'\nadding 'neurowave/providers/base.py'\nadding 'neurowave/providers/catalog.py'\nadding 'neurowave/providers/local.py'\nadding 'neurowave/providers/registry.py'\nadding 'neurowave/providers/router.py'\nadding 'neurowave/providers/soundcloud.py'\nadding 'neurowave/providers/spotify.py'\nadding 'neurowave/providers/yandex.py'\nadding 'neurowave/soundcloud/__init__.py'\nadding 'neurowave/soundcloud/adapter.py'\nadding 'neurowave/soundcloud/client.py'\nadding 'neurowave/spotify/__init__.py'\nadding 'neurowave/spotify/adapter.py'\nadding 'neurowave/spotify/auth.py'\nadding 'neurowave/spotify/client.py'\nadding 'neurowave/storage/__init__.py'\nadding 'neurowave/storage/cache.py'\nadding 'neurowave/storage/db.py'\nadding 'neurowave/storage/secrets.py'\nadding 'neurowave/ui/__init__.py'\nadding 'neurowave/ui/app.py'\nadding 'neurowave/ui/soundlab.py'\nadding 'neurowave/ui/viewmodel.py'\nadding 'neurowave/yandex/__init__.py'\nadding 'neurowave/yandex/adapter.py'\nadding 'neurowave-0.1.0.dist-info/licenses/LICENSE'\nadding 'neurowave-0.1.0.dist-info/METADATA'\nadding 'neurowave-0.1.0.dist-info/WHEEL'\nadding 'neurowave-0.1.0.dist-info/entry_points.txt'\nadding 'neurowave-0.1.0.dist-info/top_level.txt'\nadding 'neurowave-0.1.0.dist-info/RECORD'\nremoving build/bdist.linux-x86_64/wheel\nSuccessfully built neurowave-0.1.0.tar.gz and neurowave-0.1.0-py3-none-any.whl",
+      "stderr": "* Creating isolated environment: venv+pip...\n* Installing packages in isolated environment:\n  - setuptools>=77\n* Getting build dependencies for sdist...\nno previously-included directories found matching '.tools'\nno previously-included directories found matching '.venv'\nno previously-included directories found matching 'dist'\n* Installed build dependency versions:\n  - setuptools==84.2.1\n* Building sdist...\nno previously-included directories found matching '.tools'\nno previously-included directories found matching '.venv'\nno previously-included directories found matching 'dist'\n* Building wheel from sdist\n* Creating isolated environment: venv+pip...\n* Installing packages in isolated environment:\n  - setuptools>=77\n* Getting build dependencies for wheel...\nno previously-included directories found matching '.tools'\nno previously-included directories found matching '.venv'\nno previously-included directories found matching 'dist'\n* Installed build dependency versions:\n  - setuptools==84.2.1\n* Building wheel...\nno previously-included directories found matching '.tools'\nno previously-included directories found matching '.venv'\nno previously-included directories found matching 'dist'"
+    },
+    "install": {
+      "code": 0,
+      "stdout": "",
+      "stderr": "",
+      "wheel": "neurowave-0.1.0-py3-none-any.whl"
+    },
+    "installed_version": {
+      "code": 0,
+      "stdout": "NeuroWave 0.1.0",
+      "stderr": ""
+    },
+    "installed_doctor": {
+      "code": 1,
+      "stdout": "✓ Python ≥ 3.10: 3.12.3\n✗ mpv: sudo apt install mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa01_cli/wheel\n✓ yandex-music: 3.2.2\n✓ Провайдер: yandex — Яндекс Музыка\n✓ Токен: нет — нужен neurowave login\n✓ Сеть до API: api.music.yandex.net:443 доступен\n\nТребует внимания: mpv",
+      "stderr": ""
+    },
+    "installed_providers": {
+      "code": 0,
+      "stdout": "Провайдеры:\n  local      Локальные файлы — вход не требуется, поток в mpv\n    Файлы из локальной папки: без сети, аккаунта и DRM\n    возможности: каталог и поиск, поток в mpv, случайная выборка из библиотеки\n    ограничения: Кеш не используется — файл уже на диске. Теги читаются через tinytag (MIT) (extras [local]); без него берутся «Исполнитель - Название» и папка альбома. «Волна» здесь — случайная выборка, а не персонализация.\n  soundcloud SoundCloud — нужен вход, поток в mpv\n    Поиск и поток доступных треков в mpv; нужен ключ приложения (Artist Pro)\n    возможности: каталог и поиск, поток в mpv\n    ограничения: Кеш отключён: условия API запрещают постоянное хранение. Превью и заблокированные треки не попадают в очередь, у треков сохраняется ссылка на страницу автора — атрибуция обязательна.\n  spotify    Spotify — нужен вход, без прямого потока\n    Каталог и пульт Spotify Connect: звук остаётся в приложении Spotify\n    возможности: каталог и поиск, управление устройством сервиса\n    ограничения: Web API не отдаёт ссылку на поток, поэтому mpv не участвует и кеша нет. Управление воспроизведением требует Premium и активного устройства; Linux-SDK Spotify нет, поэтому включён только ",
+      "stderr": ""
+    },
+    "pip_show": {
+      "code": 1,
+      "stdout": ""
+    },
+    "metadata": {
+      "code": 0,
+      "stdout": "neurowave 0.1.0 None MIT",
+      "stderr": ""
+    }
+  },
+  "desktop_entry": {
+    "install_code": 0,
+    "install_stdout": "Ярлык в меню: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/qa01_sandbox/data/applications/neurowave.desktop\nЯрлык на рабочем столе: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/qa01_sandbox/home/Desktop/neurowave.desktop\nГотово. Запуск: «NeuroWave» в меню или двойной клик по ярлыку.",
+    "install_stderr": "",
+    "entry_exists": true,
+    "entry_text": "[Desktop Entry]\nType=Application\nVersion=1.0\nName=NeuroWave\nGenericName=Music Player\nComment=Лёгкий плеер Яндекс Музыки для Linux\nExec=\"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave\" wave\nIcon=/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/packaging/neurowave.svg\nTerminal=true\nCategories=AudioVideo;Audio;Player;\nKeywords=music;audio;yandex;player;neurowave;\nStartupNotify=true\n",
+    "entry_mode": "0o755",
+    "desktop_copy": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/qa01_sandbox/home/Desktop/neurowave.desktop",
+    "exec_wave_without_token": {
+      "code": 2,
+      "stdout": "",
+      "stderr": "Ошибка: Требуется вход в Яндекс Музыка. Выполните: neurowave login"
+    },
+    "system_mpv_in_path": "mpv-not-in-path"
+  }
+}

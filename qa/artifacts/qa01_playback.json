@@ -1,0 +1,482 @@
+{
+  "scenario": "QA-01 воспроизведение",
+  "sink": "alsa_output.pci-0000_09_00.1.hdmi-stereo",
+  "formats": [
+    {
+      "id": "qa_tone_a440_128k.mp3",
+      "title": "QA tone 440 Hz",
+      "duration_ms": 30040,
+      "play_latency_ms": 1604,
+      "state_playing": "playing",
+      "position_advanced": true,
+      "position_first_ms": 341,
+      "position_after_1_2s_ms": 1536,
+      "position_advances": true,
+      "mpv": {
+        "running": true,
+        "idle": false,
+        "pause": false,
+        "volume": 30.0,
+        "audio_device": "auto",
+        "audio_params": {
+          "samplerate": 44100,
+          "channel-count": 1,
+          "channels": "mono",
+          "hr-channels": "mono",
+          "format": "float"
+        },
+        "af": null,
+        "last_error": null
+      }
+    },
+    {
+      "id": "qa_tone_a880_48k.wav",
+      "title": "QA tone 880 Hz",
+      "duration_ms": 25000,
+      "play_latency_ms": 1604,
+      "state_playing": "playing",
+      "position_advanced": true,
+      "position_first_ms": 341,
+      "position_after_1_2s_ms": 1514,
+      "position_advances": true,
+      "mpv": {
+        "running": true,
+        "idle": false,
+        "pause": false,
+        "volume": 30.0,
+        "audio_device": "auto",
+        "audio_params": {
+          "samplerate": 48000,
+          "channel-count": 1,
+          "channels": "mono",
+          "hr-channels": "mono",
+          "format": "s16"
+        },
+        "af": null,
+        "last_error": null
+      }
+    },
+    {
+      "id": "qa_tone_b220_short.mp3",
+      "title": "QA tone 220 Hz",
+      "duration_ms": 8045,
+      "play_latency_ms": 1603,
+      "state_playing": "playing",
+      "position_advanced": true,
+      "position_first_ms": 362,
+      "position_after_1_2s_ms": 1578,
+      "position_advances": true,
+      "mpv": {
+        "running": true,
+        "idle": false,
+        "pause": false,
+        "volume": 30.0,
+        "audio_device": "auto",
+        "audio_params": {
+          "samplerate": 44100,
+          "channel-count": 1,
+          "channels": "mono",
+          "hr-channels": "mono",
+          "format": "float"
+        },
+        "af": null,
+        "last_error": null
+      }
+    },
+    {
+      "id": "qa_tone_c523_320k.mp3",
+      "title": "QA tone 523 Hz",
+      "duration_ms": 45035,
+      "play_latency_ms": 1604,
+      "state_playing": "playing",
+      "position_advanced": true,
+      "position_first_ms": 384,
+      "position_after_1_2s_ms": 1578,
+      "position_advances": true,
+      "mpv": {
+        "running": true,
+        "idle": false,
+        "pause": false,
+        "volume": 30.0,
+        "audio_device": "auto",
+        "audio_params": {
+          "samplerate": 44100,
+          "channel-count": 1,
+          "channels": "mono",
+          "hr-channels": "mono",
+          "format": "float"
+        },
+        "af": null,
+        "last_error": null
+      }
+    },
+    {
+      "id": "qa_tone_e659_lossless.flac",
+      "title": "QA tone 659 Hz",
+      "duration_ms": 3000,
+      "play_latency_ms": 1604,
+      "state_playing": "playing",
+      "position_advanced": true,
+      "position_first_ms": 384,
+      "position_after_1_2s_ms": 1557,
+      "position_advances": true,
+      "mpv": {
+        "running": true,
+        "idle": false,
+        "pause": false,
+        "volume": 30.0,
+        "audio_device": "auto",
+        "audio_params": {
+          "samplerate": 44100,
+          "channel-count": 1,
+          "channels": "mono",
+          "hr-channels": "mono",
+          "format": "float"
+        },
+        "af": null,
+        "last_error": null
+      }
+    },
+    {
+      "id": "qa_tone_g349_44k.wav",
+      "title": "QA tone 349 Hz",
+      "duration_ms": 20000,
+      "play_latency_ms": 1604,
+      "state_playing": "playing",
+      "position_advanced": true,
+      "position_first_ms": 362,
+      "position_after_1_2s_ms": 1557,
+      "position_advances": true,
+      "mpv": {
+        "running": true,
+        "idle": false,
+        "pause": false,
+        "volume": 30.0,
+        "audio_device": "auto",
+        "audio_params": {
+          "samplerate": 44100,
+          "channel-count": 1,
+          "channels": "mono",
+          "hr-channels": "mono",
+          "format": "float"
+        },
+        "af": null,
+        "last_error": null
+      }
+    }
+  ],
+  "transport": {
+    "pause_latency_ms": 0,
+    "state_after_pause": "paused",
+    "position_frozen_while_paused": true,
+    "position_paused_ms": 341,
+    "resume_latency_ms": 0,
+    "state_after_resume": "playing",
+    "position_resumed_moved": true,
+    "next_latency_ms": 1,
+    "next": {
+      "before": "qa_tone_a440_128k.mp3",
+      "after": "qa_tone_a880_48k.wav",
+      "queue_position": 1
+    },
+    "previous_latency_ms": 1,
+    "previous": {
+      "after": "qa_tone_a440_128k.mp3",
+      "queue_position": 0
+    },
+    "stop_latency_ms": 0,
+    "state_after_stop": "stopped",
+    "position_after_stop_ms": 0
+  },
+  "seek": [
+    {
+      "target": "start",
+      "target_ms": 0,
+      "latency_ms": 0,
+      "actual_ms": 576,
+      "delta_ms": 576,
+      "within_1s": true,
+      "still_playing": "playing"
+    },
+    {
+      "target": "middle",
+      "target_ms": 15020,
+      "latency_ms": 0,
+      "actual_ms": 15617,
+      "delta_ms": 597,
+      "within_1s": true,
+      "still_playing": "playing"
+    },
+    {
+      "target": "near_end",
+      "target_ms": 28040,
+      "latency_ms": 0,
+      "actual_ms": 28594,
+      "delta_ms": 554,
+      "within_1s": true,
+      "still_playing": "playing"
+    }
+  ],
+  "auto_transition": {
+    "short_track": "qa_tone_e659_lossless.flac",
+    "switched": true,
+    "switch_latency_ms": 3055,
+    "track_events_total": 12,
+    "current": "qa_tone_a440_128k.mp3",
+    "state": "playing",
+    "single_transition": true
+  },
+  "queue_end": {
+    "finished_event": true,
+    "state": "stopped",
+    "current": "qa_tone_g349_44k.wav",
+    "position_ms": 0,
+    "mpv_running": true
+  },
+  "events": [
+    {
+      "t": 0.055,
+      "event": "dsp_applied",
+      "payload": {
+        "status": "dict"
+      }
+    },
+    {
+      "t": 0.056,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        },
+        "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 1.66,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a880_48k.wav",
+          "provider": "local",
+          "duration_ms": 25000,
+          "title_hash": "e83a73505d"
+        },
+        "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 3.264,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_b220_short.mp3",
+          "provider": "local",
+          "duration_ms": 8045,
+          "title_hash": "33cc3ce9e0"
+        },
+        "quality": "Quality(codec='mp3', bitrate_kbps=64, lossless=False)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 4.867,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_c523_320k.mp3",
+          "provider": "local",
+          "duration_ms": 45035,
+          "title_hash": "eaa1c2a6b8"
+        },
+        "quality": "Quality(codec='mp3', bitrate_kbps=320, lossless=False)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 6.471,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_e659_lossless.flac",
+          "provider": "local",
+          "duration_ms": 3000,
+          "title_hash": "3d42ff581e"
+        },
+        "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 8.075,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_g349_44k.wav",
+          "provider": "local",
+          "duration_ms": 20000,
+          "title_hash": "a2641813a2"
+        },
+        "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 9.679,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        },
+        "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 10.031,
+      "event": "paused",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        }
+      }
+    },
+    {
+      "t": 11.032,
+      "event": "resumed",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        }
+      }
+    },
+    {
+      "t": 11.434,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a880_48k.wav",
+          "provider": "local",
+          "duration_ms": 25000,
+          "title_hash": "e83a73505d"
+        },
+        "quality": "Quality(codec='pcm', bitrate_kbps=768, lossless=True)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 11.737,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        },
+        "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 11.737,
+      "event": "stopped",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        }
+      }
+    },
+    {
+      "t": 11.738,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        },
+        "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 13.942,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_e659_lossless.flac",
+          "provider": "local",
+          "duration_ms": 3000,
+          "title_hash": "3d42ff581e"
+        },
+        "quality": "Quality(codec='flac', bitrate_kbps=99, lossless=True)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 16.958,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        },
+        "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 16.998,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_g349_44k.wav",
+          "provider": "local",
+          "duration_ms": 20000,
+          "title_hash": "a2641813a2"
+        },
+        "quality": "Quality(codec='pcm', bitrate_kbps=706, lossless=True)",
+        "from_cache": false
+      }
+    },
+    {
+      "t": 37.012,
+      "event": "finished",
+      "payload": {
+        "track": {
+          "id": "qa_tone_g349_44k.wav",
+          "provider": "local",
+          "duration_ms": 20000,
+          "title_hash": "a2641813a2"
+        }
+      }
+    }
+  ],
+  "error_events": [],
+  "sink_capture": {
+    "frames": 1769472,
+    "peak_dbfs": -11.37,
+    "rms_dbfs": -47.45,
+    "silent": false
+  }
+}
