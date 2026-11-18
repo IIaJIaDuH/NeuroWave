@@ -212,6 +212,58 @@ def test_player_advances_to_next_track_with_real_mpv(tmp_path: Path) -> None:
             player.close()
 
 
+def test_player_skips_unresolvable_first_track_with_real_mpv(tmp_path: Path) -> None:
+    """QA D-04 на настоящем mpv: трек без потока не блокирует очередь."""
+    from neurowave.errors import TrackUnavailable
+
+    good = make_wav(tmp_path / "b-good.wav", seconds=3, freq=523)
+    bridge = MpvBackend(
+        binary=str(MPV),
+        socket_path=tmp_path / "recovery.sock",
+        extra_args=["--ao=null", "--volume=20"],
+    )
+
+    class BrokenFirstAdapter(LocalFilesAdapter):
+        def wave_tracks(self) -> list[Track]:
+            return [Track(id="broken", title="broken", provider="local")] + super(
+            ).wave_tracks()
+
+        def stream_url(self, track_id: str) -> StreamInfo:
+            if track_id == "broken":
+                raise TrackUnavailable("поток недоступен")
+            return super().stream_url(track_id)
+
+    played: list[str] = []
+
+    def listener(event: str, payload: dict) -> None:
+        if event == "track":
+            played.append(str(payload["track"].id))
+
+    player = PlayerService(
+        adapter=BrokenFirstAdapter([good]),
+        backend=bridge,
+        queue=Queue(),
+        settings=Settings(volume=20),
+        listener=listener,
+        prefetch=False,
+    )
+    try:
+        track = player.play_tracks([
+            Track(id="broken", title="broken", provider="local"),
+            Track(id="b-good.wav", title="good", provider="local"),
+        ])
+
+        assert track is not None and track.id == "b-good.wav"
+        assert player.state.status is PlayerStatus.PLAYING
+        assert wait_until(lambda: bridge.position_ms() > 200, timeout=8.0)
+        assert played == ["b-good.wav"]
+    finally:
+        try:
+            player.stop()
+        finally:
+            player.close()
+
+
 @pytest.mark.parametrize("profile_id", sorted(BUILTIN_PROFILES))
 def test_real_mpv_accepts_every_builtin_dsp_graph(backend: MpvBackend, tmp_path: Path, profile_id: str) -> None:
     """Граф профиля должен собираться настоящим libavfilter, а не только нами.
