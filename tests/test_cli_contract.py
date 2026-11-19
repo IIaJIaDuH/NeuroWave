@@ -327,6 +327,7 @@ def test_doctor_json_contract(tmp_path: Path, capsys: pytest.CaptureFixture) -> 
         "mpv",
         "keyring",
         "Каталоги XDG",
+        "Конфигурация",
         "yandex-music",
         "Провайдер",
         "Токен",
