@@ -16,7 +16,7 @@
         "doctor"
       ],
       "code": 0,
-      "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa01_cli/profile\n✓ yandex-music: 3.2.2\n✓ Провайдер: yandex — Яндекс Музыка\n✓ Токен: нет — нужен neurowave login\n✓ Сеть до API: api.music.yandex.net:443 доступен\n\nОкружение готово к работе (звук проверяется на реальном устройстве).",
+      "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/qa01_cli/profile\n✓ yandex-music: 3.2.2\n✓ Провайдер: yandex — Яндекс Музыка\n✓ Токен: нет — нужен neurowave login\n✓ Сеть до API: api.music.yandex.net:443 доступен\n\nОкружение готово к работе (звук проверяется на реальном устройстве).",
       "stderr": "",
       "seconds": 0.25
     },
@@ -25,7 +25,7 @@
         "status"
       ],
       "code": 0,
-      "stdout": "NeuroWave 0.1.0\nКаталог состояния: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa01_cli/profile\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
+      "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/qa01_cli/profile\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
       "stderr": "",
       "seconds": 0.09
     },
@@ -70,7 +70,7 @@
         "output"
       ],
       "code": 0,
-      "stdout": "Autoselect device  [авто]\n    id=auto\n* HDA NVidia Цифровой стерео (HDMI)  [HDMI]\n    id=pulse/alsa_output.pci-0000_09_00.1.hdmi-stereo\nВыбор: auto → HDA NVidia Цифровой стерео (HDMI)",
+      "stdout": "Autoselect device  [авто]\n    id=auto\n* HDA NVidia Цифровой стерео (HDMI)  [HDMI]\n    id=pulse/alsa_output.pci-<PCI>hdmi-stereo\nВыбор: auto → HDA NVidia Цифровой стерео (HDMI)",
       "stderr": "",
       "seconds": 0.16
     },
@@ -104,7 +104,7 @@
     },
     "installed_doctor": {
       "code": 1,
-      "stdout": "✓ Python ≥ 3.10: 3.12.3\n✗ mpv: sudo apt install mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa01_cli/wheel\n✓ yandex-music: 3.2.2\n✓ Провайдер: yandex — Яндекс Музыка\n✓ Токен: нет — нужен neurowave login\n✓ Сеть до API: api.music.yandex.net:443 доступен\n\nТребует внимания: mpv",
+      "stdout": "✓ Python ≥ 3.10: 3.12.3\n✗ mpv: sudo apt install mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/qa01_cli/wheel\n✓ yandex-music: 3.2.2\n✓ Провайдер: yandex — Яндекс Музыка\n✓ Токен: нет — нужен neurowave login\n✓ Сеть до API: api.music.yandex.net:443 доступен\n\nТребует внимания: mpv",
       "stderr": ""
     },
     "installed_providers": {
@@ -124,12 +124,12 @@
   },
   "desktop_entry": {
     "install_code": 0,
-    "install_stdout": "Ярлык в меню: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/qa01_sandbox/data/applications/neurowave.desktop\nЯрлык на рабочем столе: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/qa01_sandbox/home/Desktop/neurowave.desktop\nГотово. Запуск: «NeuroWave» в меню или двойной клик по ярлыку.",
+    "install_stdout": "Ярлык в меню: <QA_STAND>/qa01_sandbox/data/applications/neurowave.desktop\nЯрлык на рабочем столе: <QA_STAND>/qa01_sandbox<HOME>\nГотово. Запуск: «NeuroWave» в меню или двойной клик по ярлыку.",
     "install_stderr": "",
     "entry_exists": true,
-    "entry_text": "[Desktop Entry]\nType=Application\nVersion=1.0\nName=NeuroWave\nGenericName=Music Player\nComment=Лёгкий плеер Яндекс Музыки для Linux\nExec=\"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave\" wave\nIcon=/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/packaging/neurowave.svg\nTerminal=true\nCategories=AudioVideo;Audio;Player;\nKeywords=music;audio;yandex;player;neurowave;\nStartupNotify=true\n",
+    "entry_text": "[Desktop Entry]\nType=Application\nVersion=1.0\nName=NeuroWave\nGenericName=Music Player\nComment=Лёгкий плеер Яндекс Музыки для Linux\nExec=\"<REPO>/.venv/bin/neurowave\" wave\nIcon=<REPO>/packaging/neurowave.svg\nTerminal=true\nCategories=AudioVideo;Audio;Player;\nKeywords=music;audio;yandex;player;neurowave;\nStartupNotify=true\n",
     "entry_mode": "0o755",
-    "desktop_copy": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/qa01_sandbox/home/Desktop/neurowave.desktop",
+    "desktop_copy": "<QA_STAND>/qa01_sandbox<HOME>",
     "exec_wave_without_token": {
       "code": 2,
       "stdout": "",

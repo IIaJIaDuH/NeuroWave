@@ -1,6 +1,6 @@
 {
   "scenario": "QA-01 воспроизведение",
-  "sink": "alsa_output.pci-0000_09_00.1.hdmi-stereo",
+  "sink": "alsa_output.pci-<PCI>hdmi-stereo",
   "formats": [
     {
       "id": "qa_tone_a440_128k.mp3",

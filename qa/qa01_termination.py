@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import qaenv as q  # noqa: E402
 
-MEDIA = "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/media"
+MEDIA = str(q.MEDIA)
 
 
 def make_home(name: str) -> Path:

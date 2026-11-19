@@ -9,7 +9,7 @@
     "mpv_alive": true
   },
   "deleted_file": {
-    "file": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/media/temp/qa_tone_b220_short.mp3",
+    "file": "<QA_MEDIA>/temp/qa_tone_b220_short.mp3",
     "deleted_while_playing": true,
     "track_events_after_delete": 3,
     "status": "playing",
@@ -18,7 +18,7 @@
   },
   "bad_output": {
     "accepted": false,
-    "error": "PlayerError: Нет такого аудиовыхода: pulse/alsa_output.does-not-exist. Доступны: alsa, alsa/front:CARD=Generic,DEV=0, alsa/jack, alsa/lavrate, alsa/oss, alsa/pipewire, alsa/samplerate, alsa/speex, alsa/speexrate, alsa/surround21:CARD=Generic,DEV=0, alsa/surround40:CARD=Generic,DEV=0, alsa/surround41:CARD=Generic,DEV=0, alsa/surround50:CARD=Generic,DEV=0, alsa/surround51:CARD=Generic,DEV=0, alsa/surround71:CARD=Generic,DEV=0, alsa/sysdefault:CARD=Generic, alsa/upmix, alsa/usbstream:CARD=Generic, alsa/usbstream:CARD=NVidia, alsa/vdownmix, auto, pulse/alsa_output.pci-0000_09_00.1.hdmi-stereo",
+    "error": "PlayerError: Нет такого аудиовыхода: pulse/alsa_output.does-not-exist. Доступны: alsa, alsa/front:CARD=<КАРТА>,DEV=0, alsa/jack, alsa/lavrate, alsa/oss, alsa/pipewire, alsa/samplerate, alsa/speex, alsa/speexrate, alsa/surround21:CARD=<КАРТА>,DEV=0, alsa/surround40:CARD=<КАРТА>,DEV=0, alsa/surround41:CARD=<КАРТА>,DEV=0, alsa/surround50:CARD=<КАРТА>,DEV=0, alsa/surround51:CARD=<КАРТА>,DEV=0, alsa/surround71:CARD=<КАРТА>,DEV=0, alsa/sysdefault:CARD=<КАРТА>, alsa/upmix, alsa/usbstream:CARD=<КАРТА>, alsa/usbstream:CARD=<КАРТА>, alsa/vdownmix, auto, pulse/alsa_output.pci-<PCI>hdmi-stereo",
     "mpv_state": {
       "running": true,
       "idle": false,
@@ -76,14 +76,14 @@
     "невалидный JSON": {
       "status_code": 2,
       "status_out": "",
-      "status_err": "Ошибка: Не удалось прочитать /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa07_settings/config/config.json: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)",
+      "status_err": "Ошибка: Не удалось прочитать <QA_HOMES>/qa07_settings/config/config.json: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)",
       "search_code": 2,
       "search_out": "",
-      "search_err": "Ошибка: Не удалось прочитать /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa07_settings/config/config.json: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)"
+      "search_err": "Ошибка: Не удалось прочитать <QA_HOMES>/qa07_settings/config/config.json: Expecting property name enclosed in double quotes: line 1 column 3 (char 2)"
     },
     "пустой объект": {
       "status_code": 0,
-      "status_out": "NeuroWave 0.1.0\nКаталог состояния: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa07_settings\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
+      "status_out": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/qa07_settings\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
       "status_err": "",
       "search_code": 0,
       "search_out": "Треки не найдены.",
@@ -92,10 +92,10 @@
     "неверные типы": {
       "status_code": 1,
       "status_out": "",
-      "status_err": "Traceback (most recent call last):\n  File \"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave\", line 6, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/src/neurowave/cli.py\", line 231, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/zoz/.deepai-code/scra",
+      "status_err": "Traceback (most recent call last):\n  File \"<REPO>/.venv/bin/neurowave\", line 6, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 231, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<HOME>",
       "search_code": 1,
       "search_out": "",
-      "search_err": "Traceback (most recent call last):\n  File \"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave\", line 6, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/src/neurowave/cli.py\", line 231, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/zoz/.deepai-code/scra"
+      "search_err": "Traceback (most recent call last):\n  File \"<REPO>/.venv/bin/neurowave\", line 6, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 231, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<HOME>"
     },
     "неизвестный провайдер": {
       "status_code": 2,
@@ -107,7 +107,7 @@
     },
     "битый local_music_dir": {
       "status_code": 0,
-      "status_out": "NeuroWave 0.1.0\nКаталог состояния: /home/zoz/.deepai-code/scratch/2026-11-18-wo03/homes/qa07_settings\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
+      "status_out": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/qa07_settings\nПровайдер: Яндекс Музыка (yandex)\nТокен: нет (file)\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)",
       "status_err": "",
       "search_code": 0,
       "search_out": "Треки не найдены.",

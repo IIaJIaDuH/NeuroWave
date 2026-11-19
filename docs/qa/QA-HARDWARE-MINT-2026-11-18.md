@@ -469,14 +469,28 @@ FLAC и WAV (44.1/48 кГц) без единой ошибки; сигнал на
 * **Ядро воспроизведения дефектов не имеет** — все находки — в слоях обработки ошибок, упаковки и валидации конфигурации.
 * **Артефакты:** `docs/qa/artifacts/*.json`, `docs/qa/artifacts/*.csv`,
   `docs/qa/screenshots/*.png`, сценарии в `qa/`.
+* **Обезличивание артефактов (QA-SEC-01):** в опубликованных артефактах
+  пути стенда и репозитория заменены плейсхолдерами `<REPO>`, `<QA_STAND>`,
+  `<HOME>`, имена звуковых карт — на `CARD=<КАРТА>`. Числовые результаты
+  измерений, значения PASS/FAIL и SHA проверяемого кода не изменены;
+  автоматический контроль — `qa/check_unchanged.py`.
 
 ## Приложение B. Как повторить
+
+Каталог стенда задаётся переменными окружения, поэтому стенд можно переносить
+в любой путь (`QA-SEC-01`):
 
 ```bash
 # отдельный worktree и окружение
 git worktree add -b qa/wo03-hardware /path/to/qa 7a82119
 cd /path/to/qa && python3 -m venv .venv
 .venv/bin/pip install -e '.[dev,local,mpris]' PySide6-Essentials build
+
+# стенд: каталог с тестовыми треками, mpv и профилями NEUROWAVE_HOME
+export QA_STAND=/path/to/stand
+export QA_MEDIA=$QA_STAND/media            # необязательно
+export QA_MPV=$QA_STAND/tools/AppDir/bin/mpv  # необязательно
+export QA_HOMES=$QA_STAND/homes            # необязательно
 
 # тестовая библиотека (синтетические тоны)
 .venv/bin/python qa/make_media.py

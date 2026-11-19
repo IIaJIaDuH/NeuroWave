@@ -3,7 +3,7 @@
   "cases": [
     {
       "label": "app_wm_close",
-      "command": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave --provider local app",
+      "command": "<REPO>/.venv/bin/neurowave --provider local app",
       "mpv_during": [
         63384
       ],
@@ -19,7 +19,7 @@
     },
     {
       "label": "app_sigint",
-      "command": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave --provider local app",
+      "command": "<REPO>/.venv/bin/neurowave --provider local app",
       "mpv_during": [
         63696
       ],
@@ -34,7 +34,7 @@
     },
     {
       "label": "app_sigterm",
-      "command": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave --provider local app",
+      "command": "<REPO>/.venv/bin/neurowave --provider local app",
       "mpv_during": [
         63816
       ],
@@ -49,7 +49,7 @@
     },
     {
       "label": "app_sigkill",
-      "command": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave --provider local app",
+      "command": "<REPO>/.venv/bin/neurowave --provider local app",
       "mpv_during": [
         64020
       ],
@@ -67,7 +67,7 @@
     },
     {
       "label": "tray_sigterm",
-      "command": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/neurowave-qa/.venv/bin/neurowave --provider local tray",
+      "command": "<REPO>/.venv/bin/neurowave --provider local tray",
       "mpv_during": [
         64193
       ],
