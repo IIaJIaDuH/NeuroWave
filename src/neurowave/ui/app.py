@@ -145,6 +145,8 @@ def _build_window(vm: PlayerViewModel) -> Any:
         "length": 0,
         "seekable": False,
         "error": "",
+        # Последний обычный статус: возвращается после снятой ошибки.
+        "normal": "Готово",
     }
 
     def _show_status(text: str, *, error: bool = False) -> None:
@@ -154,16 +156,16 @@ def _build_window(vm: PlayerViewModel) -> Any:
         )
 
     def guarded(action: str, fn: Any) -> None:
-        if state["error"]:
-            # Новое действие снимает прошедшую ошибку: пользователь уже
-            # перешёл к следующему состоянию, жаловаться больше не на что.
-            state["error"] = ""
-            _show_status(action)
+        # Ошибка не снимается при постановке команды: успехом считается
+        # только подтверждённое завершение, иначе запоздавшее событие об
+        # ошибке прошлой команды снова зажгло бы уже снятый статус.
         try:
             fn()
         except Exception as exc:
-            state["error"] = f"{action}: {exc}"
-            _show_status(f"Ошибка: {state['error']}", error=True)
+            # Синхронная ошибка (например, диспетчер уже закрыт): показываем
+            # её через view-model, чтобы `last_error` и статус не расходились.
+            vm.report_error(f"не удалось выполнить действие «{action.lower()}»", exc)
+            refresh()
 
     def refresh_outputs(items: list[tuple[str, str]]) -> None:
         current = output.currentData()
@@ -215,18 +217,29 @@ def _build_window(vm: PlayerViewModel) -> Any:
             state["output"] = snap.output_id
         events = vm.drain()
         normal = ""
+        cleared = False
         for event in events:
             if event.name == "command_error":
                 # Ошибка команды из рабочего потока: показывается до
-                # следующего действия и не стирается фоновыми событиями.
+                # подтверждённого успеха или более новой ошибки и не
+                # стирается фоновыми событиями.
                 state["error"] = str(event.payload.get("message") or "не удалось выполнить команду")
+                continue
+            if event.name == "command_ok":
+                # View-model присылает успех только тогда, когда он снимает
+                # показанную ошибку и не является запоздавшим.
+                state["error"] = ""
+                cleared = True
                 continue
             track = event.payload.get("track")
             normal = event.name + (f" · {track.label}" if track else "")
         if state["error"]:
             _show_status(f"Ошибка: {state['error']}", error=True)
         elif normal:
+            state["normal"] = normal
             _show_status(normal)
+        elif cleared:
+            _show_status(state["normal"])
 
     def load_outputs() -> None:
         try:

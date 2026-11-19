@@ -45,6 +45,9 @@ class Command:
     cancelled: bool = False
     started_at: float | None = None
     finished_at: float | None = None
+    # Порядковый номер фактического выполнения. Выдаётся рабочим потоком,
+    # поэтому отражает порядок завершения, а не порядок постановки в очередь.
+    seq: int = 0
 
     @property
     def duration_ms(self) -> int | None:
@@ -68,6 +71,9 @@ class CommandDispatcher:
         self._on_error = on_error
         self._error_listeners: list[Callable[[Command], None]] = []
         self._error_listeners_lock = threading.Lock()
+        self._completion_listeners: list[Callable[[Command], None]] = []
+        self._completion_listeners_lock = threading.Lock()
+        self._sequences = itertools.count(1)
         self.default_timeout = default_timeout
         self._closed = False
         self._active = 0
@@ -158,6 +164,29 @@ class CommandDispatcher:
             except ValueError:
                 return
 
+    def add_completion_listener(self, listener: Callable[[Command], None]) -> None:
+        """Подписать слушателя на *успешное* завершение команд.
+
+        Слушатель вызывается в рабочем потоке в порядке выполнения и только
+        для команд, которые действительно доработали до конца: отменённые и
+        упавшие команды сюда не попадают (ошибки идут через `on_error` и
+        `add_error_listener`). Такой поток нужен интерфейсу, чтобы снимать
+        ошибку не в момент постановки команды, а после подтверждённого
+        успеха, и не путать его с поздним результатом старой команды.
+        """
+        if not callable(listener):
+            raise TypeError("Слушатель завершения должен быть вызываемым")
+        with self._completion_listeners_lock:
+            if listener not in self._completion_listeners:
+                self._completion_listeners.append(listener)
+
+    def remove_completion_listener(self, listener: Callable[[Command], None]) -> None:
+        with self._completion_listeners_lock:
+            try:
+                self._completion_listeners.remove(listener)
+            except ValueError:
+                return
+
     def cancel_pending(self, keep_generation: int | None = None) -> int:
         """Отменить ещё не начатые команды старого поколения."""
         keep = self._generation if keep_generation is None else keep_generation
@@ -208,6 +237,7 @@ class CommandDispatcher:
 
     def _execute(self, command: Command) -> None:
         command.started_at = time.monotonic()
+        command.seq = next(self._sequences)
         self._active += 1
         self._peak_active = max(self._peak_active, self._active)
         try:
@@ -216,9 +246,14 @@ class CommandDispatcher:
         except BaseException as exc:  # ошибка команды не должна убивать поток
             command.error = exc
             self.stats["failed"] += 1
-            self._notify_error(command)
         finally:
             command.finished_at = time.monotonic()
+            # Уведомляем до снятия `_active`/`done`: тот, кто дождался
+            # `wait_idle()` или `result()`, уже видит и событие о команде.
+            if command.error is not None:
+                self._notify_error(command)
+            else:
+                self._notify_completion(command)
             self._active -= 1
             if command.timeout is not None and command.duration_ms is not None:
                 if command.duration_ms > command.timeout * 1000:
@@ -236,6 +271,16 @@ class CommandDispatcher:
                 listener(command)
             except Exception:
                 # Ошибка одного подписчика не должна убивать исполнитель.
+                continue
+
+    def _notify_completion(self, command: Command) -> None:
+        """Сообщить об успешном завершении всем подписчикам."""
+        with self._completion_listeners_lock:
+            listeners = list(self._completion_listeners)
+        for listener in listeners:
+            try:
+                listener(command)
+            except Exception:
                 continue
 
     @property
