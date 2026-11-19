@@ -1,0 +1,23 @@
+{
+  "scenario": "GUI: следующий + перемотка",
+  "after_next_status": "track · Неизвестный исполнитель — QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов",
+  "position_immediately_after_seek_ms": 3600,
+  "status_after_seek": "track · NeuroWave QA — QA tone 440 Hz",
+  "position_ms": 4392,
+  "target_position_ms": 18024,
+  "vm_last_error": null,
+  "seek_actually_moved": false,
+  "dispatcher_stats": {
+    "submitted": 2,
+    "executed": 2,
+    "failed": 0,
+    "cancelled": 0,
+    "slow": 0
+  },
+  "silent_failure": false,
+  "warm_seek_position_ms": 9804,
+  "warm_seek_status": "track · NeuroWave QA — QA tone 440 Hz",
+  "control_with_pause_position_ms": 20600,
+  "control_target_ms": 20000,
+  "control_seek_worked": true
+}

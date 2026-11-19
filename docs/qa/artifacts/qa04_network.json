@@ -1,0 +1,106 @@
+{
+  "scenario": "QA-04 сеть и Яндекс Музыка",
+  "real_account": {
+    "status": "NOT AVAILABLE",
+    "reason": "разрешённая тестовая авторизация не предоставлена: в профиле нет токена, keyring в системе не установлен"
+  },
+  "stub_cases": [
+    {
+      "case": "задержка ответа 3 с",
+      "action": "search",
+      "ok": true,
+      "tracks": 0,
+      "seconds": 3.0
+    },
+    {
+      "case": "timeout от сервиса",
+      "action": "search",
+      "ok": false,
+      "error": "NetworkError: Сеть недоступна: Timed out",
+      "seconds": 0.99
+    },
+    {
+      "case": "сеть недоступна",
+      "action": "search",
+      "ok": false,
+      "error": "NetworkError: Сеть недоступна: сеть недоступна",
+      "seconds": 0.98
+    },
+    {
+      "case": "ошибка сервиса",
+      "action": "search",
+      "ok": false,
+      "error": "ApiError: внутренняя ошибка сервиса",
+      "seconds": 0.0
+    },
+    {
+      "case": "недействительный токен",
+      "action": "search",
+      "ok": false,
+      "error": "AuthError: Токен недействителен. Выполните вход заново",
+      "seconds": 0.0
+    },
+    {
+      "case": "не найдено",
+      "action": "search",
+      "ok": false,
+      "error": "NetworkError: Сеть недоступна: ",
+      "seconds": 0.92
+    },
+    {
+      "case": "обрыв после первой попытки",
+      "action": "wave",
+      "ok": false,
+      "error": "NetworkError: Сеть недоступна: соединение оборвано",
+      "seconds": 0.98
+    },
+    {
+      "case": "обрыв в account()",
+      "action": "account",
+      "ok": false,
+      "error": "NetworkError: Сеть недоступна: соединение оборвано",
+      "seconds": 0.96
+    }
+  ],
+  "local_after_failure": {
+    "case_a_start_with_unavailable": {
+      "raised": true,
+      "error": "TrackUnavailable: трек недоступен",
+      "current": "broken",
+      "status": "buffering",
+      "local_played": false
+    },
+    "case_b_transition_to_unavailable": {
+      "current": "local-ok-2",
+      "status": "playing",
+      "track_events": 1,
+      "errors": [
+        {
+          "t": 3.054,
+          "event": "error",
+          "payload": {
+            "error": "трек недоступен"
+          }
+        }
+      ]
+    },
+    "mpv_alive": true,
+    "error_events_total": 1,
+    "error_events_after_2s": 1,
+    "no_infinite_retry": true
+  },
+  "offline_start": {
+    "adapter_network_error": {
+      "case": "сеть недоступна при старте",
+      "action": "account",
+      "ok": false,
+      "error": "NetworkError: Сеть недоступна: сеть недоступна",
+      "seconds": 0.23
+    },
+    "local_provider_offline": {
+      "code": 0,
+      "stdout": "Треки не найдены.",
+      "stderr": ""
+    }
+  }
+}

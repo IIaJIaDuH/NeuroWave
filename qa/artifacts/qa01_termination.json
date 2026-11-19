@@ -1,0 +1,87 @@
+{
+  "scenario": "QA-01 завершение приложения",
+  "cases": [
+    {
+      "label": "app_wm_close",
+      "command": "<REPO>/.venv/bin/neurowave --provider local app",
+      "mpv_during": [
+        63384
+      ],
+      "window": "0x07800007",
+      "exit_code": 0,
+      "mpv_after": [],
+      "orphan_mpv": false,
+      "sockets_after": [
+        "neurowave-mpv-56735.sock",
+        "neurowave-mpv-62971.sock"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "label": "app_sigint",
+      "command": "<REPO>/.venv/bin/neurowave --provider local app",
+      "mpv_during": [
+        63696
+      ],
+      "exit_code": 0,
+      "mpv_after": [],
+      "orphan_mpv": false,
+      "sockets_after": [
+        "neurowave-mpv-56735.sock",
+        "neurowave-mpv-62971.sock"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "label": "app_sigterm",
+      "command": "<REPO>/.venv/bin/neurowave --provider local app",
+      "mpv_during": [
+        63816
+      ],
+      "exit_code": 0,
+      "mpv_after": [],
+      "orphan_mpv": false,
+      "sockets_after": [
+        "neurowave-mpv-56735.sock",
+        "neurowave-mpv-62971.sock"
+      ],
+      "verdict": "PASS"
+    },
+    {
+      "label": "app_sigkill",
+      "command": "<REPO>/.venv/bin/neurowave --provider local app",
+      "mpv_during": [
+        64020
+      ],
+      "exit_code": -9,
+      "mpv_after": [
+        64020
+      ],
+      "orphan_mpv": true,
+      "sockets_after": [
+        "neurowave-mpv-56735.sock",
+        "neurowave-mpv-64019.sock",
+        "neurowave-mpv-62971.sock"
+      ],
+      "verdict": "FAIL: остался процесс mpv"
+    },
+    {
+      "label": "tray_sigterm",
+      "command": "<REPO>/.venv/bin/neurowave --provider local tray",
+      "mpv_during": [
+        64193
+      ],
+      "exit_code": "timeout",
+      "mpv_after": [
+        64193
+      ],
+      "orphan_mpv": true,
+      "sockets_after": [
+        "neurowave-mpv-56735.sock",
+        "neurowave-mpv-64192.sock",
+        "neurowave-mpv-62971.sock"
+      ],
+      "verdict": "FAIL: остался процесс mpv"
+    }
+  ]
+}

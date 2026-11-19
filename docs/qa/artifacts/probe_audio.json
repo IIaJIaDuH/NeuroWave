@@ -1,0 +1,61 @@
+{
+  "sink": "alsa_output.pci-<PCI>.hdmi-stereo",
+  "monitor_source": "76",
+  "tracks": [
+    "qa_tone_a440_128k.mp3",
+    "qa_tone_a880_48k.wav",
+    "qa_tone_b220_short.mp3",
+    "qa_tone_c523_320k.mp3",
+    "qa_tone_e659_lossless.flac",
+    "qa_tone_g349_44k.wav"
+  ],
+  "mpv_state": {
+    "running": true,
+    "idle": false,
+    "time_pos": 5.984042,
+    "pause": false,
+    "volume": 30.0,
+    "audio_device": "auto",
+    "audio_params": {
+      "samplerate": 44100,
+      "channel-count": 1,
+      "channels": "mono",
+      "hr-channels": "mono",
+      "format": "float"
+    },
+    "af": null,
+    "entry_id": 1,
+    "last_error": null
+  },
+  "position_ms": 5984,
+  "is_playing": true,
+  "events": [
+    {
+      "t": 0.055,
+      "event": "dsp_applied",
+      "payload": {
+        "status": "dict"
+      }
+    },
+    {
+      "t": 0.055,
+      "event": "track",
+      "payload": {
+        "track": {
+          "id": "qa_tone_a440_128k.mp3",
+          "provider": "local",
+          "duration_ms": 30040,
+          "title_hash": "ea9fa89e09"
+        },
+        "quality": "Quality(codec='mp3', bitrate_kbps=128, lossless=False)",
+        "from_cache": false
+      }
+    }
+  ],
+  "sink_capture": {
+    "bytes": 1114112,
+    "frames": 278528,
+    "peak_dbfs": -62.01,
+    "rms_dbfs": -65.86
+  }
+}

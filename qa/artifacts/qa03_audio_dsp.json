@@ -1,0 +1,337 @@
+{
+  "scenario": "QA-03 аудиоустройства и DSP",
+  "system_devices": {
+    "sinks": [
+      {
+        "index": "76",
+        "name": "alsa_output.pci-<PCI>.hdmi-stereo",
+        "description": "PipeWire"
+      }
+    ],
+    "sources": [
+      {
+        "index": "76",
+        "name": "alsa_output.pci-<PCI>.hdmi-stereo.monitor",
+        "description": "PipeWire"
+      }
+    ],
+    "cards": [
+      {
+        "index": "73",
+        "name": "alsa_card.pci-<PCI>"
+      },
+      {
+        "index": "74",
+        "name": "alsa_card.pci-<PCI>"
+      }
+    ],
+    "default_sink": "alsa_output.pci-<PCI>.hdmi-stereo",
+    "sink_formats": "",
+    "bluetooth_present": false,
+    "usb_audio_present": false,
+    "hdmi_present": true,
+    "builtin_analog_present": false
+  },
+  "outputs": {
+    "player_outputs": [
+      {
+        "id": "auto",
+        "name": "Autoselect device",
+        "kind": "auto",
+        "codec": null,
+        "profile": null,
+        "current": true,
+        "via_auto": false
+      },
+      {
+        "id": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+        "name": "HDA <КАРТА> Цифровой стерео (HDMI)",
+        "kind": "hdmi",
+        "codec": null,
+        "profile": null,
+        "current": true,
+        "via_auto": true
+      }
+    ],
+    "mpv_devices": [
+      {
+        "id": "auto",
+        "description": "Autoselect device"
+      },
+      {
+        "id": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+        "description": "HDA <КАРТА> Цифровой стерео (HDMI"
+      },
+      {
+        "id": "alsa",
+        "description": "Default (alsa"
+      },
+      {
+        "id": "alsa/lavrate",
+        "description": "Rate Converter Plugin Using Libav/FFmpeg Library"
+      },
+      {
+        "id": "alsa/samplerate",
+        "description": "Rate Converter Plugin Using Samplerate Library"
+      },
+      {
+        "id": "alsa/speexrate",
+        "description": "Rate Converter Plugin Using Speex Resampler"
+      },
+      {
+        "id": "alsa/jack",
+        "description": "JACK Audio Connection Kit"
+      },
+      {
+        "id": "alsa/oss",
+        "description": "Open Sound System"
+      },
+      {
+        "id": "alsa/pipewire",
+        "description": "PipeWire Sound Server"
+      },
+      {
+        "id": "alsa/speex",
+        "description": "Plugin using Speex DSP (resample, agc, denoise, echo, dereverb"
+      },
+      {
+        "id": "alsa/upmix",
+        "description": "Plugin for channel upmix (4,6,8"
+      },
+      {
+        "id": "alsa/vdownmix",
+        "description": "Plugin for channel downmix (stereo) with a simple spacialization"
+      },
+      {
+        "id": "alsa/usbstream:CARD=<КАРТА>",
+        "description": "HDA <КАРТА>/USB Stream Output"
+      },
+      {
+        "id": "alsa/sysdefault:CARD=<КАРТА>",
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/Default Audio Device"
+      },
+      {
+        "id": "alsa/front:CARD=<КАРТА>,DEV=0",
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/Front output / input"
+      },
+      {
+        "id": "alsa/surround21:CARD=<КАРТА>,DEV=0",
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/2.1 Surround output to Front and Subwoofer speakers"
+      },
+      {
+        "id": "alsa/surround40:CARD=<КАРТА>,DEV=0",
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/4.0 Surround output to Front and Rear speakers"
+      },
+      {
+        "id": "alsa/surround41:CARD=<КАРТА>,DEV=0",
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/4.1 Surround output to Front, Rear and Subwoofer speakers"
+      },
+      {
+        "id": "alsa/surround50:CARD=<КАРТА>,DEV=0",
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/5.0 Surround output to Front, Center and Rear speakers"
+      },
+      {
+        "id": "alsa/surround51:CARD=<КАРТА>,DEV=0",
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/5.1 Surround output to Front, Center, Rear and Subwoofer speakers"
+      },
+      {
+        "id": "alsa/surround71:CARD=<КАРТА>,DEV=0",
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/7.1 Surround output to Front, Center, Side, Rear and Woofer speakers"
+      },
+      {
+        "id": "alsa/usbstream:CARD=<КАРТА>",
+        "description": "HD-Audio <КАРТА>/USB Stream Output"
+      }
+    ],
+    "current": "auto"
+  },
+  "switch_during_playback": {
+    "steps": [
+      {
+        "requested": "auto",
+        "chosen": {
+          "id": "auto",
+          "name": "Autoselect device",
+          "kind": "auto",
+          "codec": null,
+          "profile": null,
+          "current": true,
+          "via_auto": false
+        },
+        "latency_ms": 1009,
+        "still_playing": "playing",
+        "mpv_audio_device": "auto",
+        "position_ms": 2517
+      },
+      {
+        "requested": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+        "chosen": {
+          "id": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+          "name": "HDA <КАРТА> Цифровой стерео (HDMI)",
+          "kind": "hdmi",
+          "codec": null,
+          "profile": null,
+          "current": true,
+          "via_auto": false
+        },
+        "latency_ms": 1020,
+        "still_playing": "playing",
+        "mpv_audio_device": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+        "position_ms": 3855
+      }
+    ]
+  },
+  "device_unplug": {
+    "sink": "alsa_output.pci-<PCI>.hdmi-stereo",
+    "before": {
+      "phase": "до suspend",
+      "peak_dbfs": -62.01,
+      "rms_dbfs": -64.98,
+      "frames": 196608,
+      "silent": false
+    },
+    "suspend": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "during_suspend": {
+      "phase": "sink suspended",
+      "peak_dbfs": -62.01,
+      "rms_dbfs": -65.56,
+      "frames": 114688,
+      "silent": false
+    },
+    "during_suspend_state": {
+      "position_ms": 7594,
+      "status": "playing",
+      "mpv_running": true,
+      "mpv_device": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+      "overlay": "None"
+    },
+    "resume": {
+      "code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "after_resume": {
+      "phase": "после resume",
+      "peak_dbfs": -62.01,
+      "rms_dbfs": -67.95,
+      "frames": 114688,
+      "silent": false
+    },
+    "after_resume_state": {
+      "position_ms": 10112,
+      "status": "playing",
+      "overlay": "None"
+    }
+  },
+  "volume_policy": {
+    "above_100": {
+      "requested": 120,
+      "applied_returned": 100,
+      "player_volume": 120,
+      "applied_volume": 100,
+      "mpv_volume": 100.0,
+      "limited_event": 1,
+      "events": [
+        {
+          "t": 14.613,
+          "event": "volume_limited",
+          "payload": {
+            "requested": 120,
+            "applied": 100,
+            "limit": 100
+          }
+        }
+      ]
+    },
+    "before_applied": 30,
+    "after_restore": {
+      "applied": 30,
+      "mpv_volume": 30.0
+    }
+  },
+  "dsp_consistency": {
+    "cases": [
+      {
+        "requested": "pure",
+        "mode": "pure",
+        "profile": "flat",
+        "confirmed": true,
+        "fallback": false,
+        "reason": null,
+        "graph": null,
+        "mpv_af": null,
+        "matches": true,
+        "position_ms": 11306,
+        "status": "playing"
+      },
+      {
+        "requested": "enhanced",
+        "mode": "enhanced",
+        "profile": "hifi",
+        "confirmed": true,
+        "fallback": false,
+        "reason": null,
+        "graph": "lavfi=[alimiter=limit=0.8913:attack=5:release=50:level=0]",
+        "mpv_af": "alimiter=limit=0.8913:attack=5:release=50:level=0",
+        "matches": true,
+        "position_ms": 11733,
+        "status": "playing"
+      },
+      {
+        "requested": "flat",
+        "mode": "pure",
+        "profile": "flat",
+        "confirmed": true,
+        "fallback": false,
+        "reason": null,
+        "graph": null,
+        "mpv_af": null,
+        "matches": true,
+        "position_ms": 12117,
+        "status": "playing"
+      },
+      {
+        "requested": "qa-eq",
+        "mode": "enhanced",
+        "profile": "qa-eq",
+        "confirmed": true,
+        "fallback": false,
+        "reason": null,
+        "graph": "lavfi=[volume=volume=-3dB:precision=float,equalizer=f=1000:t=q:w=1:g=4,alimiter=limit=0.8414:attack=5:release=50:level=0]",
+        "mpv_af": "volume=volume=-3dB:precision=float,equalizer=f=1000:t=q:w=1:g=4,alimiter=limit=0.8414:attack=5:release=50:level=0",
+        "matches": true,
+        "position_ms": 12501,
+        "status": "playing"
+      },
+      {
+        "requested": "несуществующий",
+        "mode": "pure",
+        "profile": "flat",
+        "confirmed": true,
+        "fallback": false,
+        "reason": null,
+        "graph": null,
+        "mpv_af": null,
+        "matches": true,
+        "position_ms": 12928,
+        "status": "playing"
+      }
+    ],
+    "saved_profile_id": "qa-eq"
+  },
+  "final": {
+    "status": "playing",
+    "mpv_device": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+    "audio_params": {
+      "samplerate": 44100,
+      "channel-count": 1,
+      "channels": "mono",
+      "hr-channels": "mono",
+      "format": "float"
+    }
+  }
+}
