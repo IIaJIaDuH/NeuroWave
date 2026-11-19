@@ -1,0 +1,410 @@
+{
+  "scenario": "QA-TRIAGE-02 / D-06: неизвестная длительность в GUI",
+  "sha": "7a82119d23775f7ed02db14e232dcefbc8ade3d9",
+  "display": ":0",
+  "qt_platform": "(по умолчанию xcb)",
+  "beat_interval_ms": 150,
+  "exceptions_total": 45,
+  "exception_types": {
+    "TypeError": 45
+  },
+  "exception_samples": [
+    {
+      "at": 15019.214,
+      "type": "TypeError",
+      "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+      "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+    },
+    {
+      "at": 15019.413,
+      "type": "TypeError",
+      "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+      "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+    },
+    {
+      "at": 15019.615,
+      "type": "TypeError",
+      "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+      "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+    }
+  ],
+  "steps": [
+    {
+      "step": "S1_empty_queue",
+      "note": "очередь пуста: длительности нет вовсе",
+      "at": 0.9,
+      "exceptions_total": 0,
+      "exceptions_new": 0,
+      "exception_types": {},
+      "last_exception": null,
+      "qt_beats": 5,
+      "qt_beats_per_second": null,
+      "player_status": "idle",
+      "position_ms": 0,
+      "current_track_id": null,
+      "current_duration_ms": null,
+      "labels": {
+        "time": "0:00 / 0:00",
+        "buttons": [
+          "⏮",
+          "▶",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 0,
+        "status": "Волна ещё не запущена"
+      },
+      "window_title": "NeuroWave"
+    },
+    {
+      "step": "S2_normal_duration",
+      "note": "обычный трек, длительность известна",
+      "at": 3.34,
+      "exceptions_total": 0,
+      "exceptions_new": 0,
+      "exception_types": {},
+      "last_exception": null,
+      "qt_beats": 16,
+      "qt_beats_per_second": 6.56,
+      "player_status": "playing",
+      "position_ms": 629,
+      "current_track_id": "qa_tone_c523_320k.mp3",
+      "current_duration_ms": 45035,
+      "labels": {
+        "time": "0:00 / 0:45",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 7,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave"
+    },
+    {
+      "step": "S3_unknown_duration",
+      "note": "переключились на трек с duration_ms=None",
+      "at": 4.28,
+      "exceptions_total": 5,
+      "exceptions_new": 5,
+      "exception_types": {
+        "TypeError": 5
+      },
+      "last_exception": {
+        "at": 15020.014,
+        "type": "TypeError",
+        "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+        "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+      },
+      "qt_beats": 7,
+      "qt_beats_per_second": 7.44,
+      "player_status": "playing",
+      "position_ms": 693,
+      "current_track_id": "qa_tone_c523_320k.mp3",
+      "current_duration_ms": null,
+      "labels": {
+        "time": "0:00 / 0:45",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 7,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave"
+    },
+    {
+      "step": "S4_pause_in_error_state",
+      "note": "пауза при необработанной ошибке",
+      "at": 5.54,
+      "exceptions_total": 11,
+      "exceptions_new": 6,
+      "exception_types": {
+        "TypeError": 6
+      },
+      "last_exception": {
+        "at": 15021.213,
+        "type": "TypeError",
+        "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+        "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+      },
+      "qt_beats": 8,
+      "qt_beats_per_second": 6.35,
+      "player_status": "paused",
+      "position_ms": 733,
+      "current_track_id": "qa_tone_c523_320k.mp3",
+      "current_duration_ms": null,
+      "labels": {
+        "time": "0:00 / 0:45",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 7,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave",
+      "labels_before_pause": {
+        "time": "0:00 / 0:45",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 7,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "gui_changed_after_pause": false,
+      "screenshot": {
+        "file": "triage02_d06_error_state.png",
+        "geometry": {
+          "x": 90,
+          "y": 122,
+          "width": 570,
+          "height": 360
+        },
+        "code": 0,
+        "bytes": 25562
+      }
+    },
+    {
+      "step": "S5_resume_in_error_state",
+      "note": "возобновление при той же ошибке",
+      "at": 6.68,
+      "exceptions_total": 17,
+      "exceptions_new": 6,
+      "exception_types": {
+        "TypeError": 6
+      },
+      "last_exception": {
+        "at": 15022.413,
+        "type": "TypeError",
+        "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+        "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+      },
+      "qt_beats": 7,
+      "qt_beats_per_second": 6.14,
+      "player_status": "playing",
+      "position_ms": 1674,
+      "current_track_id": "qa_tone_c523_320k.mp3",
+      "current_duration_ms": null,
+      "labels": {
+        "time": "0:00 / 0:45",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 7,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave"
+    },
+    {
+      "step": "S6_back_to_normal",
+      "note": "вернулись к треку с известной длительностью",
+      "at": 7.72,
+      "exceptions_total": 17,
+      "exceptions_new": 0,
+      "exception_types": {},
+      "last_exception": {
+        "at": 15022.413,
+        "type": "TypeError",
+        "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+        "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+      },
+      "qt_beats": 7,
+      "qt_beats_per_second": 6.68,
+      "player_status": "playing",
+      "position_ms": 821,
+      "current_track_id": "qa_tone_c523_320k.mp3",
+      "current_duration_ms": 45035,
+      "labels": {
+        "time": "0:00 / 0:45",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 9,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave"
+    },
+    {
+      "step": "S7_zero_duration",
+      "note": "duration_ms = 0",
+      "at": 8.59,
+      "exceptions_total": 17,
+      "exceptions_new": 0,
+      "exception_types": {},
+      "last_exception": {
+        "at": 15022.413,
+        "type": "TypeError",
+        "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+        "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+      },
+      "qt_beats": 6,
+      "qt_beats_per_second": 6.92,
+      "player_status": "playing",
+      "position_ms": 650,
+      "current_track_id": "qa_tone_c523_320k.mp3",
+      "current_duration_ms": 0,
+      "labels": {
+        "time": "0:00 / 0:00",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 0,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave"
+    },
+    {
+      "step": "S8_very_long_track",
+      "note": "трек на 6 часов",
+      "at": 9.54,
+      "exceptions_total": 17,
+      "exceptions_new": 0,
+      "exception_types": {},
+      "last_exception": {
+        "at": 15022.413,
+        "type": "TypeError",
+        "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+        "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+      },
+      "qt_beats": 6,
+      "qt_beats_per_second": 6.35,
+      "player_status": "playing",
+      "position_ms": 736,
+      "current_track_id": "qa_tone_c523_320k.mp3",
+      "current_duration_ms": 21600000,
+      "labels": {
+        "time": "0:00 / 360:00",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 0,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave",
+      "screenshot": {
+        "file": "triage02_d06_very_long.png",
+        "geometry": {
+          "x": 90,
+          "y": 122,
+          "width": 570,
+          "height": 360
+        },
+        "code": 0,
+        "bytes": 25631
+      }
+    },
+    {
+      "step": "S9_exception_flood_5s",
+      "note": "5 секунд с треком без длительности",
+      "at": 10.04,
+      "exceptions_total": 20,
+      "exceptions_new": 3,
+      "exception_types": {
+        "TypeError": 3
+      },
+      "last_exception": {
+        "at": 15025.811,
+        "type": "TypeError",
+        "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+        "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+      },
+      "qt_beats": 3,
+      "qt_beats_per_second": 5.96,
+      "player_status": "playing",
+      "position_ms": 160,
+      "current_track_id": "qa_tone_c523_320k.mp3",
+      "current_duration_ms": null,
+      "labels": {
+        "time": "0:00 / 360:00",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 0,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave",
+      "exceptions_per_second": 0.6
+    },
+    {
+      "step": "S10_final",
+      "note": "финальное состояние: обычный трек",
+      "at": 16.14,
+      "exceptions_total": 45,
+      "exceptions_new": 25,
+      "exception_types": {
+        "TypeError": 25
+      },
+      "last_exception": {
+        "at": 15030.812,
+        "type": "TypeError",
+        "message": "unsupported operand type(s) for //: 'NoneType' and 'int'",
+        "location": "Traceback (most recent call last):\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 157, in refresh\n    time_label.setText(f\"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}\")\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<СТЕНД>/triage-02/src/neurowave/ui/app.py\", line 38, in _mmss\n    seconds = max(0, milliseconds // 1000)\n                     ~~~~~~~~~~~~~^^~~~~~\nTypeError: unsupported operand type(s) for //: 'NoneType' and 'int'\n"
+      },
+      "qt_beats": 41,
+      "qt_beats_per_second": 6.72,
+      "player_status": "playing",
+      "position_ms": 778,
+      "current_track_id": "qa_tone_a440_128k.mp3",
+      "current_duration_ms": 30040,
+      "labels": {
+        "time": "0:00 / 0:30",
+        "buttons": [
+          "⏮",
+          "⏸",
+          "⏭",
+          "⏹",
+          "Волна",
+          "Sound Lab"
+        ],
+        "seek_value": 15,
+        "status": "NeuroWave QA — WO-03 test library"
+      },
+      "window_title": "NeuroWave"
+    }
+  ]
+}

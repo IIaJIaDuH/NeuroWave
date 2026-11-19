@@ -1,0 +1,25 @@
+{
+  "viewmodel_layer": {
+    "command_failed_counter_before": 0,
+    "command_failed_counter_after": 1,
+    "vm_last_error": null,
+    "events_in_queue": [],
+    "вывод_в_статусную_строку": null
+  },
+  "gui_layer": {
+    "status_before": "NeuroWave QA — WO-03 test library",
+    "failed_before": 0,
+    "status_after": "NeuroWave QA — WO-03 test library",
+    "failed_after": 1,
+    "vm_last_error": null,
+    "dispatcher_has_on_error": false,
+    "events_in_queue": []
+  },
+  "cli_layer": {
+    "exit_code": 2,
+    "stderr_tail": "Нет такого аудиовыхода: выход-которого-нет-qa\nДоступны: alsa, alsa/front:CARD=<КАРТА>,DEV=0, alsa/surround21:CARD=<КАРТА>,DEV=0, alsa/surround40:CARD=<КАРТА>,DEV=0, alsa/surround41:CARD=<КАРТА>,DEV=0, alsa/surround50:CARD=<КАРТА>,DEV=0, alsa/surround51:CARD=<КАРТА>,DEV=0, alsa/surround71:CARD=<КАРТА>,DEV=0, alsa/sysdefault:CARD=<КАРТА>, alsa/usbstream:CARD=<КАРТА>, alsa/usbstream:CARD=<КАРТА>, auto",
+    "has_traceback": false
+  },
+  "scenario": "QA-TRIAGE-02 / D-05: наблюдение — путь ошибки команды",
+  "sha": "7a82119d23775f7ed02db14e232dcefbc8ade3d9"
+}
