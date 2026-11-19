@@ -343,6 +343,99 @@ def test_real_mpv_lists_and_switches_audio_device(tmp_path: Path) -> None:
         backend.shutdown()
 
 
+def test_real_mpv_applies_seek_right_after_load(backend: MpvBackend, tmp_path: Path) -> None:
+    """QA D-01: seek сразу после loadfile не должен отклоняться mpv."""
+    source = make_wav(tmp_path / "seek-load.wav", seconds=20)
+
+    backend.load(str(source))
+    backend.seek(6000)  # раньше здесь было «error running command»
+
+    assert wait_until(lambda: backend.position_ms() >= 5000, timeout=10.0), (
+        "перемотка после loadfile не применилась"
+    )
+    assert backend.position_ms() < 12_000, "позиция ушла дальше запрошенной"
+
+
+def test_real_mpv_applies_last_seek_while_file_loads(backend: MpvBackend, tmp_path: Path) -> None:
+    source = make_wav(tmp_path / "seek-last.wav", seconds=25)
+
+    backend.load(str(source))
+    for position in (2000, 9000, 16000):
+        backend.seek(position)
+
+    assert wait_until(lambda: backend.position_ms() >= 15000, timeout=10.0), (
+        "применилась не последняя перемотка"
+    )
+    assert backend.position_ms() < 20_000
+
+
+def test_real_mpv_seek_after_next_track(tmp_path: Path) -> None:
+    """Сквозной сценарий дефекта: Next, сразу перемотка — и позиция нового трека."""
+    first = make_wav(tmp_path / "a-first.wav", seconds=20, freq=440)
+    second = make_wav(tmp_path / "b-second.wav", seconds=20, freq=523)
+    adapter = LocalFilesAdapter([first, second])
+    bridge = MpvBackend(
+        binary=str(MPV),
+        socket_path=tmp_path / "seek-next.sock",
+        extra_args=["--ao=null", "--volume=20"],
+    )
+    player = PlayerService(
+        adapter=adapter,
+        backend=bridge,
+        queue=Queue(),
+        settings=Settings(volume=20),
+        prefetch=False,
+    )
+    try:
+        player.play_tracks(adapter.wave_tracks())
+        player.next_track()
+        player.seek(7000)
+
+        assert wait_until(lambda: bridge.position_ms() >= 6000, timeout=10.0), (
+            "перемотка после Next не применилась"
+        )
+        assert player.current_track is not None
+        assert player.current_track.id == "b-second.wav"
+        assert bridge.position_ms() < 14_000
+    finally:
+        try:
+            player.stop()
+        finally:
+            player.close()
+
+
+def test_real_mpv_seek_after_stop_is_ignored(backend: MpvBackend, tmp_path: Path) -> None:
+    """После stop файла нет: seek — контролируемый no-op, а не ошибка IPC."""
+    backend.load(str(make_wav(tmp_path / "seek-stop.wav", seconds=20)))
+    assert wait_until(lambda: backend.position_ms() > 200, timeout=8.0)
+
+    backend.stop()
+    backend.seek(3000)
+
+    assert backend.position_ms() < 1000
+
+
+def test_real_mpv_single_end_file_after_seek(tmp_path: Path) -> None:
+    """Перемотка не порождает двойных end-file."""
+    received: list[str] = []
+    done = threading.Event()
+    bridge = MpvBackend(
+        binary=str(MPV),
+        socket_path=tmp_path / "seek-end.sock",
+        extra_args=["--ao=null", "--volume=20"],
+        on_end=lambda reason: (received.append(reason), done.set()),
+    )
+    try:
+        bridge.load(str(make_wav(tmp_path / "seek-end.wav", seconds=1.5)))
+        bridge.seek(1000)
+
+        assert done.wait(15.0), "трек не доиграл после перемотки"
+        time.sleep(0.6)
+        assert received == ["eof"], f"лишние события завершения: {received}"
+    finally:
+        bridge.shutdown()
+
+
 def test_real_mpv_accepts_custom_profile_graph(tmp_path: Path) -> None:
     """Пользовательский профиль (4 полосы + лимитер) должен собрать живой lavfi."""
     from neurowave.audio.dsp_controller import DspController

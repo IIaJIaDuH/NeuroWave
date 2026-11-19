@@ -26,6 +26,9 @@ from .backend import EndHandler
 
 CONNECT_TIMEOUT = 5.0
 COMMAND_TIMEOUT = 3.0
+# Предел ожидания готовности файла для отложенной перемотки. Нужен только как
+# страховка: обычно готовность приходит событием file-loaded за миллисекунды.
+SEEK_READY_TIMEOUT = 5.0
 
 SOCKET_NAME = "neurowave-mpv-{pid}.sock"
 _SOCKET_RE = re.compile(r"^neurowave-mpv-(?P<pid>\d+)\.sock$")
@@ -133,13 +136,27 @@ class MpvBackend:
         self._event_thread: threading.Thread | None = None
         # Обработчики завершения трека не должны исполняться в потоке
         # чтения IPC: изнутри них посылаются новые команды и нужен ответ.
-        self._events: queue.Queue[tuple[Callable[[str], None], str] | None] = queue.Queue()
+        self._events: queue.Queue[Callable[[], None] | None] = queue.Queue()
         self._write_lock = threading.Lock()
         self._pending: dict[int, tuple[threading.Event, dict[str, Any]]] = {}
         self._request_id = 0
         self._closing = False
         # Идентификатор текущей загрузки: по нему отсеиваем устаревшие end-file.
         self._entry_id: int | None = None
+        # Готовность файла. mpv отклоняет `seek`, пока файл не загружен, поэтому
+        # перемотка в этот промежуток откладывается до события file-loaded.
+        self._state_lock = threading.Lock()
+        self._started_entry: int | None = None  # id из события start-file
+        self._loading = False  # loadfile отправлен, file-loaded ещё не пришёл
+        self._has_file = False  # в mpv есть загруженный файл
+        # Поколение загрузки: отложенная перемотка и таймер привязаны к нему,
+        # поэтому запоздавший callback не достанет seek уже другого трека.
+        self._load_gen = 0
+        self._pending_seek: tuple[int, float] | None = None  # (поколение, мс)
+        self._seek_timer: threading.Timer | None = None
+        # Порядок «проверка поколения → отправка seek» и переходы load/stop.
+        # Блокировка не нужна читателю IPC: он берёт только _state_lock.
+        self._order_lock = threading.RLock()
         self.last_error: str | None = None
 
     # --- жизненный цикл ----------------------------------------------
@@ -203,7 +220,11 @@ class MpvBackend:
         self._event_thread.start()
 
     def shutdown(self) -> None:
+        # Без _order_lock: иначе обработчик end-file, ждавший замка, после
+        # завершения мог бы заново запустить mpv. Отложенная перемотка и так
+        # отменяется сменой поколения в _cancel_load().
         self._closing = True
+        self._cancel_load()
         try:
             if self._socket is not None:
                 self._send({"command": ["quit"]})
@@ -242,12 +263,22 @@ class MpvBackend:
     # --- команды ------------------------------------------------------
     def load(self, url: str, start_ms: int = 0) -> None:
         self.start()
-        reply = self._command("loadfile", url, "replace")
-        # mpv возвращает id загрузки: без него нельзя отличить свой end-file
-        # от конца предыдущего трека после ручного next.
-        self._entry_id = _entry_id_of(reply)
-        if start_ms > 0:
-            self.seek(start_ms)
+        with self._order_lock:
+            self._begin_load()
+            try:
+                reply = self._command("loadfile", url, "replace")
+            except PlayerError:
+                # Файл не загрузился: ждать больше нечего, отложенная перемотка
+                # не должна переехать на следующий трек.
+                self._cancel_load()
+                raise
+            # mpv возвращает id загрузки: без него нельзя отличить свой end-file
+            # от конца предыдущего трека после ручного next.
+            with self._state_lock:
+                self._entry_id = _entry_id_of(reply)
+                self._has_file = True
+            if start_ms > 0:
+                self.seek(start_ms)
 
     def play(self) -> None:
         self._set_property("pause", False)
@@ -256,19 +287,40 @@ class MpvBackend:
         self._set_property("pause", True)
 
     def stop(self) -> None:
-        if self.is_running:
-            self._command("stop")
-        self._entry_id = None
+        with self._order_lock:
+            if self.is_running:
+                self._command("stop")
+            with self._state_lock:
+                self._entry_id = None
+            self._cancel_load()
 
     def set_volume(self, volume: int) -> None:
         self._set_property("volume", _volume_value(volume))
 
     def seek(self, position_ms: int) -> None:
+        """Перемотать текущий файл.
+
+        mpv отклоняет `seek`, пока файл ещё загружается («error running
+        command» в QA D-01). Поэтому во время загрузки команда запоминается и
+        применяется после file-loaded: последняя перемотка важнее предыдущих,
+        а stop/shutdown/новая загрузка отменяют её. Если файла нет вовсе
+        (stop), перематывать нечего и запрос игнорируется.
+        """
         if isinstance(position_ms, bool) or not isinstance(position_ms, (int, float)):
             raise PlayerError(f"Некорректная позиция: {position_ms!r}")
         if not math.isfinite(float(position_ms)):
             raise PlayerError(f"Некорректная позиция: {position_ms!r}")
-        self._command("seek", max(0.0, float(position_ms) / 1000.0), "absolute")
+        position = max(0.0, float(position_ms))
+        # Проверка и отправка — под одним замком с load()/stop(): иначе между
+        # ними успевает начаться другая загрузка, и seek уходит в чужой файл.
+        with self._order_lock:
+            if self._defer_seek(position):
+                return
+            with self._state_lock:
+                has_file = self._has_file
+            if not has_file:
+                return  # после stop или неудачной загрузки перематывать нечего
+            self._command("seek", position / 1000.0, "absolute")
 
     def audio_devices(self) -> list[dict[str, Any]]:
         """Все выходы, которые видит mpv (`audio-device-list`)."""
@@ -332,6 +384,133 @@ class MpvBackend:
             return False
         # В idle time-pos равен None: файла нет, и играть нечего.
         return self._get_property("time-pos") is not None
+
+    # --- готовность файла ---------------------------------------------
+    def _begin_load(self) -> None:
+        """Новая загрузка: перемотка прошлого трека не должна достаться новому."""
+        with self._state_lock:
+            self._load_gen += 1
+            self._loading = True
+            self._started_entry = None
+            self._has_file = False
+            self._pending_seek = None
+            self._cancel_seek_timer_locked()
+
+    def _cancel_load(self) -> None:
+        """Забыть ожидание загрузки и отложенную перемотку."""
+        with self._state_lock:
+            self._load_gen += 1
+            self._loading = False
+            self._started_entry = None
+            self._has_file = False
+            self._pending_seek = None
+            self._cancel_seek_timer_locked()
+
+    def _defer_seek(self, position_ms: float) -> bool:
+        """Запомнить перемотку до готовности файла, если он ещё грузится."""
+        with self._state_lock:
+            if not self._loading:
+                return False
+            generation = self._load_gen
+            self._pending_seek = (generation, position_ms)  # выигрывает последний
+            if self._seek_timer is None:
+                timer = threading.Timer(
+                    SEEK_READY_TIMEOUT, self._expire_pending_seek, args=(generation,)
+                )
+                timer.daemon = True
+                self._seek_timer = timer
+                timer.start()
+            return True
+
+    def _expire_pending_seek(self, generation: int) -> None:
+        """Страховка: не ждать file-loaded бесконечно.
+
+        Callback помнит своё поколение: если успела начаться другая загрузка,
+        он ничего не делает и не трогает чужую отложенную перемотку.
+        """
+        self._apply_pending_seek(None, generation, force=True)
+
+    def _apply_pending_seek(
+        self, token: int | None, generation: int, *, force: bool = False
+    ) -> None:
+        """Отправить отложенную перемотку, если она всё ещё про текущий файл.
+
+        Проверка поколения и отправка идут под одним замком с load()/stop(),
+        поэтому seek не может уехать в файл, загруженный после проверки.
+        """
+        with self._order_lock:
+            with self._state_lock:
+                if generation != self._load_gen:
+                    return  # загрузка уже другая: callback устарел
+                pending = self._pending_seek
+                if pending is None or pending[0] != generation:
+                    return
+                if not force:
+                    if self._loading:
+                        return
+                    if token is not None and self._started_entry != token:
+                        return  # файл уже сменился: чужой seek не отправляем
+                position = pending[1]
+                self._pending_seek = None
+                timer, self._seek_timer = self._seek_timer, None
+            if timer is not None:
+                timer.cancel()
+            try:
+                self._command("seek", position / 1000.0, "absolute")
+            except PlayerError:
+                # Файл сменился или mpv закрыт: отложенная перемотка не должна
+                # ронять поток событий.
+                pass
+
+    def _cancel_seek_timer_locked(self) -> None:
+        timer, self._seek_timer = self._seek_timer, None
+        if timer is not None:
+            timer.cancel()
+
+    def _handle_start_file(self, message: dict[str, Any]) -> None:
+        """Запомнить, какая загрузка идёт: по ней проверяем file-loaded.
+
+        Событие file-loaded не содержит playlist_entry_id (в отличие от
+        start-file и end-file), поэтому единственный признак «свой/чужой» —
+        id последнего start-file. mpv присылает file-loaded только для
+        текущей загрузки; прерванная загрузка его не получает.
+        """
+        incoming = message.get("playlist_entry_id")
+        if not isinstance(incoming, int) or isinstance(incoming, bool):
+            return
+        with self._state_lock:
+            if not self._loading:
+                return
+            self._started_entry = incoming
+
+    def _handle_file_loaded(self, _message: dict[str, Any]) -> None:
+        """Файл готов принимать seek — применить последнюю отложенную перемотку."""
+        with self._state_lock:
+            if not self._loading:
+                return
+            if self._started_entry is None and self._entry_id is not None:
+                # Новая загрузка ещё не прислала start-file, а id reply уже
+                # обновлён — значит это file-loaded предыдущего файла.
+                return
+            self._loading = False
+            token = self._started_entry
+            generation = self._load_gen
+        self._events.put(lambda: self._apply_pending_seek(token, generation))
+
+    def _handle_end_file(self, message: dict[str, Any]) -> None:
+        reason = str(message.get("reason", "eof"))
+        if not self._is_current_entry(message):
+            return  # конец предыдущего файла: очередь двигать нельзя
+        # Файла больше нет: отложенная перемотка относилась к ушедшему треку.
+        with self._state_lock:
+            self._loading = False
+            self._started_entry = None
+            self._has_file = False
+            self._pending_seek = None
+            self._cancel_seek_timer_locked()
+        handler: Callable[[str], None] | None = self.on_end
+        if handler is not None and reason in {"eof", "error"}:
+            self._events.put(lambda: handler(reason))
 
     # --- IPC ----------------------------------------------------------
     def _is_current_entry(self, message: dict[str, Any]) -> bool:
@@ -424,21 +603,20 @@ class MpvBackend:
             item = self._events.get()
             if item is None:
                 return
-            handler, reason = item
             try:
-                handler(reason)
+                item()
             except Exception:
                 pass
 
     def _handle_message(self, message: dict[str, Any]) -> None:
         if "event" in message:
-            if message["event"] == "end-file":
-                reason = str(message.get("reason", "eof"))
-                if not self._is_current_entry(message):
-                    return  # конец предыдущего файла: очередь двигать нельзя
-                handler: Callable[[str], None] | None = self.on_end
-                if handler is not None and reason in {"eof", "error"}:
-                    self._events.put((handler, reason))
+            event = message["event"]
+            if event == "start-file":
+                self._handle_start_file(message)
+            elif event == "file-loaded":
+                self._handle_file_loaded(message)
+            elif event == "end-file":
+                self._handle_end_file(message)
             return
         request_id = message.get("request_id")
         if request_id is None:
