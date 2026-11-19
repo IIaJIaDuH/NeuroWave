@@ -36,6 +36,17 @@ def git_show(ref: str, path: str) -> str | None:
     return result.stdout
 
 
+def PLACEHOLDER_CHANGED_OK(old: str, new: str) -> bool:
+    """Смена одного плейсхолдера на другой допустима (стиль обозначений).
+
+    Обе стороны — плейсхолдеры без сведений об окружении; измерения при
+    этом не меняются. Такие замены перечисляются в отчёте отдельно.
+    """
+    def placeholder(value: str) -> bool:
+        return "<" in value and ">" in value
+    return placeholder(old) and placeholder(new)
+
+
 def compare_json(old: Any, new: Any, trail: str, problems: list[str]) -> None:
     if isinstance(old, dict) and isinstance(new, dict):
         if set(old) != set(new):
@@ -61,7 +72,7 @@ def compare_json(old: Any, new: Any, trail: str, problems: list[str]) -> None:
         return
     if isinstance(old, str) and isinstance(new, str):
         expected, _ = sanitize_text(old)
-        if expected != new:
+        if expected != new and not (PLACEHOLDER_CHANGED_OK(old, new)):
             problems.append(f"{trail}: строка изменена сверх обезличивания:\n"
                             f"    было:  {old[:160]!r}\n"
                             f"    стало: {new[:160]!r}\n"
