@@ -11,13 +11,18 @@
 
 from __future__ import annotations
 
+import logging
 import queue
+import re
 import threading
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from ..dispatcher import CommandDispatcher
+from ..dispatcher import Command, CommandDispatcher
 from ..domain import Track
+from ..errors import NeuroWaveError
+
+LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -85,6 +90,83 @@ def _subtitle(track: Track | None) -> str:
     return " — ".join(part for part in parts if part)
 
 
+# --- D-05: ошибки команд для строки статуса ----------------------------
+# Диспетчер живёт в своём потоке, поэтому сюда приходит уже готовый текст:
+# никаких объектов исключений, трассировок и Qt.
+_COMMAND_ERROR_TITLES = {
+    "output": "не удалось выбрать аудиовыход",
+    "seek": "не удалось перемотать трек",
+    "profile": "не удалось применить профиль звука",
+    "apply-profile": "не удалось применить профиль звука",
+    "save-profile": "не удалось сохранить профиль звука",
+    "delete-profile": "не удалось удалить профиль звука",
+    "mode": "не удалось переключить режим обработки",
+    "volume": "не удалось изменить громкость",
+    "toggle": "не удалось переключить воспроизведение",
+    "next": "не удалось переключить трек",
+    "previous": "не удалось переключить трек",
+    "stop": "не удалось остановить воспроизведение",
+    "wave": "не удалось запустить волну",
+}
+_DEFAULT_COMMAND_ERROR = "не удалось выполнить команду"
+_ERROR_TEXT_LIMIT = 300
+_SECRET_PATTERNS: tuple[tuple[re.Pattern[str], str], ...] = (
+    # Bearer/OAuth-заголовки приходят одной строкой вместе с текстом ошибки.
+    (re.compile(r"(?i)\b(bearer)\s+[^\s,;]+"), r"\1 ***"),
+    (
+        re.compile(
+            r"(?i)\b(access[_-]?token|refresh[_-]?token|id[_-]?token|token"
+            r"|api[_-]?key|authorization|password|passwd|secret)\b\s*[=:]\s*[^\s,;]+"
+        ),
+        r"\1 ***",
+    ),
+    # Cookie и заголовки сессии: значение тянется до точки с запятой.
+    (re.compile(r"(?i)\b(set-cookie|cookie)\b\s*:\s*[^;\n]+"), r"\1: ***"),
+    # URL с логином и паролем: https://user:pass@host.
+    (re.compile(r"(?i)(://)[^/\s:@]+:[^/\s@]+@"), r"\1***@"),
+)
+
+
+def _sanitize_error_text(text: object) -> str:
+    """Однострочный безопасный текст: без секретов, переводов строк и хвостов."""
+    clean = " ".join(str(text).split())
+    for pattern, replacement in _SECRET_PATTERNS:
+        clean = pattern.sub(replacement, clean)
+    clean = clean.strip(" .;,")
+    if len(clean) > _ERROR_TEXT_LIMIT:
+        clean = clean[: _ERROR_TEXT_LIMIT - 1].rstrip() + "…"
+    return clean
+
+
+def _error_message(title: str, error: BaseException | None) -> str:
+    """Понятное пользователю сообщение без внутренностей исключения.
+
+    Известные ошибки (`NeuroWaveError`) дают полезную деталь — с редакцией
+    токенов и паролей. Неизвестное исключение непредсказуемо по содержимому,
+    поэтому в текст попадает только общий заголовок, а тип уходит в лог.
+    """
+    if isinstance(error, NeuroWaveError):
+        detail = _sanitize_error_text(error)
+        if detail:
+            return f"{title} — {detail}"
+    return title
+
+
+def _command_error_message(command: Command) -> str:
+    title = _COMMAND_ERROR_TITLES.get(command.name, _DEFAULT_COMMAND_ERROR)
+    return _error_message(title, command.error)
+
+
+def _safe_command_name(name: object) -> str:
+    """Имя команды для лога: одна строка без секретов и без хвостов."""
+    return _sanitize_error_text(name)[:_ERROR_TEXT_LIMIT // 5] or "?"
+
+
+def _command_seq(command: Command) -> int:
+    """Номер выполнения; у чужих объектов диспетчера его может не быть."""
+    return int(getattr(command, "seq", 0) or 0)
+
+
 def _duration(track: Track | None) -> tuple[int, bool]:
     """Длительность для GUI: число и признак достоверности.
 
@@ -118,12 +200,117 @@ class PlayerViewModel:
         self._stop = threading.Event()
         self._poller: threading.Thread | None = None
         self.last_error: str | None = None
+        # Жизненный цикл ошибки: номер команды, которая её произвела, и
+        # наибольший применённый номер выполнения. Нужны, чтобы запоздалое
+        # событие старой команды не возвращало снятую ошибку.
+        self._error_seq: int | None = None
+        self._last_seq = 0
+        self._state_lock = threading.Lock()
+        self._closed = False
+        add_listener = getattr(self.dispatcher, "add_error_listener", None)
+        if callable(add_listener):
+            add_listener(self._on_command_error)
+        add_done = getattr(self.dispatcher, "add_completion_listener", None)
+        if callable(add_done):
+            add_done(self._on_command_done)
         player.add_listener(self.on_event)
 
     # --- события -------------------------------------------------------
     def on_event(self, name: str, payload: dict[str, Any] | None = None) -> None:
         """Вызывается из аудиопотока: только очередь, без виджетов."""
         self._events.put(PendingEvent(name, dict(payload or {})))
+
+    def _on_command_error(self, command: Command) -> None:
+        """Ошибка команды из рабочего потока: очередь и `last_error`.
+
+        Здесь нельзя трогать Qt: окно забирает событие через :meth:`drain`
+        в GUI-потоке. Объект исключения в очередь не попадает.
+        """
+        if self._closed:
+            return
+        message = _command_error_message(command)
+        seq = _command_seq(command)
+        with self._state_lock:
+            if seq and seq < self._last_seq:
+                return  # запоздавший результат уже снятой команды
+            self._last_seq = max(self._last_seq, seq)
+            self._error_seq = seq
+            self.last_error = message
+        if not isinstance(command.error, NeuroWaveError):
+            # Текст неизвестного исключения не публикуется: в нём бывают
+            # токены, cookie и URL с авторизацией, а `exc_info` выводит
+            # его целиком вместе с traceback. Для диагностики достаточно
+            # типа исключения, имени и идентификатора команды.
+            LOG.debug(
+                "Команда %s (id=%s) завершилась неожиданной ошибкой %s; детали скрыты",
+                _safe_command_name(command.name),
+                command.id,
+                type(command.error).__name__,
+            )
+        self._events.put(
+            PendingEvent(
+                name="command_error",
+                payload={
+                    "command": command.name,
+                    "message": message,
+                    "command_id": command.id,
+                },
+            )
+        )
+
+    def _on_command_done(self, command: Command) -> None:
+        """Успешное завершение команды — единственное подтверждение успеха.
+
+        Отправка команды успехом не считается, поэтому ошибка снимается
+        только здесь и только для команды новее той, что её вызвала.
+        Запоздавший успех старой команды более новую ошибку не стирает.
+        """
+        if self._closed:
+            return
+        seq = _command_seq(command)
+        with self._state_lock:
+            if seq and seq < self._last_seq:
+                return  # запоздавший результат уже снятой команды
+            self._last_seq = max(self._last_seq, seq)
+            if self._error_seq is None:
+                return
+            if self._error_seq and seq <= self._error_seq:
+                return
+            self._error_seq = None
+            self.last_error = None
+        self._events.put(
+            PendingEvent(
+                name="command_ok",
+                payload={"command": command.name, "command_id": command.id},
+            )
+        )
+
+    def report_error(self, title: str, error: BaseException) -> None:
+        """Ошибка, найденная в GUI-потоке до создания команды.
+
+        Диспетчер такую ошибку не увидит (команда не была поставлена),
+        поэтому снимок состояния делается здесь: `last_error` и строка
+        статуса остаются согласованными, а снимает сообщение первый же
+        подтверждённый успех.
+        """
+        if self._closed:
+            return
+        message = _error_message(title, error)
+        with self._state_lock:
+            self.last_error = message
+            self._error_seq = 0  # локальная ошибка: снимает любой следующий успех
+        if not isinstance(error, NeuroWaveError):
+            LOG.debug(
+                "Действие %s завершилось неожиданной ошибкой %s; детали скрыты",
+                _safe_command_name(title),
+                type(error).__name__,
+            )
+        self._events.put(
+            PendingEvent(
+                name="command_error",
+                payload={"command": "ui", "message": message, "command_id": 0},
+            )
+        )
 
     def drain(self) -> list[PendingEvent]:
         events: list[PendingEvent] = []
@@ -276,5 +463,13 @@ class PlayerViewModel:
 
     # --- жизненный цикл ------------------------------------------------
     def close(self) -> None:
+        """Отписаться от ошибок и остановить фоновые потоки."""
+        self._closed = True
+        remove_listener = getattr(self.dispatcher, "remove_error_listener", None)
+        if callable(remove_listener):
+            remove_listener(self._on_command_error)
+        remove_done = getattr(self.dispatcher, "remove_completion_listener", None)
+        if callable(remove_done):
+            remove_done(self._on_command_done)
         self.stop_polling()
         self.dispatcher.shutdown()
