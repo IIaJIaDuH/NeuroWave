@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import tempfile
 from dataclasses import asdict, dataclass, field, fields
@@ -20,6 +21,63 @@ MAX_VOLUME = 130  # верхняя граница, которую принима
 SAFE_VOLUME = 100
 DEFAULT_CACHE_QUOTA_GB = 2.0
 DEFAULT_CACHE_TTL_DAYS = 7
+
+
+def _bad_setting(name: str, value: Any, expected: str) -> ConfigError:
+    """Ошибка с именем поля: пользователь должен знать, что править."""
+    return ConfigError(
+        f"Некорректное значение настройки «{name}»: "
+        f"ожидалось {expected}, получено {value!r}"
+    )
+
+
+def _coerce_volume(value: Any) -> int:
+    """Громкость: целое число; числовая строка «80» поддержана как раньше."""
+    expected = "целое число 0…130"
+    if isinstance(value, bool):
+        raise _bad_setting("volume", value, expected)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise _bad_setting("volume", value, expected)
+        return int(value)
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError as exc:
+            raise _bad_setting("volume", value, expected) from exc
+    raise _bad_setting("volume", value, expected)
+
+
+def _coerce_quota(value: Any) -> float:
+    """Квота кеша: конечное число гигабайт; отрицательное по-прежнему = 0."""
+    expected = "конечное число гигабайт"
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise _bad_setting("cache_quota_gb", value, expected)
+    number = float(value)
+    if not math.isfinite(number):
+        raise _bad_setting("cache_quota_gb", value, expected)
+    return number
+
+
+def _coerce_ttl(value: Any) -> int:
+    """TTL кеша: целое число дней; числовая строка поддержана как раньше."""
+    expected = "целое число дней"
+    if isinstance(value, bool):
+        raise _bad_setting("cache_ttl_days", value, expected)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise _bad_setting("cache_ttl_days", value, expected)
+        return int(value)
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError as exc:
+            raise _bad_setting("cache_ttl_days", value, expected) from exc
+    raise _bad_setting("cache_ttl_days", value, expected)
 
 
 @dataclass(frozen=True)
@@ -120,7 +178,11 @@ class Settings:
         known = {f.name for f in fields(cls)}
         filtered = {k: v for k, v in data.items() if k in known}
         settings = cls(**filtered)
-        settings.volume = settings.clamp_volume(settings.volume)
+        # Проверяем числовые поля сразу: иначе ошибка всплывёт только при
+        # первом обращении к свойству (кеш, громкость) и уже с traceback.
+        settings.volume = settings.clamp_volume(_coerce_volume(settings.volume))
+        settings.cache_quota_gb = _coerce_quota(settings.cache_quota_gb)
+        settings.cache_ttl_days = _coerce_ttl(settings.cache_ttl_days)
         settings.repeat = RepeatMode.parse(settings.repeat).value
         # Ленивый импорт: audio импортирует config (MAX_VOLUME), поэтому
         # обычный импорт на уровне модуля дал бы цикл.
@@ -157,7 +219,13 @@ class ConfigStore:
             raise ConfigError(f"Не удалось прочитать {file}: {exc}") from exc
         if not isinstance(data, dict):
             raise ConfigError(f"Ожидался объект JSON в {file}")
-        return Settings.from_dict(data)
+        try:
+            return Settings.from_dict(data)
+        except ConfigError as exc:
+            raise ConfigError(f"{exc}. Файл: {file}") from exc
+        except (TypeError, ValueError, OverflowError) as exc:
+            # Некорректный тип не должен доходить до команд как traceback.
+            raise ConfigError(f"Некорректные настройки в {file}: {exc}") from exc
 
     def save(self, settings: Settings) -> None:
         self._paths.ensure()

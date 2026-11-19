@@ -31,7 +31,7 @@ from .audio.dsp_profiles import BUILTIN_PROFILES, DspError, get_profile, resolve
 from .audio.profile_store import ProfileRegistry
 from .config import ConfigStore, Paths, Settings
 from .domain import AccountInfo, Track
-from .errors import AuthError, NetworkError, NeuroWaveError, PlayerError
+from .errors import AuthError, ConfigError, NetworkError, NeuroWaveError, PlayerError
 from .player import PlayerService
 from .providers import (
     AuthKind,
@@ -1272,7 +1272,17 @@ def _cmd_doctor(args: argparse.Namespace) -> int:
     except OSError as exc:
         checks.append(("Каталоги XDG", False, str(exc)))
 
-    provider_id = _resolve_provider_id(args, ConfigStore(paths).load())
+    # Повреждённый config.json не должен прекращать диагностику: отмечаем
+    # неуспешную проверку и продолжаем с безопасными значениями по умолчанию.
+    try:
+        settings = ConfigStore(paths).load()
+    except ConfigError as exc:
+        checks.append(("Конфигурация", False, str(exc)))
+        settings = Settings()
+    else:
+        checks.append(("Конфигурация", True, str(paths.settings_file)))
+
+    provider_id = _resolve_provider_id(args, settings)
     checks.extend(_provider_dependency_checks(provider_id))
     try:
         provider_title = get_spec(provider_id).info.title
