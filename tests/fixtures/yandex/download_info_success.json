@@ -1,0 +1,7 @@
+{
+  "_comment": "Обезличенный снимок tracks_download_info(get_direct_links=True). Ссылки на несуществующий домен, не настоящий CDN.",
+  "items": [
+    {"codec": "mp3", "bitrate_in_kbps": 320, "direct_link": "https://example.invalid/stream/mp3"},
+    {"codec": "flac", "bitrate_in_kbps": 1411, "direct_link": "https://example.invalid/stream/flac"}
+  ]
+}

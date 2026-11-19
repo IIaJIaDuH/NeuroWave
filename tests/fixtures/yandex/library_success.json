@@ -1,0 +1,24 @@
+{
+  "_comment": "Обезличенный снимок результата users_likes_tracks().fetch_tracks() и users_playlists().",
+  "liked_tracks": [
+    {
+      "id": 1003,
+      "title": "Anonymized Liked Song",
+      "artists": [{"id": 503, "name": "Anonymized Artist"}],
+      "albums": [{"id": 603, "title": "Anonymized Album"}],
+      "duration_ms": 99000,
+      "available": true
+    }
+  ],
+  "playlist": {"tracks": [{"track_id": 1003, "album_id": 603}]},
+  "playlist_tracks": [
+    {
+      "id": 1003,
+      "title": "Anonymized Liked Song",
+      "artists": [{"id": 503, "name": "Anonymized Artist"}],
+      "albums": [{"id": 603, "title": "Anonymized Album"}],
+      "duration_ms": 99000,
+      "available": true
+    }
+  ]
+}
