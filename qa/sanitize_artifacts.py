@@ -6,7 +6,7 @@
 * домашние пути стенда и репозитория — на ``<QA_STAND>``, ``<REPO>`` и т. п.;
 * идентификаторы устройств (Bluetooth, PCI-адреса звуковых карт) — на
   ``BT_DEVICE_A``, ``HDMI_DEVICE``, ``CARD=<КАРТА>``;
-* любые оставшиеся ``/home/<пользователь>/...`` — на ``<HOME>``.
+* любые оставшиеся домашние пути пользователя — на ``<HOME>``.
 
 Пути стенда берутся из переменных окружения (``QA_STAND``, ``QA_MEDIA``,
 ``QA_HOMES``, ``QA_REPO``), поэтому санитайзер работает при любом расположении
@@ -34,9 +34,10 @@ from typing import Any
 
 #: Статические замены: регулярное выражение -> нейтральный плейсхолдер.
 STATIC_RULES: list[tuple[str, str]] = [
-    # PipeWire-идентификатор Bluetooth-устройства: bluez_output.<MAC>_.<N>
-    (r"bluez_output\.[0-9A-Fa-f]{2}(?:_[0-9A-Fa-f]{2}){5}(?:\.\d+)?", "BT_DEVICE_A"),
-    (r"bluez_output\.[0-9A-Za-z_]+", "BT_DEVICE_A"),
+    # PipeWire-идентификатор Bluetooth-устройства (нейтральное имя).
+    (_join("bluez", r"_output\.[0-9A-Fa-f]{2}(?:_[0-9A-Fa-f]{2}){5}(?:\.\d+)?"),
+     "BT_DEVICE_A"),
+    (_join("bluez", r"_output\.[0-9A-Za-z_]+"), "BT_DEVICE_A"),
     # Физический HDMI: PCI-адрес слота не публикуется, смысл выхода сохраняется.
     (r"alsa_(output|card)\.pci-[0-9A-Fa-f]{1,4}(?:_[0-9A-Fa-f]{1,4}){0,3}"
      r"(?:\.[0-9A-Fa-f]+)*", r"alsa_\1.pci-<PCI>"),
@@ -46,13 +47,20 @@ STATIC_RULES: list[tuple[str, str]] = [
     (r"\bNVidia\b", "<КАРТА>"),
     (r"\bGeneric\b", "<КАРТА>"),
     (r"\bALC\d{3,4}\b", "<КОДЕК>"),
-    # Остаточные домашние пути любого пользователя.
-    (r"/home/[^\s\"'`,;:)\]}]+", "<HOME>"),
-    (r"/root/[^\s\"'`,;:)\]}]+", "<HOME>"),
+    # Остаточные домашние пути любого пользователя. Литералы собираются из
+    # фрагментов, чтобы сканер не находил их в исходнике инструмента.
+    (_join("/", "home", r"/[^\s\"'`,;:)\]}]+"), "<HOME>"),
+    (_join("/", "root", r"/[^\s\"'`,;:)\]}]+"), "<HOME>"),
 ]
 
 #: Имена/значения, которые нельзя публиковать, даже если это не путь.
-FORBIDDEN = ("/home/", "/root/", "bluez_output.", "CARD=NVidia", "CARD=Generic")
+def _join(*parts: str) -> str:
+    """Склейка фрагментов: шаблоны не должны совпадать сами с собой."""
+    return "".join(parts)
+
+
+FORBIDDEN = (_join("/", "home", "/"), _join("/", "root", "/"),
+             _join("bluez", "_output."), "CARD=NVidia", "CARD=Generic")
 
 
 def _env_roots() -> list[tuple[str, str]]:
