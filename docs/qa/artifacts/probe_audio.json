@@ -1,5 +1,5 @@
 {
-  "sink": "alsa_output.pci-<PCI>hdmi-stereo",
+  "sink": "alsa_output.pci-<PCI>.hdmi-stereo",
   "monitor_source": "76",
   "tracks": [
     "qa_tone_a440_128k.mp3",

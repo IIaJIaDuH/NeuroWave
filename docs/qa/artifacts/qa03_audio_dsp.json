@@ -4,14 +4,14 @@
     "sinks": [
       {
         "index": "76",
-        "name": "alsa_output.pci-<PCI>hdmi-stereo",
+        "name": "alsa_output.pci-<PCI>.hdmi-stereo",
         "description": "PipeWire"
       }
     ],
     "sources": [
       {
         "index": "76",
-        "name": "alsa_output.pci-<PCI>hdmi-stereo.monitor",
+        "name": "alsa_output.pci-<PCI>.hdmi-stereo.monitor",
         "description": "PipeWire"
       }
     ],
@@ -25,7 +25,7 @@
         "name": "alsa_card.pci-0000_09_00.1"
       }
     ],
-    "default_sink": "alsa_output.pci-<PCI>hdmi-stereo",
+    "default_sink": "alsa_output.pci-<PCI>.hdmi-stereo",
     "sink_formats": "",
     "bluetooth_present": false,
     "usb_audio_present": false,
@@ -44,8 +44,8 @@
         "via_auto": false
       },
       {
-        "id": "pulse/alsa_output.pci-<PCI>hdmi-stereo",
-        "name": "HDA NVidia Цифровой стерео (HDMI)",
+        "id": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+        "name": "HDA <КАРТА> Цифровой стерео (HDMI)",
         "kind": "hdmi",
         "codec": null,
         "profile": null,
@@ -59,8 +59,8 @@
         "description": "Autoselect device"
       },
       {
-        "id": "pulse/alsa_output.pci-<PCI>hdmi-stereo",
-        "description": "HDA NVidia Цифровой стерео (HDMI"
+        "id": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+        "description": "HDA <КАРТА> Цифровой стерео (HDMI"
       },
       {
         "id": "alsa",
@@ -104,43 +104,43 @@
       },
       {
         "id": "alsa/usbstream:CARD=<КАРТА>",
-        "description": "HDA NVidia/USB Stream Output"
+        "description": "HDA <КАРТА>/USB Stream Output"
       },
       {
         "id": "alsa/sysdefault:CARD=<КАРТА>",
-        "description": "HD-Audio Generic, ALC897 Analog/Default Audio Device"
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/Default Audio Device"
       },
       {
         "id": "alsa/front:CARD=<КАРТА>,DEV=0",
-        "description": "HD-Audio Generic, ALC897 Analog/Front output / input"
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/Front output / input"
       },
       {
         "id": "alsa/surround21:CARD=<КАРТА>,DEV=0",
-        "description": "HD-Audio Generic, ALC897 Analog/2.1 Surround output to Front and Subwoofer speakers"
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/2.1 Surround output to Front and Subwoofer speakers"
       },
       {
         "id": "alsa/surround40:CARD=<КАРТА>,DEV=0",
-        "description": "HD-Audio Generic, ALC897 Analog/4.0 Surround output to Front and Rear speakers"
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/4.0 Surround output to Front and Rear speakers"
       },
       {
         "id": "alsa/surround41:CARD=<КАРТА>,DEV=0",
-        "description": "HD-Audio Generic, ALC897 Analog/4.1 Surround output to Front, Rear and Subwoofer speakers"
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/4.1 Surround output to Front, Rear and Subwoofer speakers"
       },
       {
         "id": "alsa/surround50:CARD=<КАРТА>,DEV=0",
-        "description": "HD-Audio Generic, ALC897 Analog/5.0 Surround output to Front, Center and Rear speakers"
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/5.0 Surround output to Front, Center and Rear speakers"
       },
       {
         "id": "alsa/surround51:CARD=<КАРТА>,DEV=0",
-        "description": "HD-Audio Generic, ALC897 Analog/5.1 Surround output to Front, Center, Rear and Subwoofer speakers"
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/5.1 Surround output to Front, Center, Rear and Subwoofer speakers"
       },
       {
         "id": "alsa/surround71:CARD=<КАРТА>,DEV=0",
-        "description": "HD-Audio Generic, ALC897 Analog/7.1 Surround output to Front, Center, Side, Rear and Woofer speakers"
+        "description": "HD-Audio <КАРТА>, <КОДЕК> Analog/7.1 Surround output to Front, Center, Side, Rear and Woofer speakers"
       },
       {
         "id": "alsa/usbstream:CARD=<КАРТА>",
-        "description": "HD-Audio Generic/USB Stream Output"
+        "description": "HD-Audio <КАРТА>/USB Stream Output"
       }
     ],
     "current": "auto"
@@ -164,10 +164,10 @@
         "position_ms": 2517
       },
       {
-        "requested": "pulse/alsa_output.pci-<PCI>hdmi-stereo",
+        "requested": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
         "chosen": {
-          "id": "pulse/alsa_output.pci-<PCI>hdmi-stereo",
-          "name": "HDA NVidia Цифровой стерео (HDMI)",
+          "id": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
+          "name": "HDA <КАРТА> Цифровой стерео (HDMI)",
           "kind": "hdmi",
           "codec": null,
           "profile": null,
@@ -176,13 +176,13 @@
         },
         "latency_ms": 1020,
         "still_playing": "playing",
-        "mpv_audio_device": "pulse/alsa_output.pci-<PCI>hdmi-stereo",
+        "mpv_audio_device": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
         "position_ms": 3855
       }
     ]
   },
   "device_unplug": {
-    "sink": "alsa_output.pci-<PCI>hdmi-stereo",
+    "sink": "alsa_output.pci-<PCI>.hdmi-stereo",
     "before": {
       "phase": "до suspend",
       "peak_dbfs": -62.01,
@@ -206,7 +206,7 @@
       "position_ms": 7594,
       "status": "playing",
       "mpv_running": true,
-      "mpv_device": "pulse/alsa_output.pci-<PCI>hdmi-stereo",
+      "mpv_device": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
       "overlay": "None"
     },
     "resume": {
@@ -325,7 +325,7 @@
   },
   "final": {
     "status": "playing",
-    "mpv_device": "pulse/alsa_output.pci-<PCI>hdmi-stereo",
+    "mpv_device": "pulse/alsa_output.pci-<PCI>.hdmi-stereo",
     "audio_params": {
       "samplerate": 44100,
       "channel-count": 1,

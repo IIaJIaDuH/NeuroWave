@@ -18,7 +18,7 @@
   },
   "bad_output": {
     "accepted": false,
-    "error": "PlayerError: Нет такого аудиовыхода: pulse/alsa_output.does-not-exist. Доступны: alsa, alsa/front:CARD=<КАРТА>,DEV=0, alsa/jack, alsa/lavrate, alsa/oss, alsa/pipewire, alsa/samplerate, alsa/speex, alsa/speexrate, alsa/surround21:CARD=<КАРТА>,DEV=0, alsa/surround40:CARD=<КАРТА>,DEV=0, alsa/surround41:CARD=<КАРТА>,DEV=0, alsa/surround50:CARD=<КАРТА>,DEV=0, alsa/surround51:CARD=<КАРТА>,DEV=0, alsa/surround71:CARD=<КАРТА>,DEV=0, alsa/sysdefault:CARD=<КАРТА>, alsa/upmix, alsa/usbstream:CARD=<КАРТА>, alsa/usbstream:CARD=<КАРТА>, alsa/vdownmix, auto, pulse/alsa_output.pci-<PCI>hdmi-stereo",
+    "error": "PlayerError: Нет такого аудиовыхода: pulse/alsa_output.does-not-exist. Доступны: alsa, alsa/front:CARD=<КАРТА>,DEV=0, alsa/jack, alsa/lavrate, alsa/oss, alsa/pipewire, alsa/samplerate, alsa/speex, alsa/speexrate, alsa/surround21:CARD=<КАРТА>,DEV=0, alsa/surround40:CARD=<КАРТА>,DEV=0, alsa/surround41:CARD=<КАРТА>,DEV=0, alsa/surround50:CARD=<КАРТА>,DEV=0, alsa/surround51:CARD=<КАРТА>,DEV=0, alsa/surround71:CARD=<КАРТА>,DEV=0, alsa/sysdefault:CARD=<КАРТА>, alsa/upmix, alsa/usbstream:CARD=<КАРТА>, alsa/usbstream:CARD=<КАРТА>, alsa/vdownmix, auto, pulse/alsa_output.pci-<PCI>.hdmi-stereo",
     "mpv_state": {
       "running": true,
       "idle": false,

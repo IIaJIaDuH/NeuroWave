@@ -70,7 +70,7 @@
         "output"
       ],
       "code": 0,
-      "stdout": "Autoselect device  [авто]\n    id=auto\n* HDA NVidia Цифровой стерео (HDMI)  [HDMI]\n    id=pulse/alsa_output.pci-<PCI>hdmi-stereo\nВыбор: auto → HDA NVidia Цифровой стерео (HDMI)",
+      "stdout": "Autoselect device  [авто]\n    id=auto\n* HDA <КАРТА> Цифровой стерео (HDMI)  [HDMI]\n    id=pulse/alsa_output.pci-<PCI>.hdmi-stereo\nВыбор: auto → HDA <КАРТА> Цифровой стерео (HDMI)",
       "stderr": "",
       "seconds": 0.16
     },
