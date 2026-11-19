@@ -48,7 +48,7 @@ JSON/JSONL/CSV, скрипты, логи и снимки экрана:
 
 | Класс | Где найдено | Пример (до обезличивания) |
 |---|---|---|
-| **Домашний абсолютный путь** | PR #32: артефакты `qa01_cli`, `qa01_termination`, `qa07_recovery`, `qa03_audio_dsp`, `probe_audio`, `qa01_playback` (в `docs/qa/artifacts/` и `qa/artifacts/`), скрипты `qa/qaenv.py`, `qa/make_media.py`, `qa/qa01_termination.py`; `qa/verify-d01`: `qa/qaenv.py`, `qa/make_media.py`, `qa/verify_d01.py`, `qa/gui_close_socket.py`, артефакт `verify_d01.json` | домашний путь стенда вида `/home/<пользователь>/…/stand/media/…` |
+| **Домашний абсолютный путь** | PR #32: артефакты `qa01_cli`, `qa01_termination`, `qa07_recovery`, `qa03_audio_dsp`, `probe_audio`, `qa01_playback` (в `docs/qa/artifacts/` и `qa/artifacts/`), скрипты `qa/qaenv.py`, `qa/make_media.py`, `qa/qa01_termination.py`; `qa/verify-d01`: `qa/qaenv.py`, `qa/make_media.py`, `qa/verify_d01.py`, `qa/gui_close_socket.py`, артефакт `verify_d01.json` | домашний путь стенда вида `<HOME>/<пользователь>/…/stand/media/…` |
 | **Идентификатор Bluetooth-устройства (MAC-подобный)** | `qa/verify-d04`: `docs/qa/artifacts/verify_d04.json` и `verify_d04_main_baseline.json` — поля `default_sink_before`, `default_sink_during`, `default_sink_restored`, `monitor_source`, список sink'ов | имя Bluetooth-sink'а вида `bluez_output.<MAC-идентификатор>.<N>` |
 | **Имя звуковой карты / PCI-слот** | PR #32: `qa03_audio_dsp.json` (и описание устройства в списке выходов), `qa07_recovery.json`; `qa/verify-d04`: PCI-адрес HDMI-sink'а | имя карты в списке устройств, `CARD=…`, PCI-слот |
 | **Модель звуковой карты и кодека** | PR #32: `qa03_audio_dsp.json` — описание HDA-устройства и кодек в списке выходов | имя производителя карты, модель аудиокодека |
@@ -73,9 +73,10 @@ JSON/JSONL/CSV, скрипты, логи и снимки экрана:
 Сканер даёт три осознанных исключения — все проверены вручную:
 
 1. **Собственные шаблоны регулярных выражений** сканера и санитайзера
-   (`r"/home/..."`) — это данные инструмента, а не сведения об окружении;
+   (шаблон регулярного выражения в самом инструменте) — это данные
+   инструмента, а не сведения об окружении;
    исключаются отдельным правилом.
-2. **Пути с плейсхолдерами** (`<REPO>`, `<QA_STAND>`, `/home/<пользователь>/…`)
+2. **Пути с плейсхолдерами** (`<REPO>`, `<QA_STAND>`, `<HOME>/<пользователь>/…`)
    — шаблоны, а не реальные пути; исключаются по наличию `<` и `>`.
 3. **Структура «дома» внутри QA-песочницы** (`…/qa01_sandbox/<домашний каталог>/Desktop/…`)
    — служебный каталог стенда; при обезличивании заменяется на `<HOME>`,
