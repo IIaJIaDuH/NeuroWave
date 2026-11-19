@@ -2,7 +2,7 @@
   "scenario": "QA-VERIFY-01 исправление D-01",
   "base_sha": "e0aa7a3580f1cda9f5d0f601451fa6dfcadbbc71",
   "branch": "fix/qa-seek-readiness-01",
-  "media_dir": "/home/zoz/.deepai-code/scratch/2026-11-18-wo03/media-verify",
+  "media_dir": "<QA_MEDIA>",
   "position_tolerance_ms": 1000,
   "mpv_probe_ok": true,
   "next_seek": [

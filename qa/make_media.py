@@ -4,16 +4,35 @@
 персональных данных. Каждая частота уникальна — по спектру вывода можно
 понять, какой файл реально играет.
 
+Каталог берётся из аргумента, иначе из $QA_MEDIA, иначе $QA_STAND/media
+(стенд можно переносить в любой путь — QA-SEC-01).
+
 Запуск: python qa/make_media.py [<каталог>]
 """
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
 
-DEFAULT_DIR = Path("/home/zoz/.deepai-code/scratch/2026-11-18-wo03/media")
+
+def default_dir() -> Path:
+    media = (os.environ.get("QA_MEDIA") or "").strip()
+    if media:
+        return Path(media).expanduser().resolve()
+    stand = (os.environ.get("QA_STAND") or "").strip()
+    if stand:
+        return (Path(stand).expanduser().resolve() / "media")
+    raise SystemExit(
+        "Не указан каталог для тестовых треков.\n"
+        "  python qa/make_media.py <каталог>\n"
+        "или задайте $QA_MEDIA (либо $QA_STAND — тогда каталог $QA_STAND/media)."
+    )
+
+
+DEFAULT_DIR: Path | None = None
 
 # (имя, частота, длительность, формат, кодек, частота дискретизации, теги)
 FILES = [
@@ -68,6 +87,6 @@ def _long_title_file(target: Path) -> Path:
 
 
 if __name__ == "__main__":
-    out = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_DIR
+    out = Path(sys.argv[1]) if len(sys.argv) > 1 else default_dir()
     for item in build(out):
         print(f"{item.name}\t{item.stat().st_size} Б")

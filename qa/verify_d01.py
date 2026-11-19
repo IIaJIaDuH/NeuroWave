@@ -39,7 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import qaenv as q  # noqa: E402
 
-MEDIA = Path("/home/zoz/.deepai-code/scratch/2026-11-18-wo03/media-verify")
+MEDIA = q.MEDIA
 BASE_SHA = "e0aa7a3580f1cda9f5d0f601451fa6dfcadbbc71"
 POSITION_TOLERANCE_MS = 1000  # критерий приёмки из ТЗ
 JUMP_THRESHOLD_MS = 400       # разрыв позиции, за которым виден seek

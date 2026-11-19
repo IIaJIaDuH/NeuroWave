@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import qaenv as q  # noqa: E402
 
-MEDIA = Path("/home/zoz/.deepai-code/scratch/2026-11-18-wo03/media-verify")
+MEDIA = q.MEDIA
 
 
 def main() -> int:

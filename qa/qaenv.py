@@ -20,18 +20,68 @@ from typing import Any, Callable, Iterable
 ROOT = Path(__file__).resolve().parents[1]
 QA_DIR = ROOT / "qa"
 ARTIFACTS = QA_DIR / "artifacts"
-SHARED = Path("/home/zoz/.deepai-code/scratch/2026-11-18-wo03")
-MEDIA = SHARED / "media"
-MPV = SHARED / "tools" / "AppDir" / "bin" / "mpv"
-HOMES = SHARED / "homes"
+
+#: Каталог стенда задаётся окружением: стенд можно перенести в любой путь
+#: (QA-SEC-01), в репозитории не остаётся домашних путей.
+STAND_ENV_HINT = """\
+Не задан каталог стенда QA.
+
+Задайте переменные окружения (стенд может лежать в любом каталоге):
+  export QA_STAND=/путь/к/стенду                    # обязательно
+  export QA_MEDIA=$QA_STAND/media                   # необязательно
+  export QA_MPV=$QA_STAND/tools/AppDir/bin/mpv     # необязательно
+  export QA_HOMES=$QA_STAND/homes                   # необязательно
+
+Ожидаемое содержимое каталога стенда:
+  $QA_STAND/media                     — синтетические тестовые треки
+                                        (создаются: python qa/make_media.py)
+  $QA_STAND/tools/AppDir/bin/mpv      — mpv для реального воспроизведения
+  $QA_STAND/homes                     — изолированные профили NEUROWAVE_HOME
+                                        (создаются автоматически)"""
+
+
+def _stand_path() -> Path:
+    raw = (os.environ.get("QA_STAND") or "").strip()
+    if not raw:
+        raise SystemExit(STAND_ENV_HINT)
+    return Path(raw).expanduser().resolve()
+
+
+def _option_path(name: str, default: Path) -> Path:
+    raw = (os.environ.get(name) or "").strip()
+    if not raw:
+        return default
+    return Path(raw).expanduser().resolve()
+
+
+SHARED = _stand_path()
+MEDIA = _option_path("QA_MEDIA", SHARED / "media")
+MPV = _option_path("QA_MPV", SHARED / "tools" / "AppDir" / "bin" / "mpv")
+HOMES = _option_path("QA_HOMES", SHARED / "homes")
 
 #: Громкость по умолчанию для стенда: слышно, но без риска для слуха.
 SAFE_TEST_VOLUME = 30
 
 
+def check_stand() -> None:
+    """Проверяет готовность стенда; иначе — понятное сообщение."""
+    problems: list[str] = []
+    if not MEDIA.is_dir():
+        problems.append(
+            f"каталог с тестовыми треками не найден: {MEDIA}\n"
+            f"    создайте его: python qa/make_media.py {MEDIA}")
+    if not MPV.exists():
+        problems.append(
+            f"mpv не найден: {MPV}\n"
+            f"    укажите путь в переменной QA_MPV")
+    if problems:
+        raise SystemExit("Стенд не готов:\n  - " + "\n  - ".join(problems))
+
+
 def ensure_dirs() -> None:
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     HOMES.mkdir(parents=True, exist_ok=True)
+    check_stand()
 
 
 def qa_home(name: str) -> Path:
