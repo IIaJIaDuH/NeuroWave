@@ -17,6 +17,8 @@ from .viewmodel import PlayerViewModel, UiState
 
 TITLE = "NeuroWave"
 REFRESH_MS = 200
+STATUS_COLOR = "#8b97a8"
+ERROR_COLOR = "#e06c75"
 
 
 class UiUnavailable(RuntimeError):
@@ -130,7 +132,7 @@ def _build_window(vm: PlayerViewModel) -> Any:
     layout.addLayout(output_row)
 
     status = QLabel("Готово")
-    status.setStyleSheet("color: #8b97a8; font-size: 12px;")
+    status.setStyleSheet(f"color: {STATUS_COLOR}; font-size: 12px;")
     status.setWordWrap(True)
     layout.addWidget(status)
     layout.addStretch(1)
@@ -142,13 +144,26 @@ def _build_window(vm: PlayerViewModel) -> Any:
         "dragging": False,
         "length": 0,
         "seekable": False,
+        "error": "",
     }
 
+    def _show_status(text: str, *, error: bool = False) -> None:
+        status.setText(text)
+        status.setStyleSheet(
+            f"color: {ERROR_COLOR if error else STATUS_COLOR}; font-size: 12px;"
+        )
+
     def guarded(action: str, fn: Any) -> None:
+        if state["error"]:
+            # Новое действие снимает прошедшую ошибку: пользователь уже
+            # перешёл к следующему состоянию, жаловаться больше не на что.
+            state["error"] = ""
+            _show_status(action)
         try:
             fn()
         except Exception as exc:
-            status.setText(f"{action}: {exc}")
+            state["error"] = f"{action}: {exc}"
+            _show_status(f"Ошибка: {state['error']}", error=True)
 
     def refresh_outputs(items: list[tuple[str, str]]) -> None:
         current = output.currentData()
@@ -199,9 +214,19 @@ def _build_window(vm: PlayerViewModel) -> Any:
         if snap.output_id != state["output"]:
             state["output"] = snap.output_id
         events = vm.drain()
-        if events:
-            last = events[-1]
-            status.setText(f"{last.name}" + (f" · {last.payload.get('track').label}" if last.payload.get("track") else ""))
+        normal = ""
+        for event in events:
+            if event.name == "command_error":
+                # Ошибка команды из рабочего потока: показывается до
+                # следующего действия и не стирается фоновыми событиями.
+                state["error"] = str(event.payload.get("message") or "не удалось выполнить команду")
+                continue
+            track = event.payload.get("track")
+            normal = event.name + (f" · {track.label}" if track else "")
+        if state["error"]:
+            _show_status(f"Ошибка: {state['error']}", error=True)
+        elif normal:
+            _show_status(normal)
 
     def load_outputs() -> None:
         try:
@@ -254,6 +279,7 @@ def _build_window(vm: PlayerViewModel) -> Any:
     refresh()
     # Для тестов: один кадр обновления без запуска таймера.
     window._refresh = refresh  # type: ignore[attr-defined]
+    window._status = status  # type: ignore[attr-defined]
     window._viewmodel = vm  # type: ignore[attr-defined]
     return window
 

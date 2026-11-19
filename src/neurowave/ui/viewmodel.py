@@ -11,13 +11,18 @@
 
 from __future__ import annotations
 
+import logging
 import queue
+import re
 import threading
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-from ..dispatcher import CommandDispatcher
+from ..dispatcher import Command, CommandDispatcher
 from ..domain import Track
+from ..errors import NeuroWaveError
+
+LOG = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -85,6 +90,58 @@ def _subtitle(track: Track | None) -> str:
     return " — ".join(part for part in parts if part)
 
 
+# --- D-05: ошибки команд для строки статуса ----------------------------
+# Диспетчер живёт в своём потоке, поэтому сюда приходит уже готовый текст:
+# никаких объектов исключений, трассировок и Qt.
+_COMMAND_ERROR_TITLES = {
+    "output": "не удалось выбрать аудиовыход",
+    "seek": "не удалось перемотать трек",
+    "profile": "не удалось применить профиль звука",
+    "apply-profile": "не удалось применить профиль звука",
+    "save-profile": "не удалось сохранить профиль звука",
+    "delete-profile": "не удалось удалить профиль звука",
+    "mode": "не удалось переключить режим обработки",
+    "volume": "не удалось изменить громкость",
+    "toggle": "не удалось переключить воспроизведение",
+    "next": "не удалось переключить трек",
+    "previous": "не удалось переключить трек",
+    "stop": "не удалось остановить воспроизведение",
+    "wave": "не удалось запустить волну",
+}
+_DEFAULT_COMMAND_ERROR = "не удалось выполнить команду"
+_ERROR_TEXT_LIMIT = 300
+_SECRET_PATTERNS = (
+    re.compile(r"(?i)\b(bearer)\s+[^\s,;]+"),
+    re.compile(
+        r"(?i)\b(access[_-]?token|refresh[_-]?token|token|api[_-]?key|authorization|password|secret)"
+        r"\b\s*[=:]\s*[^\s,;]+"
+    ),
+)
+
+
+def _sanitize_error_text(text: object) -> str:
+    """Однострочный безопасный текст: без секретов, переводов строк и хвостов."""
+    clean = " ".join(str(text).split())
+    for pattern in _SECRET_PATTERNS:
+        clean = pattern.sub(r"\1 ***", clean)
+    clean = clean.strip(" .;,")
+    if len(clean) > _ERROR_TEXT_LIMIT:
+        clean = clean[: _ERROR_TEXT_LIMIT - 1].rstrip() + "…"
+    return clean
+
+
+def _command_error_message(command: Command) -> str:
+    """Понятное пользователю сообщение без внутренностей исключения."""
+    title = _COMMAND_ERROR_TITLES.get(command.name, _DEFAULT_COMMAND_ERROR)
+    error = command.error
+    if isinstance(error, NeuroWaveError):
+        detail = _sanitize_error_text(error)
+        if detail:
+            return f"{title} — {detail}"
+    # Неизвестное исключение: только общий текст, подробности — в лог.
+    return title
+
+
 def _duration(track: Track | None) -> tuple[int, bool]:
     """Длительность для GUI: число и признак достоверности.
 
@@ -118,12 +175,41 @@ class PlayerViewModel:
         self._stop = threading.Event()
         self._poller: threading.Thread | None = None
         self.last_error: str | None = None
+        self._closed = False
+        add_listener = getattr(self.dispatcher, "add_error_listener", None)
+        if callable(add_listener):
+            add_listener(self._on_command_error)
         player.add_listener(self.on_event)
 
     # --- события -------------------------------------------------------
     def on_event(self, name: str, payload: dict[str, Any] | None = None) -> None:
         """Вызывается из аудиопотока: только очередь, без виджетов."""
         self._events.put(PendingEvent(name, dict(payload or {})))
+
+    def _on_command_error(self, command: Command) -> None:
+        """Ошибка команды из рабочего потока: очередь и `last_error`.
+
+        Здесь нельзя трогать Qt: окно забирает событие через :meth:`drain`
+        в GUI-потоке. Объект исключения в очередь не попадает.
+        """
+        if self._closed:
+            return
+        message = _command_error_message(command)
+        self.last_error = message
+        if not isinstance(command.error, NeuroWaveError):
+            LOG.debug(
+                "Команда %s завершилась неожиданной ошибкой", command.name, exc_info=command.error
+            )
+        self._events.put(
+            PendingEvent(
+                name="command_error",
+                payload={
+                    "command": command.name,
+                    "message": message,
+                    "command_id": command.id,
+                },
+            )
+        )
 
     def drain(self) -> list[PendingEvent]:
         events: list[PendingEvent] = []
@@ -276,5 +362,10 @@ class PlayerViewModel:
 
     # --- жизненный цикл ------------------------------------------------
     def close(self) -> None:
+        """Отписаться от ошибок и остановить фоновые потоки."""
+        self._closed = True
+        remove_listener = getattr(self.dispatcher, "remove_error_listener", None)
+        if callable(remove_listener):
+            remove_listener(self._on_command_error)
         self.stop_polling()
         self.dispatcher.shutdown()

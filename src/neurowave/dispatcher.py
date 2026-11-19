@@ -66,6 +66,8 @@ class CommandDispatcher:
         self._generation = 0
         self._lock = threading.Lock()
         self._on_error = on_error
+        self._error_listeners: list[Callable[[Command], None]] = []
+        self._error_listeners_lock = threading.Lock()
         self.default_timeout = default_timeout
         self._closed = False
         self._active = 0
@@ -135,6 +137,27 @@ class CommandDispatcher:
             raise DispatcherError(f"Команда {command.name} отменена")
         return command.result
 
+    def add_error_listener(self, listener: Callable[[Command], None]) -> None:
+        """Подписать слушателя на ошибки команд.
+
+        `on_error` из конструктора остаётся и вызывается первым: подписка
+        дополняет его, а не перезаписывает чужой callback. Слушатель
+        вызывается в рабочем потоке, поэтому он обязан быть быстрым и не
+        трогать Qt: только очередь, счётчики и тому подобное.
+        """
+        if not callable(listener):
+            raise TypeError("Слушатель ошибок должен быть вызываемым")
+        with self._error_listeners_lock:
+            if listener not in self._error_listeners:
+                self._error_listeners.append(listener)
+
+    def remove_error_listener(self, listener: Callable[[Command], None]) -> None:
+        with self._error_listeners_lock:
+            try:
+                self._error_listeners.remove(listener)
+            except ValueError:
+                return
+
     def cancel_pending(self, keep_generation: int | None = None) -> int:
         """Отменить ещё не начатые команды старого поколения."""
         keep = self._generation if keep_generation is None else keep_generation
@@ -193,11 +216,7 @@ class CommandDispatcher:
         except BaseException as exc:  # ошибка команды не должна убивать поток
             command.error = exc
             self.stats["failed"] += 1
-            if self._on_error is not None:
-                try:
-                    self._on_error(command)
-                except Exception:
-                    pass
+            self._notify_error(command)
         finally:
             command.finished_at = time.monotonic()
             self._active -= 1
@@ -205,6 +224,19 @@ class CommandDispatcher:
                 if command.duration_ms > command.timeout * 1000:
                     self.stats["slow"] += 1
             command.done.set()
+
+    def _notify_error(self, command: Command) -> None:
+        """Сообщить об ошибке всем подписчикам, не роняя рабочий поток."""
+        with self._error_listeners_lock:
+            listeners = list(self._error_listeners)
+        if self._on_error is not None:
+            listeners.insert(0, self._on_error)
+        for listener in listeners:
+            try:
+                listener(command)
+            except Exception:
+                # Ошибка одного подписчика не должна убивать исполнитель.
+                continue
 
     @property
     def peak_concurrency(self) -> int:
