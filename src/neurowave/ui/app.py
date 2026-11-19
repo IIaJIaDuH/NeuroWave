@@ -34,8 +34,14 @@ def is_available() -> tuple[bool, str]:
     return True, ""
 
 
-def _mmss(milliseconds: int) -> str:
-    seconds = max(0, milliseconds // 1000)
+def _mmss(milliseconds: int | None) -> str:
+    """Время в ``м:сс``; неизвестная длительность — ``--:--``.
+
+    Маркер совпадает с :func:`neurowave.domain.format_duration`.
+    """
+    if milliseconds is None:
+        return "--:--"
+    seconds = max(0, int(milliseconds) // 1000)
     return f"{seconds // 60}:{seconds % 60:02d}"
 
 
@@ -130,7 +136,13 @@ def _build_window(vm: PlayerViewModel) -> Any:
     layout.addStretch(1)
     window.setCentralWidget(central)
 
-    state = {"profile": "", "output": "", "dragging": False, "length": 0}
+    state = {
+        "profile": "",
+        "output": "",
+        "dragging": False,
+        "length": 0,
+        "seekable": False,
+    }
 
     def guarded(action: str, fn: Any) -> None:
         try:
@@ -151,10 +163,14 @@ def _build_window(vm: PlayerViewModel) -> Any:
 
     def refresh() -> None:
         snap = vm.snapshot()
-        state["length"] = snap.duration_ms
+        seekable = snap.duration_known and snap.duration_ms > 0
+        state["seekable"] = seekable
+        state["length"] = snap.duration_ms if seekable else 0
         title.setText(snap.title)
         subtitle.setText(snap.subtitle or ("Источник: " + snap.quality if snap.quality else "Волна ещё не запущена"))
-        time_label.setText(f"{_mmss(snap.position_ms)} / {_mmss(snap.duration_ms)}")
+        duration_text = _mmss(snap.duration_ms if snap.duration_known else None)
+        time_label.setText(f"{_mmss(snap.position_ms)} / {duration_text}")
+        seek.setEnabled(seekable)
         if not state["dragging"]:
             seek.blockSignals(True)
             seek.setValue(int(snap.progress * 1000))
@@ -214,6 +230,10 @@ def _build_window(vm: PlayerViewModel) -> Any:
 
     def _seek_released() -> None:
         state["dragging"] = False
+        # Длительность неизвестна или нулевая: перемотка недоступна, и
+        # отпускание ползунка не должно отправлять ложный seek(0).
+        if not state["seekable"] or state["length"] <= 0:
+            return
         guarded("Перемотка", lambda: vm.seek(int(seek.value() * state["length"] / 1000)))
 
     profile.currentIndexChanged.connect(

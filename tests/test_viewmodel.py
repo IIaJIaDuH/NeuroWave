@@ -139,3 +139,67 @@ def test_state_serializes_for_debugging(vm) -> None:
     assert data["status"] == "idle"
     assert set(data) >= {"title", "volume", "profile_id", "output_id"}
     assert UiState().progress == 0.0
+
+
+# --- D-06: неизвестная длительность -----------------------------------
+def test_snapshot_marks_unknown_duration_and_keeps_numbers_safe(vm) -> None:
+    model, player, _ = vm
+    player.play_tracks([make_track(1, duration_ms=None)])
+    model.set_position(15_000)
+    state = model.snapshot()
+    assert state.status == "playing"
+    assert state.is_playing is True
+    assert state.duration_known is False
+    assert state.duration_ms == 0  # число, а не None: GUI не делит None
+    assert state.progress == 0.0
+    assert state.position_ms == 15_000
+
+
+def test_snapshot_distinguishes_known_zero_duration(vm) -> None:
+    model, player, _ = vm
+    player.play_tracks([make_track(1, duration_ms=0)])
+    state = model.snapshot()
+    assert state.duration_known is True
+    assert state.duration_ms == 0
+    assert state.progress == 0.0
+
+
+def test_snapshot_treats_empty_queue_as_known_zero(vm) -> None:
+    model, _, _ = vm
+    state = model.snapshot()
+    assert state.duration_known is True
+    assert state.duration_ms == 0
+    assert state.progress == 0.0
+
+
+def test_snapshot_keeps_long_duration(vm) -> None:
+    model, player, _ = vm
+    player.play_tracks([make_track(1, duration_ms=6 * 3_600_000)])
+    model.set_position(3_600_000)
+    state = model.snapshot()
+    assert state.duration_known is True
+    assert state.duration_ms == 21_600_000
+    assert 0.16 < state.progress < 0.17
+
+
+def test_state_dict_exposes_duration_known(vm) -> None:
+    import json
+
+    model, player, _ = vm
+    player.play_tracks([make_track(1, duration_ms=None)])
+    data = model.snapshot().to_dict()
+    assert data["duration_known"] is False
+    assert data["duration_ms"] == 0
+    json.dumps(data)  # снимок остаётся сериализуемым для отладки
+
+
+def test_hundred_snapshots_with_unknown_duration(vm) -> None:
+    model, player, _ = vm
+    player.play_tracks([make_track(1, duration_ms=None)])
+    model.set_position(15_000)
+    for _ in range(100):
+        state = model.snapshot()
+        assert state.title == "Song 1"
+        assert state.duration_ms == 0
+        assert state.progress == 0.0
+        assert state.volume == 80
