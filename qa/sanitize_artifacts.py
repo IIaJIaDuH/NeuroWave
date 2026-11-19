@@ -32,6 +32,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+def _join(*parts: str) -> str:
+    """Склейка фрагментов: шаблоны не должны совпадать сами с собой."""
+    return "".join(parts)
+
+
 #: Статические замены: регулярное выражение -> нейтральный плейсхолдер.
 STATIC_RULES: list[tuple[str, str]] = [
     # PipeWire-идентификатор Bluetooth-устройства (нейтральное имя).
@@ -54,11 +59,6 @@ STATIC_RULES: list[tuple[str, str]] = [
 ]
 
 #: Имена/значения, которые нельзя публиковать, даже если это не путь.
-def _join(*parts: str) -> str:
-    """Склейка фрагментов: шаблоны не должны совпадать сами с собой."""
-    return "".join(parts)
-
-
 FORBIDDEN = (_join("/", "home", "/"), _join("/", "root", "/"),
              _join("bluez", "_output."), "CARD=NVidia", "CARD=Generic")
 
