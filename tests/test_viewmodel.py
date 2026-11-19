@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import threading
 import time
 
 import pytest
@@ -13,6 +14,7 @@ import pytest
 from neurowave.audio import NullBackend
 from neurowave.config import Settings
 from neurowave.dispatcher import CommandDispatcher
+from neurowave.errors import PlayerError
 from neurowave.player import PlayerService
 from neurowave.ui.viewmodel import PlayerViewModel, UiState
 from tests.conftest import FakeAdapter, make_track
@@ -203,3 +205,172 @@ def test_hundred_snapshots_with_unknown_duration(vm) -> None:
         assert state.duration_ms == 0
         assert state.progress == 0.0
         assert state.volume == 80
+
+
+# --- D-05: ошибки асинхронных команд -----------------------------------
+def _fail_with(player, name: str, error: BaseException) -> None:
+    """Проваливать одну команду плеера, как отключённое устройство."""
+
+    def boom(*_args, **_kwargs):
+        raise error
+
+    setattr(player, name, boom)
+
+
+def _error_events(model) -> list:
+    return [event for event in model.drain() if event.name == "command_error"]
+
+
+def test_command_error_reaches_viewmodel_and_queue(vm) -> None:
+    model, player, _ = vm
+    _fail_with(player, "set_output", PlayerError("Нет такого аудиовыхода: pulse/dead"))
+
+    model.set_output("pulse/dead")
+    assert model.dispatcher.wait_idle(3)
+
+    errors = _error_events(model)
+    assert len(errors) == 1
+    payload = errors[0].payload
+    assert set(payload) == {"command", "message", "command_id"}
+    assert payload["command"] == "output"
+    assert isinstance(payload["command_id"], int)
+    assert payload["message"] == (
+        "не удалось выбрать аудиовыход — Нет такого аудиовыхода: pulse/dead"
+    )
+    assert model.last_error == payload["message"]
+    assert model.dispatcher.stats["failed"] == 1
+
+
+def test_unknown_command_error_hides_details_but_keeps_text_safe(vm) -> None:
+    model, player, _ = vm
+    _fail_with(player, "set_output", RuntimeError("внутренний сбой token=SECRET123"))
+
+    model.set_output("pulse/dead")
+    assert model.dispatcher.wait_idle(3)
+
+    message = _error_events(model)[0].payload["message"]
+    assert message == "не удалось выбрать аудиовыход"
+    assert "SECRET123" not in message
+    assert "Traceback" not in message
+    assert model.last_error == message
+
+
+def test_expected_error_text_is_redacted(vm) -> None:
+    model, player, _ = vm
+    _fail_with(
+        player,
+        "set_output",
+        PlayerError("401: Bearer abcdef123456, access_token=deadbeef"),
+    )
+
+    model.set_output("pulse/dead")
+    assert model.dispatcher.wait_idle(3)
+
+    message = _error_events(model)[0].payload["message"]
+    assert "не удалось выбрать аудиовыход" in message
+    assert "abcdef123456" not in message
+    assert "deadbeef" not in message
+    assert "***" in message
+
+
+def test_several_errors_are_delivered_in_order(vm) -> None:
+    model, player, _ = vm
+    _fail_with(player, "seek", PlayerError("mpv не отвечает"))
+    _fail_with(player, "set_output", PlayerError("устройство недоступно"))
+
+    model.seek(1000)
+    model.set_output("pulse/dead")
+    assert model.dispatcher.wait_idle(3)
+
+    errors = _error_events(model)
+    assert [event.payload["command"] for event in errors] == ["seek", "output"]
+    assert model.last_error == errors[-1].payload["message"]
+    assert model.dispatcher.stats["failed"] == 2
+
+
+def test_successful_command_after_error_is_not_reported(vm) -> None:
+    model, player, backend = vm
+    player.play_tracks([make_track(1)])
+    original = player.toggle_pause
+    _fail_with(player, "toggle_pause", PlayerError("плеер занят"))
+
+    model.toggle()
+    assert model.dispatcher.wait_idle(3)
+    assert _error_events(model)
+
+    player.toggle_pause = original
+    model.toggle()
+    assert model.dispatcher.wait_idle(3)
+    assert _error_events(model) == []
+    assert backend.is_playing() is False
+
+
+def test_cancelled_navigation_does_not_report_error(vm) -> None:
+    model, player, _ = vm
+    player.play_tracks([make_track(1), make_track(2)])
+    gate = threading.Event()
+    started = threading.Event()
+
+    def blocker() -> None:
+        started.set()
+        gate.wait(5)
+
+    running = model.dispatcher.submit("blocker", blocker)
+    assert started.wait(2)
+    model.next()
+    model.next()
+    gate.set()
+
+    assert running.done.wait(3)
+    assert model.dispatcher.wait_idle(3)
+    assert model.dispatcher.stats["cancelled"] >= 1
+    assert _error_events(model) == []
+    assert model.last_error is None
+
+
+def test_external_dispatcher_keeps_its_own_error_handler() -> None:
+    legacy: list[str] = []
+    dispatcher = CommandDispatcher(on_error=lambda command: legacy.append(command.name))
+    player = PlayerService(
+        adapter=FakeAdapter(), backend=NullBackend(), settings=Settings(), prefetch=False
+    )
+    model = PlayerViewModel(player, dispatcher=dispatcher)
+    try:
+        _fail_with(player, "toggle_pause", PlayerError("плеер занят"))
+        model.toggle()
+        assert dispatcher.wait_idle(3)
+        assert legacy == ["toggle"]
+        errors = _error_events(model)
+        assert len(errors) == 1
+        assert "не удалось переключить воспроизведение" in errors[0].payload["message"]
+    finally:
+        model.close()
+
+
+def test_close_releases_error_subscription() -> None:
+    class RecordingDispatcher(CommandDispatcher):
+        def __init__(self) -> None:
+            super().__init__()
+            self.added: list = []
+            self.removed: list = []
+
+        def add_error_listener(self, listener) -> None:
+            self.added.append(listener)
+            super().add_error_listener(listener)
+
+        def remove_error_listener(self, listener) -> None:
+            self.removed.append(listener)
+            super().remove_error_listener(listener)
+
+    dispatcher = RecordingDispatcher()
+    player = PlayerService(
+        adapter=FakeAdapter(), backend=NullBackend(), settings=Settings(), prefetch=False
+    )
+    model = PlayerViewModel(player, dispatcher=dispatcher)
+    assert len(dispatcher.added) == 1
+
+    model.close()
+
+    assert dispatcher.removed == dispatcher.added
+    assert dispatcher._error_listeners == []
+    assert dispatcher._thread.is_alive() is False
