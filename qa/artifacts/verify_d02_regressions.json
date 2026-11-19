@@ -1,0 +1,158 @@
+{
+  "label": "fix",
+  "sha": "067c7f90540ed4e40598435874d6ab8192821579",
+  "results": [
+    {
+      "command": "<REPO>/.venv/bin/pytest tests/test_config_recovery.py",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_s": 0.9,
+      "stdout_tail": "...............................................                          [100%]\n47 passed in 0.71s\n",
+      "stderr_tail": "",
+      "passed": 47,
+      "failed": null,
+      "errors": null,
+      "name": "config_recovery",
+      "collected": 47
+    },
+    {
+      "command": "<REPO>/.venv/bin/pytest tests/test_config_cli.py tests/test_cli_contract.py tests/test_cli_architecture.py",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_s": 1.4,
+      "stdout_tail": "........................................................................ [ 66%]\n.....................................                                    [100%]\n109 passed in 1.23s\n",
+      "stderr_tail": "",
+      "passed": 109,
+      "failed": null,
+      "errors": null,
+      "name": "cli_contract",
+      "collected": 109
+    },
+    {
+      "command": "<REPO>/.venv/bin/pytest -m not integration",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_s": 26.4,
+      "stdout_tail": "........................................................................ [ 11%]\n........................................................................ [ 22%]\n........................................................................ [ 33%]\n........................................................................ [ 44%]\n........................................................................ [ 55%]\n........................................................................ [ 66%]\n........................................................................ [ 77%]\n........................................................................ [ 88%]\n........................................................................ [ 99%]\n....                                                                     [100%]\n652 passed, 21 deselected in 26.15s\n",
+      "stderr_tail": "",
+      "passed": 652,
+      "failed": null,
+      "errors": null,
+      "name": "all_not_integration",
+      "collected": 652
+    },
+    {
+      "command": "<REPO>/.venv/bin/python -m compileall -q src tests",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_s": 0.0,
+      "stdout_tail": "",
+      "stderr_tail": "",
+      "passed": null,
+      "failed": null,
+      "errors": null,
+      "name": "compileall",
+      "collected": null
+    },
+    {
+      "command": "git diff --check",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_s": 0.0,
+      "stdout_tail": "",
+      "stderr_tail": "",
+      "passed": null,
+      "failed": null,
+      "errors": null,
+      "name": "git_diff_check",
+      "collected": null
+    },
+    {
+      "command": "<REPO>/.venv/bin/pytest -m integration",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_s": 11.5,
+      "stdout_tail": ".....................                                                    [100%]\n21 passed, 652 deselected in 11.34s\n",
+      "stderr_tail": "",
+      "passed": 21,
+      "failed": null,
+      "errors": null,
+      "name": "integration_mpv",
+      "collected": 21
+    },
+    {
+      "command": "<REPO>/.venv/bin/pytest -m integration",
+      "exit_code": 0,
+      "timed_out": false,
+      "duration_s": 11.7,
+      "stdout_tail": ".....................                                                    [100%]\n21 passed, 652 deselected in 11.47s\n",
+      "stderr_tail": "",
+      "passed": 21,
+      "failed": null,
+      "errors": null,
+      "name": "integration_qt_offscreen",
+      "collected": 21
+    },
+    {
+      "name": "cli_parser_flags",
+      "cases": [
+        {
+          "args": [
+            "--json",
+            "doctor"
+          ],
+          "exit_code": 0,
+          "stdout_head": "[\n  {\n    \"check\": \"Python ≥ 3.10\",\n    \"ok\": true,\n    \"detail\": \"3.12.3\"\n  },\n  {\n    \"check\": \"mpv\",\n    \"ok\": true,\n    \"detail\": \"<QA_STAND>/tools/AppDir/bin/mpv\"\n  },\n  {\n    \"check\": \"keyring\","
+        },
+        {
+          "args": [
+            "doctor",
+            "--json"
+          ],
+          "exit_code": 2,
+          "stdout_head": ""
+        },
+        {
+          "args": [
+            "--version"
+          ],
+          "exit_code": 0,
+          "stdout_head": "NeuroWave 0.1.0\n"
+        }
+      ]
+    },
+    {
+      "name": "yandex_diagnostics",
+      "checks": [
+        {
+          "check": "doctor --json — корректный массив",
+          "ok": true,
+          "detail": "проверок: 9"
+        },
+        {
+          "check": "в наборе есть проверка провайдера",
+          "ok": true,
+          "detail": "Python ≥ 3.10, mpv, keyring, Каталоги XDG, Конфигурация, tinytag, Провайдер, Токен, Сеть"
+        },
+        {
+          "check": "doctor без авторизации Яндекс Музыки завершается без traceback",
+          "ok": true,
+          "detail": "код 0"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "checks": 9,
+    "failed_commands": 0,
+    "tests_collected": {
+      "config_recovery": 47,
+      "cli_contract": 109,
+      "all_not_integration": 652,
+      "compileall": null,
+      "git_diff_check": null,
+      "integration_mpv": 21,
+      "integration_qt_offscreen": 21
+    }
+  }
+}

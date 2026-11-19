@@ -1,0 +1,534 @@
+{
+  "label": "fix",
+  "sha": "067c7f90540ed4e40598435874d6ab8192821579",
+  "cases": [
+    {
+      "case_id": "volume_string",
+      "plain": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "checks_total": 10,
+        "failed_checks": [
+          "✗ Конфигурация: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_doctor_volume_string/config/config.json"
+        ],
+        "mentions_config": true,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_volume_string"
+          },
+          {
+            "check": "Конфигурация",
+            "ok": false,
+            "detail": "Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_doctor_volume_string/config/config.json"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": true,
+        "config_check_ok": false,
+        "failed_checks": [
+          "Конфигурация"
+        ],
+        "checks_count": 9,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    },
+    {
+      "case_id": "volume_null",
+      "plain": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "checks_total": 10,
+        "failed_checks": [
+          "✗ Конфигурация: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено None. Файл: <QA_HOMES>/verify_d02_doctor_volume_null/config/config.json"
+        ],
+        "mentions_config": true,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_volume_null"
+          },
+          {
+            "check": "Конфигурация",
+            "ok": false,
+            "detail": "Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено None. Файл: <QA_HOMES>/verify_d02_doctor_volume_null/config/config.json"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": true,
+        "config_check_ok": false,
+        "failed_checks": [
+          "Конфигурация"
+        ],
+        "checks_count": 9,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    },
+    {
+      "case_id": "quota_string",
+      "plain": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "checks_total": 10,
+        "failed_checks": [
+          "✗ Конфигурация: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено 'много'. Файл: <QA_HOMES>/verify_d02_doctor_quota_string/config/config.json"
+        ],
+        "mentions_config": true,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_quota_string"
+          },
+          {
+            "check": "Конфигурация",
+            "ok": false,
+            "detail": "Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено 'много'. Файл: <QA_HOMES>/verify_d02_doctor_quota_string/config/config.json"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": true,
+        "config_check_ok": false,
+        "failed_checks": [
+          "Конфигурация"
+        ],
+        "checks_count": 9,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    },
+    {
+      "case_id": "quota_null",
+      "plain": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "checks_total": 10,
+        "failed_checks": [
+          "✗ Конфигурация: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено None. Файл: <QA_HOMES>/verify_d02_doctor_quota_null/config/config.json"
+        ],
+        "mentions_config": true,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_quota_null"
+          },
+          {
+            "check": "Конфигурация",
+            "ok": false,
+            "detail": "Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено None. Файл: <QA_HOMES>/verify_d02_doctor_quota_null/config/config.json"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": true,
+        "config_check_ok": false,
+        "failed_checks": [
+          "Конфигурация"
+        ],
+        "checks_count": 9,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    },
+    {
+      "case_id": "ttl_string",
+      "plain": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "checks_total": 10,
+        "failed_checks": [
+          "✗ Конфигурация: Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено 'неделя'. Файл: <QA_HOMES>/verify_d02_doctor_ttl_string/config/config.json"
+        ],
+        "mentions_config": true,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_ttl_string"
+          },
+          {
+            "check": "Конфигурация",
+            "ok": false,
+            "detail": "Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено 'неделя'. Файл: <QA_HOMES>/verify_d02_doctor_ttl_string/config/config.json"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": true,
+        "config_check_ok": false,
+        "failed_checks": [
+          "Конфигурация"
+        ],
+        "checks_count": 9,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    },
+    {
+      "case_id": "broken_json",
+      "plain": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "checks_total": 10,
+        "failed_checks": [
+          "✗ Конфигурация: Не удалось прочитать <QA_HOMES>/verify_d02_doctor_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)"
+        ],
+        "mentions_config": true,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 1,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_broken_json"
+          },
+          {
+            "check": "Конфигурация",
+            "ok": false,
+            "detail": "Не удалось прочитать <QA_HOMES>/verify_d02_doctor_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": true,
+        "config_check_ok": false,
+        "failed_checks": [
+          "Конфигурация"
+        ],
+        "checks_count": 9,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    }
+  ],
+  "provider_variant": {
+    "with_provider_flag": {
+      "exit_code": 2,
+      "has_traceback": false,
+      "stdout": "",
+      "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_doctor_provider/config/config.json\n"
+    },
+    "without_provider_flag": {
+      "exit_code": 2,
+      "has_traceback": false,
+      "stdout": "",
+      "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_doctor_provider/config/config.json\n"
+    },
+    "note": "Известное замечание P2: без явного --provider команда status обращается к провайдеру по умолчанию (yandex) и может завершиться с ошибкой авторизации раньше, чем сообщит о повреждённой конфигурации; регрессией D-02 это не является."
+  },
+  "summary": {
+    "cases": 6,
+    "unhandled_tracebacks": 0,
+    "doctor_json_valid": 6,
+    "doctor_json_array": 6,
+    "doctor_json_keys_ok": 6,
+    "config_check_failed": 6,
+    "doctor_exit_code_1": 6
+  }
+}

@@ -1,0 +1,711 @@
+{
+  "sha": "067c7f90540ed4e40598435874d6ab8192821579",
+  "per_command_sha256": [
+    {
+      "case_id": "volume_string",
+      "is_p1_case": true,
+      "config_sha256_before": "c85d3f58cad32db55c076d3963d41544c48fe1542ceea9eda6abe96236cb26e0",
+      "config_sha256_after": "c85d3f58cad32db55c076d3963d41544c48fe1542ceea9eda6abe96236cb26e0",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "volume_null",
+      "is_p1_case": true,
+      "config_sha256_before": "8883beb61789348fa3b02b1d725b63f1d8f771e8e1084d592da96227410f6a95",
+      "config_sha256_after": "8883beb61789348fa3b02b1d725b63f1d8f771e8e1084d592da96227410f6a95",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "volume_negative",
+      "is_p1_case": false,
+      "config_sha256_before": "8ef298794b8b7c1307b1b2e56583a9749f1fbe3859babd664f91592c09d50e0d",
+      "config_sha256_after": "410cfd9ba1f7fa6a382ec112041e95e1e2f91f0b2d600733df2bc061deccadd5",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "volume_too_large",
+      "is_p1_case": false,
+      "config_sha256_before": "4afd942d5953e3b76775cd465a1056392ac7fffc0039603a087b9609b4e3e8af",
+      "config_sha256_after": "b065e564d5d51cf07ba736f4c1d3bbf5e2dfc1653469de6218057e3195ba4c2a",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "volume_float",
+      "is_p1_case": false,
+      "config_sha256_before": "372aa8fcfb76455893a9a6ec3b2b45769e85ffae97054859e5fc456a74251b1f",
+      "config_sha256_after": "85ace3364ecaba9127b9f238ca828f7233a0523b90920dc6c7bf40d052063e4b",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "volume_bool",
+      "is_p1_case": false,
+      "config_sha256_before": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+      "config_sha256_after": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "quota_string",
+      "is_p1_case": true,
+      "config_sha256_before": "a57b7d5601da68b20458be834875c158944bb8ea74e95a5f9988de16b3ec754c",
+      "config_sha256_after": "a57b7d5601da68b20458be834875c158944bb8ea74e95a5f9988de16b3ec754c",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "quota_null",
+      "is_p1_case": true,
+      "config_sha256_before": "5ea0a575168da29d24f6f670596001e218094d950a221fe7ef9f19bdd90d4ed4",
+      "config_sha256_after": "5ea0a575168da29d24f6f670596001e218094d950a221fe7ef9f19bdd90d4ed4",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "quota_negative",
+      "is_p1_case": false,
+      "config_sha256_before": "33ed31d76ff5399a94836a2059906fe47dc077bf8f6c9f696475a734cafb6e4a",
+      "config_sha256_after": "ab24ad37a1396eddab9628bf2c672101f880b10847504df3b73d5466e3376b0c",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "ttl_string",
+      "is_p1_case": true,
+      "config_sha256_before": "c54f8a8afdd4490b129232941c79c69cc95b8886e5a6c4eb3f45afb0588c2f0f",
+      "config_sha256_after": "c54f8a8afdd4490b129232941c79c69cc95b8886e5a6c4eb3f45afb0588c2f0f",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "shuffle_string",
+      "is_p1_case": false,
+      "config_sha256_before": "d4d425f226392ef8325312b16f34c04197c655e61f6bb81b62923e4a540ec0f3",
+      "config_sha256_after": "dbf6d2b7998fb547f61d149447f3698b5bf5b6f4637da63b20edc55ad8d35d73",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "repeat_number",
+      "is_p1_case": false,
+      "config_sha256_before": "ac4b64127cbff04239984bc5c3698458d28b56da5c6d8c2a2144cf2835aad70d",
+      "config_sha256_after": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "repeat_unknown",
+      "is_p1_case": false,
+      "config_sha256_before": "614fa98c25f010a4c57cde020fb27891c94446d20c42461ac0ac347fabd6131c",
+      "config_sha256_after": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "provider_unknown",
+      "is_p1_case": false,
+      "config_sha256_before": "596cf1d80e199889d178cb8d3aaf99121249e6b1dfad4a649a7ac766a6b2c97a",
+      "config_sha256_after": "9084682d14ab323676ee6c0d52ed23facf7d1f4e4c8a55dd6f0e66724e6df484",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "local_dir_missing",
+      "is_p1_case": false,
+      "config_sha256_before": "8099cd342195fd8109b284faabcbd34ede6844b5cd1588d7f4bad6bffadfe2f5",
+      "config_sha256_after": "f3b366b365c53a741a163ece2ec25d0bb87f0f72dc0daec1e696f920200f4af2",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "custom_profiles_broken",
+      "is_p1_case": false,
+      "config_sha256_before": "afb4803331976026ad8a480b7f07e4244c4cd8a97a0528e990ec6fe4fd363d16",
+      "config_sha256_after": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "dsp_profile_unknown",
+      "is_p1_case": false,
+      "config_sha256_before": "f6b14b4a9bba8ea0bbcff5a8025d8f29efb76c4c836c88d28442979286edbfe9",
+      "config_sha256_after": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "extra_fields",
+      "is_p1_case": false,
+      "config_sha256_before": "4c78284121d29ecbe58580b67b6de37d1ccdea24e24c1671fa60da51e658e456",
+      "config_sha256_after": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "empty_object",
+      "is_p1_case": false,
+      "config_sha256_before": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+      "config_sha256_after": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "broken_json",
+      "is_p1_case": false,
+      "config_sha256_before": "b48b18a25e6ca9adbabacf6e0944c8a975bda37495d06153664c8247113a7036",
+      "config_sha256_after": "b48b18a25e6ca9adbabacf6e0944c8a975bda37495d06153664c8247113a7036",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "empty_file",
+      "is_p1_case": false,
+      "config_sha256_before": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "config_sha256_after": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "json_not_object",
+      "is_p1_case": false,
+      "config_sha256_before": "a36b1f2c3f84522dd1005145646617d7054c0851e97c72a039c0bdfac9fa07f3",
+      "config_sha256_after": "a36b1f2c3f84522dd1005145646617d7054c0851e97c72a039c0bdfac9fa07f3",
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "missing_file",
+      "is_p1_case": false,
+      "config_sha256_before": null,
+      "config_sha256_after": "278efab08715e4d7188866cff3e46a9b3ccc15c81e22bba32ba32c17b4abd027",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "config/config.json",
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    },
+    {
+      "case_id": "valid_baseline",
+      "is_p1_case": false,
+      "config_sha256_before": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+      "config_sha256_after": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_lost": false,
+      "token_leaked_to_output": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "damaged_config_preserved": true
+    }
+  ],
+  "p1_damaged_config_preserved": true,
+  "p1_config_not_rewritten": true,
+  "unknown_fields": [
+    {
+      "case_id": "extra_fields",
+      "unknown_keys_before": [
+        "another",
+        "что_то_новое"
+      ],
+      "unknown_keys_after": [
+        "another",
+        "что_то_новое"
+      ],
+      "rewritten_by": [
+        "app"
+      ],
+      "classification": "P2 — штатное сохранение приложения теряет неизвестные поля; повреждение конфигурации к этому отношения не имеет"
+    }
+  ],
+  "edge_values": {
+    "cases": 16,
+    "unhandled_tracebacks": 0,
+    "damaged_config_overwritten": 0,
+    "per_case": [
+      {
+        "case_id": "volume_numeric_string",
+        "expect": "accepted",
+        "observed": "accepted",
+        "config_rewritten": false,
+        "effective_volume": 80,
+        "effective_quota_gb": 2.0
+      },
+      {
+        "case_id": "ttl_numeric_string",
+        "expect": "accepted",
+        "observed": "accepted",
+        "config_rewritten": false,
+        "effective_volume": 40,
+        "effective_quota_gb": 2.0
+      },
+      {
+        "case_id": "volume_999",
+        "expect": "clamped_130",
+        "observed": "clamped_130",
+        "config_rewritten": false,
+        "effective_volume": 100,
+        "effective_quota_gb": 2.0
+      },
+      {
+        "case_id": "volume_negative",
+        "expect": "clamped_0",
+        "observed": "clamped_0",
+        "config_rewritten": false,
+        "effective_volume": 0,
+        "effective_quota_gb": 2.0
+      },
+      {
+        "case_id": "quota_negative",
+        "expect": "accepted",
+        "observed": "accepted",
+        "config_rewritten": false,
+        "effective_volume": 40,
+        "effective_quota_gb": 0.0
+      },
+      {
+        "case_id": "volume_bool",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "quota_bool",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "ttl_bool",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "volume_nan",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "volume_infinity",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "volume_neg_infinity",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "quota_nan",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "quota_infinity",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "ttl_nan",
+        "expect": "controlled_error",
+        "observed": "controlled_error",
+        "config_rewritten": false,
+        "effective_volume": null,
+        "effective_quota_gb": null
+      },
+      {
+        "case_id": "empty_object",
+        "expect": "accepted",
+        "observed": "accepted",
+        "config_rewritten": false,
+        "effective_volume": 40,
+        "effective_quota_gb": 2.0
+      },
+      {
+        "case_id": "missing_file",
+        "expect": "accepted",
+        "observed": "accepted",
+        "config_rewritten": false,
+        "effective_volume": 80,
+        "effective_quota_gb": 2.0
+      }
+    ]
+  },
+  "recovery_after_manual_fix": {
+    "cases_checked": 24,
+    "all_status_exit_zero": true,
+    "all_without_traceback": true,
+    "marker_alive_everywhere": true,
+    "tokens_intact_everywhere": true,
+    "profile_not_deleted": true
+  },
+  "no_token_leak_to_output": true,
+  "no_user_data_loss": true,
+  "no_tokens_lost": true
+}

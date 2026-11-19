@@ -1,0 +1,357 @@
+{
+  "label": "base",
+  "sha": "f02ae29aad5ecd02cc0edfa929d3ac25430f35e3",
+  "cases": [
+    {
+      "case_id": "volume_string",
+      "plain": {
+        "exit_code": 1,
+        "has_traceback": true,
+        "checks_total": 0,
+        "failed_checks": [],
+        "mentions_config": false,
+        "mentions_field": false,
+        "stderr": "Traceback (most recent call last):\n  File \"<REPO>/.venv/bin/neurowave\", line 8, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 110, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 121, in _dispatch\n    return _cmd_doctor(args)\n           ^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 1173, in _cmd_doctor\n    provider_id = _resolve_provider_id(args, ConfigStore(paths).load())\n                                             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 160, in load\n    return Settings.from_dict(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 123, in from_dict\n    settings.volume = settings.clamp_volume(settings.volume)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 96, in clamp_volume\n    return max(0, min(MAX_VOLUME, int(value)))\n                                  ^^^^^^^^^^\nValueError: invalid literal for int() with base 10: 'громко'\n"
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 1,
+        "has_traceback": true,
+        "stderr": "Traceback (most recent call last):\n  File \"<REPO>/.venv/bin/neurowave\", line 8, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 110, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 121, in _dispatch\n    return _cmd_doctor(args)\n           ^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 1173, in _cmd_doctor\n    provider_id = _resolve_provider_id(args, ConfigStore(paths).load())\n                                             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 160, in load\n    return Settings.from_dict(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 123, in from_dict\n    settings.volume = settings.clamp_volume(settings.volume)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 96, in clamp_volume\n    return max(0, min(MAX_VOLUME, int(value)))\n                                  ^^^^^^^^^^\nValueError: invalid literal for int() with base 10: 'громко'\n",
+        "json_parsed": false,
+        "is_array": false,
+        "items": [],
+        "entry_keys_ok": true,
+        "config_check_present": false,
+        "config_check_ok": null,
+        "failed_checks": [],
+        "checks_count": 0,
+        "stdout_clean": false,
+        "parse_error": "Expecting value: line 1 column 1 (char 0)"
+      }
+    },
+    {
+      "case_id": "volume_null",
+      "plain": {
+        "exit_code": 1,
+        "has_traceback": true,
+        "checks_total": 0,
+        "failed_checks": [],
+        "mentions_config": false,
+        "mentions_field": false,
+        "stderr": "Traceback (most recent call last):\n  File \"<REPO>/.venv/bin/neurowave\", line 8, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 110, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 121, in _dispatch\n    return _cmd_doctor(args)\n           ^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 1173, in _cmd_doctor\n    provider_id = _resolve_provider_id(args, ConfigStore(paths).load())\n                                             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 160, in load\n    return Settings.from_dict(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 123, in from_dict\n    settings.volume = settings.clamp_volume(settings.volume)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 96, in clamp_volume\n    return max(0, min(MAX_VOLUME, int(value)))\n                                  ^^^^^^^^^^\nTypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\n"
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 1,
+        "has_traceback": true,
+        "stderr": "Traceback (most recent call last):\n  File \"<REPO>/.venv/bin/neurowave\", line 8, in <module>\n    sys.exit(main())\n             ^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 110, in main\n    return _dispatch(args, parser)\n           ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 121, in _dispatch\n    return _cmd_doctor(args)\n           ^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 1173, in _cmd_doctor\n    provider_id = _resolve_provider_id(args, ConfigStore(paths).load())\n                                             ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 160, in load\n    return Settings.from_dict(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 123, in from_dict\n    settings.volume = settings.clamp_volume(settings.volume)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 96, in clamp_volume\n    return max(0, min(MAX_VOLUME, int(value)))\n                                  ^^^^^^^^^^\nTypeError: int() argument must be a string, a bytes-like object or a real number, not 'NoneType'\n",
+        "json_parsed": false,
+        "is_array": false,
+        "items": [],
+        "entry_keys_ok": true,
+        "config_check_present": false,
+        "config_check_ok": null,
+        "failed_checks": [],
+        "checks_count": 0,
+        "stdout_clean": false,
+        "parse_error": "Expecting value: line 1 column 1 (char 0)"
+      }
+    },
+    {
+      "case_id": "quota_string",
+      "plain": {
+        "exit_code": 0,
+        "has_traceback": false,
+        "checks_total": 9,
+        "failed_checks": [],
+        "mentions_config": false,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 0,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_quota_string"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": false,
+        "config_check_ok": null,
+        "failed_checks": [],
+        "checks_count": 8,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    },
+    {
+      "case_id": "quota_null",
+      "plain": {
+        "exit_code": 0,
+        "has_traceback": false,
+        "checks_total": 9,
+        "failed_checks": [],
+        "mentions_config": false,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 0,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_quota_null"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": false,
+        "config_check_ok": null,
+        "failed_checks": [],
+        "checks_count": 8,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    },
+    {
+      "case_id": "ttl_string",
+      "plain": {
+        "exit_code": 0,
+        "has_traceback": false,
+        "checks_total": 9,
+        "failed_checks": [],
+        "mentions_config": false,
+        "mentions_field": true,
+        "stderr": ""
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 0,
+        "has_traceback": false,
+        "stderr": "",
+        "json_parsed": true,
+        "is_array": true,
+        "items": [
+          {
+            "check": "Python ≥ 3.10",
+            "ok": true,
+            "detail": "3.12.3"
+          },
+          {
+            "check": "mpv",
+            "ok": true,
+            "detail": "<QA_STAND>/tools/AppDir/bin/mpv"
+          },
+          {
+            "check": "keyring",
+            "ok": true,
+            "detail": "нет backend — токен будет в файле 0600"
+          },
+          {
+            "check": "Каталоги XDG",
+            "ok": true,
+            "detail": "<QA_HOMES>/verify_d02_doctor_ttl_string"
+          },
+          {
+            "check": "tinytag",
+            "ok": true,
+            "detail": "2.3.2"
+          },
+          {
+            "check": "Провайдер",
+            "ok": true,
+            "detail": "local — Локальные файлы"
+          },
+          {
+            "check": "Токен",
+            "ok": true,
+            "detail": "не требуется — локальные файлы"
+          },
+          {
+            "check": "Сеть",
+            "ok": true,
+            "detail": "не требуется — файлы на диске"
+          }
+        ],
+        "entry_keys_ok": true,
+        "config_check_present": false,
+        "config_check_ok": null,
+        "failed_checks": [],
+        "checks_count": 8,
+        "stdout_clean": true,
+        "parse_error": null
+      }
+    },
+    {
+      "case_id": "broken_json",
+      "plain": {
+        "exit_code": 2,
+        "has_traceback": false,
+        "checks_total": 0,
+        "failed_checks": [],
+        "mentions_config": false,
+        "mentions_field": false,
+        "stderr": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_doctor_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)\n"
+      },
+      "json_flag_after_subcommand": {
+        "exit_code": 2,
+        "stderr_head": [
+          "neurowave: error: unrecognized arguments: --json"
+        ],
+        "note": "--json — глобальный флаг (до подкоманды); форма после подкоманды отклоняется парсером одинаково на main и на проверяемой ветке."
+      },
+      "json": {
+        "exit_code": 2,
+        "has_traceback": false,
+        "stderr": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_doctor_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)\n",
+        "json_parsed": false,
+        "is_array": false,
+        "items": [],
+        "entry_keys_ok": true,
+        "config_check_present": false,
+        "config_check_ok": null,
+        "failed_checks": [],
+        "checks_count": 0,
+        "stdout_clean": false,
+        "parse_error": "Expecting value: line 1 column 1 (char 0)"
+      }
+    }
+  ],
+  "provider_variant": {
+    "with_provider_flag": {
+      "exit_code": 1,
+      "has_traceback": true,
+      "stdout": "",
+      "stderr": "^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 126, in _dispatch\n    ctx = _context(args)\n          ^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 178, in _context\n    settings = ConfigStore(paths).load()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 160, in load\n    return Settings.from_dict(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 123, in from_dict\n    settings.volume = settings.clamp_volume(settings.volume)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 96, in clamp_volume\n    return max(0, min(MAX_VOLUME, int(value)))\n                                  ^^^^^^^^^^\nValueError: invalid literal for int() with base 10: 'громко'\n"
+    },
+    "without_provider_flag": {
+      "exit_code": 1,
+      "has_traceback": true,
+      "stdout": "",
+      "stderr": "^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 126, in _dispatch\n    ctx = _context(args)\n          ^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/cli.py\", line 178, in _context\n    settings = ConfigStore(paths).load()\n               ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 160, in load\n    return Settings.from_dict(data)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 123, in from_dict\n    settings.volume = settings.clamp_volume(settings.volume)\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<REPO>/src/neurowave/config.py\", line 96, in clamp_volume\n    return max(0, min(MAX_VOLUME, int(value)))\n                                  ^^^^^^^^^^\nValueError: invalid literal for int() with base 10: 'громко'\n"
+    },
+    "note": "Известное замечание P2: без явного --provider команда status обращается к провайдеру по умолчанию (yandex) и может завершиться с ошибкой авторизации раньше, чем сообщит о повреждённой конфигурации; регрессией D-02 это не является."
+  },
+  "summary": {
+    "cases": 6,
+    "unhandled_tracebacks": 4,
+    "doctor_json_valid": 3,
+    "doctor_json_array": 3,
+    "doctor_json_keys_ok": 6,
+    "config_check_failed": 0,
+    "doctor_exit_code_1": 2
+  }
+}

@@ -1,0 +1,3058 @@
+{
+  "label": "fix",
+  "sha": "067c7f90540ed4e40598435874d6ab8192821579",
+  "cases": 24,
+  "runs": 72,
+  "unhandled_tracebacks": 0,
+  "p1_cases": [
+    "volume_string",
+    "volume_null",
+    "quota_string",
+    "quota_null",
+    "ttl_string"
+  ],
+  "results": [
+    {
+      "case_id": "volume_string",
+      "why": "volume = строка",
+      "is_p1_case": true,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 86,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_volume_string/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_volume_string/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 77,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_volume_string\n✗ Конфигурация: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_volume_string/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_volume_string/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_volume_string/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "c85d3f58cad32db55c076d3963d41544c48fe1542ceea9eda6abe96236cb26e0",
+        "bytes": 140,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": \"громко\"\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "c85d3f58cad32db55c076d3963d41544c48fe1542ceea9eda6abe96236cb26e0",
+        "bytes": 140,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": \"громко\"\n}"
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "c85d3f58cad32db55c076d3963d41544c48fe1542ceea9eda6abe96236cb26e0",
+        "bytes": 140,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": \"громко\"\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "c85d3f58cad32db55c076d3963d41544c48fe1542ceea9eda6abe96236cb26e0",
+        "bytes": 140,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": \"громко\"\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "c85d3f58cad32db55c076d3963d41544c48fe1542ceea9eda6abe96236cb26e0",
+        "bytes": 140,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": \"громко\"\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "volume_null",
+      "why": "volume = null",
+      "is_p1_case": true,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 74,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено None. Файл: <QA_HOMES>/verify_d02_volume_null/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено None. Файл: <QA_HOMES>/verify_d02_volume_null/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 75,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_volume_null\n✗ Конфигурация: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено None. Файл: <QA_HOMES>/verify_d02_volume_null/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено None. Файл: <QA_HOMES>/verify_d02_volume_null/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено None. Файл: <QA_HOMES>/verify_d02_volume_null/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "8883beb61789348fa3b02b1d725b63f1d8f771e8e1084d592da96227410f6a95",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": null\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "8883beb61789348fa3b02b1d725b63f1d8f771e8e1084d592da96227410f6a95",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": null\n}"
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "8883beb61789348fa3b02b1d725b63f1d8f771e8e1084d592da96227410f6a95",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": null\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "8883beb61789348fa3b02b1d725b63f1d8f771e8e1084d592da96227410f6a95",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": null\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "8883beb61789348fa3b02b1d725b63f1d8f771e8e1084d592da96227410f6a95",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": null\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.6
+    },
+    {
+      "case_id": "volume_negative",
+      "why": "volume = -5",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 87,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_volume_negative\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 0%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_volume_negative\n✓ Конфигурация: <QA_HOMES>/verify_d02_volume_negative/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 456,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "8ef298794b8b7c1307b1b2e56583a9749f1fbe3859babd664f91592c09d50e0d",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": -5\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "410cfd9ba1f7fa6a382ec112041e95e1e2f91f0b2d600733df2bc061deccadd5",
+        "bytes": 443,
+        "content": "{\n  \"volume\": 0,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "8ef298794b8b7c1307b1b2e56583a9749f1fbe3859babd664f91592c09d50e0d",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": -5\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "8ef298794b8b7c1307b1b2e56583a9749f1fbe3859babd664f91592c09d50e0d",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": -5\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "410cfd9ba1f7fa6a382ec112041e95e1e2f91f0b2d600733df2bc061deccadd5",
+        "bytes": 443,
+        "content": "{\n  \"volume\": 0,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "volume_too_large",
+      "why": "volume = 500",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 84,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_volume_too_large\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 100%\nОграничение: в настройках 130%, применяется 100% — лимитер ещё не подтверждён\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 74,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_volume_too_large\n✓ Конфигурация: <QA_HOMES>/verify_d02_volume_too_large/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 452,
+          "stdout": "",
+          "stderr": "! Громкость ограничена до 100 %: усиление выше 100 % включится только после проверки лимитера. В настройках сохранено 130 %.\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "4afd942d5953e3b76775cd465a1056392ac7fffc0039603a087b9609b4e3e8af",
+        "bytes": 129,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 500\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "b065e564d5d51cf07ba736f4c1d3bbf5e2dfc1653469de6218057e3195ba4c2a",
+        "bytes": 445,
+        "content": "{\n  \"volume\": 130,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "4afd942d5953e3b76775cd465a1056392ac7fffc0039603a087b9609b4e3e8af",
+        "bytes": 129,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 500\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "4afd942d5953e3b76775cd465a1056392ac7fffc0039603a087b9609b4e3e8af",
+        "bytes": 129,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 500\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "b065e564d5d51cf07ba736f4c1d3bbf5e2dfc1653469de6218057e3195ba4c2a",
+        "bytes": 445,
+        "content": "{\n  \"volume\": 130,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "volume_float",
+      "why": "volume = 80.7 (не целое)",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 85,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_volume_float\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_volume_float\n✓ Конфигурация: <QA_HOMES>/verify_d02_volume_float/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 450,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "372aa8fcfb76455893a9a6ec3b2b45769e85ffae97054859e5fc456a74251b1f",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 80.7\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "85ace3364ecaba9127b9f238ca828f7233a0523b90920dc6c7bf40d052063e4b",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 80,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "372aa8fcfb76455893a9a6ec3b2b45769e85ffae97054859e5fc456a74251b1f",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 80.7\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "372aa8fcfb76455893a9a6ec3b2b45769e85ffae97054859e5fc456a74251b1f",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 80.7\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "85ace3364ecaba9127b9f238ca828f7233a0523b90920dc6c7bf40d052063e4b",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 80,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "volume_bool",
+      "why": "volume = true",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено True. Файл: <QA_HOMES>/verify_d02_volume_bool/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено True. Файл: <QA_HOMES>/verify_d02_volume_bool/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 74,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_volume_bool\n✗ Конфигурация: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено True. Файл: <QA_HOMES>/verify_d02_volume_bool/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено True. Файл: <QA_HOMES>/verify_d02_volume_bool/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено True. Файл: <QA_HOMES>/verify_d02_volume_bool/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": true\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": true\n}"
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": true\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": true\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+        "bytes": 130,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": true\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.6
+    },
+    {
+      "case_id": "quota_string",
+      "why": "cache_quota_gb = строка",
+      "is_p1_case": true,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено 'много'. Файл: <QA_HOMES>/verify_d02_quota_string/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено 'много'. Файл: <QA_HOMES>/verify_d02_quota_string/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 74,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_quota_string\n✗ Конфигурация: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено 'много'. Файл: <QA_HOMES>/verify_d02_quota_string/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено 'много'. Файл: <QA_HOMES>/verify_d02_quota_string/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено 'много'. Файл: <QA_HOMES>/verify_d02_quota_string/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "a57b7d5601da68b20458be834875c158944bb8ea74e95a5f9988de16b3ec754c",
+        "bytes": 162,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": \"много\"\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "a57b7d5601da68b20458be834875c158944bb8ea74e95a5f9988de16b3ec754c",
+        "bytes": 162,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": \"много\"\n}"
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "a57b7d5601da68b20458be834875c158944bb8ea74e95a5f9988de16b3ec754c",
+        "bytes": 162,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": \"много\"\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "a57b7d5601da68b20458be834875c158944bb8ea74e95a5f9988de16b3ec754c",
+        "bytes": 162,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": \"много\"\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "a57b7d5601da68b20458be834875c158944bb8ea74e95a5f9988de16b3ec754c",
+        "bytes": 162,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": \"много\"\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.6
+    },
+    {
+      "case_id": "quota_null",
+      "why": "cache_quota_gb = null",
+      "is_p1_case": true,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено None. Файл: <QA_HOMES>/verify_d02_quota_null/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено None. Файл: <QA_HOMES>/verify_d02_quota_null/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 80,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_quota_null\n✗ Конфигурация: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено None. Файл: <QA_HOMES>/verify_d02_quota_null/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено None. Файл: <QA_HOMES>/verify_d02_quota_null/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено None. Файл: <QA_HOMES>/verify_d02_quota_null/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "5ea0a575168da29d24f6f670596001e218094d950a221fe7ef9f19bdd90d4ed4",
+        "bytes": 154,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": null\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "5ea0a575168da29d24f6f670596001e218094d950a221fe7ef9f19bdd90d4ed4",
+        "bytes": 154,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": null\n}"
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "5ea0a575168da29d24f6f670596001e218094d950a221fe7ef9f19bdd90d4ed4",
+        "bytes": 154,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": null\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "5ea0a575168da29d24f6f670596001e218094d950a221fe7ef9f19bdd90d4ed4",
+        "bytes": 154,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": null\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "5ea0a575168da29d24f6f670596001e218094d950a221fe7ef9f19bdd90d4ed4",
+        "bytes": 154,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": null\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.6
+    },
+    {
+      "case_id": "quota_negative",
+      "why": "cache_quota_gb = -1",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 84,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_quota_negative\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 0.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 74,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_quota_negative\n✓ Конфигурация: <QA_HOMES>/verify_d02_quota_negative/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 450,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "33ed31d76ff5399a94836a2059906fe47dc077bf8f6c9f696475a734cafb6e4a",
+        "bytes": 152,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": -1\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "ab24ad37a1396eddab9628bf2c672101f880b10847504df3b73d5466e3376b0c",
+        "bytes": 445,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": -1.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "33ed31d76ff5399a94836a2059906fe47dc077bf8f6c9f696475a734cafb6e4a",
+        "bytes": 152,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": -1\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "33ed31d76ff5399a94836a2059906fe47dc077bf8f6c9f696475a734cafb6e4a",
+        "bytes": 152,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_quota_gb\": -1\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "ab24ad37a1396eddab9628bf2c672101f880b10847504df3b73d5466e3376b0c",
+        "bytes": 445,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": -1.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "ttl_string",
+      "why": "cache_ttl_days = строка",
+      "is_p1_case": true,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 72,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено 'неделя'. Файл: <QA_HOMES>/verify_d02_ttl_string/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено 'неделя'. Файл: <QA_HOMES>/verify_d02_ttl_string/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 74,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_ttl_string\n✗ Конфигурация: Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено 'неделя'. Файл: <QA_HOMES>/verify_d02_ttl_string/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено 'неделя'. Файл: <QA_HOMES>/verify_d02_ttl_string/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено 'неделя'. Файл: <QA_HOMES>/verify_d02_ttl_string/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "c54f8a8afdd4490b129232941c79c69cc95b8886e5a6c4eb3f45afb0588c2f0f",
+        "bytes": 164,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_ttl_days\": \"неделя\"\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "c54f8a8afdd4490b129232941c79c69cc95b8886e5a6c4eb3f45afb0588c2f0f",
+        "bytes": 164,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_ttl_days\": \"неделя\"\n}"
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "c54f8a8afdd4490b129232941c79c69cc95b8886e5a6c4eb3f45afb0588c2f0f",
+        "bytes": 164,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_ttl_days\": \"неделя\"\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "c54f8a8afdd4490b129232941c79c69cc95b8886e5a6c4eb3f45afb0588c2f0f",
+        "bytes": 164,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_ttl_days\": \"неделя\"\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "c54f8a8afdd4490b129232941c79c69cc95b8886e5a6c4eb3f45afb0588c2f0f",
+        "bytes": 164,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"cache_ttl_days\": \"неделя\"\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.6
+    },
+    {
+      "case_id": "shuffle_string",
+      "why": "shuffle = строка",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 83,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_shuffle_string\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_shuffle_string\n✓ Конфигурация: <QA_HOMES>/verify_d02_shuffle_string/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 458,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "d4d425f226392ef8325312b16f34c04197c655e61f6bb81b62923e4a540ec0f3",
+        "bytes": 149,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"shuffle\": \"да\"\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "dbf6d2b7998fb547f61d149447f3698b5bf5b6f4637da63b20edc55ad8d35d73",
+        "bytes": 445,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": \"да\",\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "d4d425f226392ef8325312b16f34c04197c655e61f6bb81b62923e4a540ec0f3",
+        "bytes": 149,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"shuffle\": \"да\"\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "d4d425f226392ef8325312b16f34c04197c655e61f6bb81b62923e4a540ec0f3",
+        "bytes": 149,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"shuffle\": \"да\"\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "dbf6d2b7998fb547f61d149447f3698b5bf5b6f4637da63b20edc55ad8d35d73",
+        "bytes": 445,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": \"да\",\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "repeat_number",
+      "why": "repeat = 5",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 92,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_repeat_number\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 80,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_repeat_number\n✓ Конфигурация: <QA_HOMES>/verify_d02_repeat_number/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 453,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "ac4b64127cbff04239984bc5c3698458d28b56da5c6d8c2a2144cf2835aad70d",
+        "bytes": 143,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"repeat\": 5\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "ac4b64127cbff04239984bc5c3698458d28b56da5c6d8c2a2144cf2835aad70d",
+        "bytes": 143,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"repeat\": 5\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "ac4b64127cbff04239984bc5c3698458d28b56da5c6d8c2a2144cf2835aad70d",
+        "bytes": 143,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"repeat\": 5\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "repeat_unknown",
+      "why": "repeat = неизвестный режим",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 88,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_repeat_unknown\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 75,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_repeat_unknown\n✓ Конфигурация: <QA_HOMES>/verify_d02_repeat_unknown/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 449,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "614fa98c25f010a4c57cde020fb27891c94446d20c42461ac0ac347fabd6131c",
+        "bytes": 160,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"repeat\": \"карусель\"\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "614fa98c25f010a4c57cde020fb27891c94446d20c42461ac0ac347fabd6131c",
+        "bytes": 160,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"repeat\": \"карусель\"\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "614fa98c25f010a4c57cde020fb27891c94446d20c42461ac0ac347fabd6131c",
+        "bytes": 160,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"repeat\": \"карусель\"\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "provider_unknown",
+      "why": "provider = неизвестный",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 86,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_provider_unknown\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_provider_unknown\n✓ Конфигурация: <QA_HOMES>/verify_d02_provider_unknown/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 449,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "596cf1d80e199889d178cb8d3aaf99121249e6b1dfad4a649a7ac766a6b2c97a",
+        "bytes": 131,
+        "content": "{\n  \"provider\": \"spotify2\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "9084682d14ab323676ee6c0d52ed23facf7d1f4e4c8a55dd6f0e66724e6df484",
+        "bytes": 447,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"spotify2\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "596cf1d80e199889d178cb8d3aaf99121249e6b1dfad4a649a7ac766a6b2c97a",
+        "bytes": 131,
+        "content": "{\n  \"provider\": \"spotify2\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "596cf1d80e199889d178cb8d3aaf99121249e6b1dfad4a649a7ac766a6b2c97a",
+        "bytes": 131,
+        "content": "{\n  \"provider\": \"spotify2\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "9084682d14ab323676ee6c0d52ed23facf7d1f4e4c8a55dd6f0e66724e6df484",
+        "bytes": 447,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"spotify2\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "local_dir_missing",
+      "why": "local_music_dir = несуществующий",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 85,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_local_dir_missing\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 74,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_local_dir_missing\n✓ Конфигурация: <QA_HOMES>/verify_d02_local_dir_missing/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 451,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "8099cd342195fd8109b284faabcbd34ede6844b5cd1588d7f4bad6bffadfe2f5",
+        "bytes": 84,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"/nonexistent/music\",\n  \"volume\": 40\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "f3b366b365c53a741a163ece2ec25d0bb87f0f72dc0daec1e696f920200f4af2",
+        "bytes": 400,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"/nonexistent/music\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "8099cd342195fd8109b284faabcbd34ede6844b5cd1588d7f4bad6bffadfe2f5",
+        "bytes": 84,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"/nonexistent/music\",\n  \"volume\": 40\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "8099cd342195fd8109b284faabcbd34ede6844b5cd1588d7f4bad6bffadfe2f5",
+        "bytes": 84,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"/nonexistent/music\",\n  \"volume\": 40\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "f3b366b365c53a741a163ece2ec25d0bb87f0f72dc0daec1e696f920200f4af2",
+        "bytes": 400,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"/nonexistent/music\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "custom_profiles_broken",
+      "why": "custom_profiles = мусор",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 88,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_custom_profiles_broken\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 72,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_custom_profiles_broken\n✓ Конфигурация: <QA_HOMES>/verify_d02_custom_profiles_broken/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 456,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "afb4803331976026ad8a480b7f07e4244c4cd8a97a0528e990ec6fe4fd363d16",
+        "bytes": 222,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"custom_profiles\": [\n    {\n      \"id\": \"x\",\n      \"filters\": \"не список\"\n    }\n  ]\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "afb4803331976026ad8a480b7f07e4244c4cd8a97a0528e990ec6fe4fd363d16",
+        "bytes": 222,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"custom_profiles\": [\n    {\n      \"id\": \"x\",\n      \"filters\": \"не список\"\n    }\n  ]\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "afb4803331976026ad8a480b7f07e4244c4cd8a97a0528e990ec6fe4fd363d16",
+        "bytes": 222,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"custom_profiles\": [\n    {\n      \"id\": \"x\",\n      \"filters\": \"не список\"\n    }\n  ]\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "dsp_profile_unknown",
+      "why": "dsp_profile = неизвестный",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 84,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_dsp_profile_unknown\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_dsp_profile_unknown\n✓ Конфигурация: <QA_HOMES>/verify_d02_dsp_profile_unknown/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 449,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "f6b14b4a9bba8ea0bbcff5a8025d8f29efb76c4c836c88d28442979286edbfe9",
+        "bytes": 168,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"dsp_profile\": \"нет-такого\"\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "f6b14b4a9bba8ea0bbcff5a8025d8f29efb76c4c836c88d28442979286edbfe9",
+        "bytes": 168,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"dsp_profile\": \"нет-такого\"\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "f6b14b4a9bba8ea0bbcff5a8025d8f29efb76c4c836c88d28442979286edbfe9",
+        "bytes": 168,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"dsp_profile\": \"нет-такого\"\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "extra_fields",
+      "why": "неизвестные дополнительные поля",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 88,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_extra_fields\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 77,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_extra_fields\n✓ Конфигурация: <QA_HOMES>/verify_d02_extra_fields/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 450,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "4c78284121d29ecbe58580b67b6de37d1ccdea24e24c1671fa60da51e658e456",
+        "bytes": 190,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"что_то_новое\": 1,\n  \"another\": {\n    \"a\": 2\n  }\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "4c78284121d29ecbe58580b67b6de37d1ccdea24e24c1671fa60da51e658e456",
+        "bytes": 190,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"что_то_новое\": 1,\n  \"another\": {\n    \"a\": 2\n  }\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "4c78284121d29ecbe58580b67b6de37d1ccdea24e24c1671fa60da51e658e456",
+        "bytes": 190,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40,\n  \"что_то_новое\": 1,\n  \"another\": {\n    \"a\": 2\n  }\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "empty_object",
+      "why": "пустой объект {}",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 84,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_empty_object\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_empty_object\n✓ Конфигурация: <QA_HOMES>/verify_d02_empty_object/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 450,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "broken_json",
+      "why": "нарушен синтаксис JSON",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "",
+          "stderr": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 77,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_broken_json\n✗ Конфигурация: Не удалось прочитать <QA_HOMES>/verify_d02_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_broken_json/config/config.json: Expecting property name enclosed in double quotes: line 1 column 15 (char 14)",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "b48b18a25e6ca9adbabacf6e0944c8a975bda37495d06153664c8247113a7036",
+        "bytes": 16,
+        "content": "{\"volume\": 80,,}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "b48b18a25e6ca9adbabacf6e0944c8a975bda37495d06153664c8247113a7036",
+        "bytes": 16,
+        "content": "{\"volume\": 80,,}"
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "b48b18a25e6ca9adbabacf6e0944c8a975bda37495d06153664c8247113a7036",
+        "bytes": 16,
+        "content": "{\"volume\": 80,,}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "b48b18a25e6ca9adbabacf6e0944c8a975bda37495d06153664c8247113a7036",
+        "bytes": 16,
+        "content": "{\"volume\": 80,,}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "b48b18a25e6ca9adbabacf6e0944c8a975bda37495d06153664c8247113a7036",
+        "bytes": 16,
+        "content": "{\"volume\": 80,,}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.6
+    },
+    {
+      "case_id": "empty_file",
+      "why": "пустой файл",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 72,
+          "stdout": "",
+          "stderr": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_empty_file/config/config.json: Expecting value: line 1 column 1 (char 0)\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_empty_file/config/config.json: Expecting value: line 1 column 1 (char 0)",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_empty_file\n✗ Конфигурация: Не удалось прочитать <QA_HOMES>/verify_d02_empty_file/config/config.json: Expecting value: line 1 column 1 (char 0)\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_empty_file/config/config.json: Expecting value: line 1 column 1 (char 0)\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Не удалось прочитать <QA_HOMES>/verify_d02_empty_file/config/config.json: Expecting value: line 1 column 1 (char 0)",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "content": ""
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "content": ""
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "content": ""
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "content": ""
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "content": ""
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.6
+    },
+    {
+      "case_id": "json_not_object",
+      "why": "JSON, но не объект",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 2,
+          "killed_by_qa": false,
+          "duration_ms": 72,
+          "stdout": "",
+          "stderr": "Ошибка: Ожидался объект JSON в <QA_HOMES>/verify_d02_json_not_object/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Ожидался объект JSON в <QA_HOMES>/verify_d02_json_not_object/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 1,
+          "killed_by_qa": false,
+          "duration_ms": 75,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_json_not_object\n✗ Конфигурация: Ожидался объект JSON в <QA_HOMES>/verify_d02_json_not_object/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nТребует внимания: Конфигурация\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 2,
+          "window_opened": false,
+          "window_closed_by_qa": false,
+          "duration_ms": 404,
+          "stdout": "",
+          "stderr": "Ошибка: Ожидался объект JSON в <QA_HOMES>/verify_d02_json_not_object/config/config.json\n",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": "Ошибка: Ожидался объект JSON в <QA_HOMES>/verify_d02_json_not_object/config/config.json",
+          "friendly_error": true,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "a36b1f2c3f84522dd1005145646617d7054c0851e97c72a039c0bdfac9fa07f3",
+        "bytes": 9,
+        "content": "[1, 2, 3]"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "a36b1f2c3f84522dd1005145646617d7054c0851e97c72a039c0bdfac9fa07f3",
+        "bytes": 9,
+        "content": "[1, 2, 3]"
+      },
+      "config_rewritten": false,
+      "config_rewritten_by": [],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "a36b1f2c3f84522dd1005145646617d7054c0851e97c72a039c0bdfac9fa07f3",
+        "bytes": 9,
+        "content": "[1, 2, 3]"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "a36b1f2c3f84522dd1005145646617d7054c0851e97c72a039c0bdfac9fa07f3",
+        "bytes": 9,
+        "content": "[1, 2, 3]"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "a36b1f2c3f84522dd1005145646617d7054c0851e97c72a039c0bdfac9fa07f3",
+        "bytes": 9,
+        "content": "[1, 2, 3]"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.6
+    },
+    {
+      "case_id": "missing_file",
+      "why": "файла конфигурации нет",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 83,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_missing_file\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 72,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_missing_file\n✓ Конфигурация: <QA_HOMES>/verify_d02_missing_file/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 457,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": false
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "278efab08715e4d7188866cff3e46a9b3ccc15c81e22bba32ba32c17b4abd027",
+        "bytes": 383,
+        "content": "{\n  \"volume\": 80,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"yandex\",\n  \"local_music_dir\": \"\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": false
+      },
+      "config_after_doctor": {
+        "exists": false
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "278efab08715e4d7188866cff3e46a9b3ccc15c81e22bba32ba32c17b4abd027",
+        "bytes": 383,
+        "content": "{\n  \"volume\": 80,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"yandex\",\n  \"local_music_dir\": \"\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "config/config.json",
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    },
+    {
+      "case_id": "valid_baseline",
+      "why": "корректная конфигурация (контроль)",
+      "is_p1_case": false,
+      "outcomes": {
+        "status": {
+          "command": "--provider local status",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 83,
+          "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_valid_baseline\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "doctor": {
+          "command": "--provider local doctor",
+          "exit_code": 0,
+          "killed_by_qa": false,
+          "duration_ms": 73,
+          "stdout": "✓ Python ≥ 3.10: 3.12.3\n✓ mpv: <QA_STAND>/tools/AppDir/bin/mpv\n✓ keyring: нет backend — токен будет в файле 0600\n✓ Каталоги XDG: <QA_HOMES>/verify_d02_valid_baseline\n✓ Конфигурация: <QA_HOMES>/verify_d02_valid_baseline/config/config.json\n✓ tinytag: 2.3.2\n✓ Провайдер: local — Локальные файлы\n✓ Токен: не требуется — локальные файлы\n✓ Сеть: не требуется — файлы на диске\n\nОкружение готово к работе (звук проверяется на реальном устройстве).\n",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        },
+        "app": {
+          "command": "neurowave --provider local app",
+          "exit_code": 0,
+          "window_opened": true,
+          "window_closed_by_qa": true,
+          "duration_ms": 456,
+          "stdout": "",
+          "stderr": "",
+          "has_traceback": false,
+          "exception_type": null,
+          "exception_message": null,
+          "user_visible_message": null,
+          "friendly_error": false,
+          "classification": "CONTROLLED"
+        }
+      },
+      "config_before": {
+        "exists": true,
+        "sha256": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "config_rewritten": true,
+      "config_rewritten_by": [
+        "app"
+      ],
+      "config_after_status": {
+        "exists": true,
+        "sha256": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after_doctor": {
+        "exists": true,
+        "sha256": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+        "bytes": 128,
+        "content": "{\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"volume\": 40\n}"
+      },
+      "config_after_app": {
+        "exists": true,
+        "sha256": "597231d60aa5c6f56f40cd0a3deefe3917d55245fab7e70ae6388970f8ae7c6a",
+        "bytes": 444,
+        "content": "{\n  \"volume\": 40,\n  \"cache_quota_gb\": 2.0,\n  \"cache_ttl_days\": 7,\n  \"repeat\": \"off\",\n  \"shuffle\": false,\n  \"audio_backend\": \"mpv\",\n  \"provider\": \"local\",\n  \"local_music_dir\": \"<MEDIA>\",\n  \"reduced_motion\": false,\n  \"language\": \"ru\",\n  \"ai_enabled\": false,\n  \"autoplay_wave_feedback\": true,\n  \"dsp_profile\": \"flat\",\n  \"audio_output\": \"\",\n  \"custom_profiles\": [],\n  \"boost_verified\": false\n}"
+      },
+      "files_before": [
+        "config/config.json",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_after": [
+        "config/config.json",
+        "data/state.db",
+        "data/user-state.txt",
+        "tokens/local.token"
+      ],
+      "files_added": [
+        "data/state.db"
+      ],
+      "files_removed": [],
+      "user_data_intact": true,
+      "tokens_before": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_after": {
+        "token_files": [
+          "local.token"
+        ],
+        "db_exists": false,
+        "db_sha256": null,
+        "db_bytes": 0,
+        "history_exists": false,
+        "history_sha256": null
+      },
+      "tokens_lost": false,
+      "recovery": {
+        "status_exit_code": 0,
+        "status_has_traceback": false,
+        "marker_alive": true,
+        "tokens_intact": true
+      },
+      "token_leaked_to_output": false,
+      "duration_s": 0.7
+    }
+  ]
+}

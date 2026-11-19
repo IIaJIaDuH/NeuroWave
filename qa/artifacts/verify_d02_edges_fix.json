@@ -1,0 +1,350 @@
+{
+  "label": "fix",
+  "sha": "067c7f90540ed4e40598435874d6ab8192821579",
+  "cases": [
+    {
+      "case_id": "volume_numeric_string",
+      "expect": "accepted",
+      "observed": "accepted",
+      "effective_volume": 80,
+      "effective_quota_gb": 2.0,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 0,
+        "has_traceback": false,
+        "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_edge_volume_numeric_string\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+        "stderr": "",
+        "friendly_error": false
+      },
+      "doctor_exit_code": 0,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "5bcc329844a00da8a1ef76e4b3c2b7bdaca4ca2ff60c84e06e35f2e98cd37a7d",
+      "config_sha256_after": "5bcc329844a00da8a1ef76e4b3c2b7bdaca4ca2ff60c84e06e35f2e98cd37a7d",
+      "config_rewritten": false,
+      "volume_line": "Аудиовыход: mpv (auto), громкость 80%"
+    },
+    {
+      "case_id": "ttl_numeric_string",
+      "expect": "accepted",
+      "observed": "accepted",
+      "effective_volume": 40,
+      "effective_quota_gb": 2.0,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 0,
+        "has_traceback": false,
+        "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_edge_ttl_numeric_string\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+        "stderr": "",
+        "friendly_error": false
+      },
+      "doctor_exit_code": 0,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "a4ef724799a1dcadcef05940418eca5be48d84f56ff6fd93f3f31a190c8fc946",
+      "config_sha256_after": "a4ef724799a1dcadcef05940418eca5be48d84f56ff6fd93f3f31a190c8fc946",
+      "config_rewritten": false,
+      "volume_line": "Аудиовыход: mpv (auto), громкость 40%"
+    },
+    {
+      "case_id": "volume_999",
+      "expect": "clamped_130",
+      "observed": "clamped_130",
+      "effective_volume": 100,
+      "effective_quota_gb": 2.0,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 0,
+        "has_traceback": false,
+        "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_edge_volume_999\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 100%\nОграничение: в настройках 130%, применяется 100% — лимитер ещё не подтверждён\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+        "stderr": "",
+        "friendly_error": false
+      },
+      "doctor_exit_code": 0,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "000d4abeafaff5da543a08139a13052dab996b6ef06d7db20730bb843334008b",
+      "config_sha256_after": "000d4abeafaff5da543a08139a13052dab996b6ef06d7db20730bb843334008b",
+      "config_rewritten": false,
+      "volume_line": "Аудиовыход: mpv (auto), громкость 100%"
+    },
+    {
+      "case_id": "volume_negative",
+      "expect": "clamped_0",
+      "observed": "clamped_0",
+      "effective_volume": 0,
+      "effective_quota_gb": 2.0,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 0,
+        "has_traceback": false,
+        "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_edge_volume_negative\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 0%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+        "stderr": "",
+        "friendly_error": false
+      },
+      "doctor_exit_code": 0,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "8ef298794b8b7c1307b1b2e56583a9749f1fbe3859babd664f91592c09d50e0d",
+      "config_sha256_after": "8ef298794b8b7c1307b1b2e56583a9749f1fbe3859babd664f91592c09d50e0d",
+      "config_rewritten": false,
+      "volume_line": "Аудиовыход: mpv (auto), громкость 0%"
+    },
+    {
+      "case_id": "quota_negative",
+      "expect": "accepted",
+      "observed": "accepted",
+      "effective_volume": 40,
+      "effective_quota_gb": 0.0,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 0,
+        "has_traceback": false,
+        "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_edge_quota_negative\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 0.0 МБ (0 файлов)\n",
+        "stderr": "",
+        "friendly_error": false
+      },
+      "doctor_exit_code": 0,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "33ed31d76ff5399a94836a2059906fe47dc077bf8f6c9f696475a734cafb6e4a",
+      "config_sha256_after": "33ed31d76ff5399a94836a2059906fe47dc077bf8f6c9f696475a734cafb6e4a",
+      "config_rewritten": false,
+      "volume_line": "Аудиовыход: mpv (auto), громкость 40%"
+    },
+    {
+      "case_id": "volume_bool",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено True. Файл: <QA_HOMES>/verify_d02_edge_volume_bool/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+      "config_sha256_after": "ec45893c3414c608b3f9b31ab33295da42b97aa3e8b0c2f4a14a83858e7a475c",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "quota_bool",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено True. Файл: <QA_HOMES>/verify_d02_edge_quota_bool/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "0fdfe9c640848fae42c2e9359da891746797962689f5704fd71e80e632502a7d",
+      "config_sha256_after": "0fdfe9c640848fae42c2e9359da891746797962689f5704fd71e80e632502a7d",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "ttl_bool",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено True. Файл: <QA_HOMES>/verify_d02_edge_ttl_bool/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "7ec62d2744114e6c4646d475e9868351d5aca7ea118842a241031ec9f5bcc2a6",
+      "config_sha256_after": "7ec62d2744114e6c4646d475e9868351d5aca7ea118842a241031ec9f5bcc2a6",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "volume_nan",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено nan. Файл: <QA_HOMES>/verify_d02_edge_volume_nan/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "fb739c452b5eb8afa2529a2cadbf8abf0953b00477f1189843495b5f0722a7e0",
+      "config_sha256_after": "fb739c452b5eb8afa2529a2cadbf8abf0953b00477f1189843495b5f0722a7e0",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "volume_infinity",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено inf. Файл: <QA_HOMES>/verify_d02_edge_volume_infinity/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "3ff706a31106be7319e27e56bacd390bc918f81c809e306a8492372fc8d32327",
+      "config_sha256_after": "3ff706a31106be7319e27e56bacd390bc918f81c809e306a8492372fc8d32327",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "volume_neg_infinity",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено -inf. Файл: <QA_HOMES>/verify_d02_edge_volume_neg_infinity/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "3d034e4ddf0007ffe8b0e0a3dfbf457d626cb4b1af0a74dd7e9febfe1fa3daa7",
+      "config_sha256_after": "3d034e4ddf0007ffe8b0e0a3dfbf457d626cb4b1af0a74dd7e9febfe1fa3daa7",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "quota_nan",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено nan. Файл: <QA_HOMES>/verify_d02_edge_quota_nan/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "3506ed6321550ddb76e00e0e793a09e264635c999bb1b7488197fec97935e405",
+      "config_sha256_after": "3506ed6321550ddb76e00e0e793a09e264635c999bb1b7488197fec97935e405",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "quota_infinity",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «cache_quota_gb»: ожидалось конечное число гигабайт, получено inf. Файл: <QA_HOMES>/verify_d02_edge_quota_infinity/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "eb10eca6236bdf9ca02e2b489f515120b8d354c898952a988ebe36649a9ed459",
+      "config_sha256_after": "eb10eca6236bdf9ca02e2b489f515120b8d354c898952a988ebe36649a9ed459",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "ttl_nan",
+      "expect": "controlled_error",
+      "observed": "controlled_error",
+      "effective_volume": null,
+      "effective_quota_gb": null,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 2,
+        "has_traceback": false,
+        "stdout": "",
+        "stderr": "Ошибка: Некорректное значение настройки «cache_ttl_days»: ожидалось целое число дней, получено nan. Файл: <QA_HOMES>/verify_d02_edge_ttl_nan/config/config.json\n",
+        "friendly_error": true
+      },
+      "doctor_exit_code": 1,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "e7b99212ea2e7de32df97edd90e668512fa08768dfee5d6339d6f175f045163c",
+      "config_sha256_after": "e7b99212ea2e7de32df97edd90e668512fa08768dfee5d6339d6f175f045163c",
+      "config_rewritten": false,
+      "volume_line": null
+    },
+    {
+      "case_id": "empty_object",
+      "expect": "accepted",
+      "observed": "accepted",
+      "effective_volume": 40,
+      "effective_quota_gb": 2.0,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 0,
+        "has_traceback": false,
+        "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_edge_empty_object\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 40%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+        "stderr": "",
+        "friendly_error": false
+      },
+      "doctor_exit_code": 0,
+      "doctor_has_traceback": false,
+      "config_sha256_before": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+      "config_sha256_after": "7dcf676d07f30d85b625dec7ebe1ae49c2de1d6f951f126d078dbf1d07e01570",
+      "config_rewritten": false,
+      "volume_line": "Аудиовыход: mpv (auto), громкость 40%"
+    },
+    {
+      "case_id": "missing_file",
+      "expect": "accepted",
+      "observed": "accepted",
+      "effective_volume": 80,
+      "effective_quota_gb": 2.0,
+      "status": {
+        "command": "--provider local status",
+        "exit_code": 0,
+        "has_traceback": false,
+        "stdout": "NeuroWave 0.1.0\nКаталог состояния: <QA_HOMES>/verify_d02_edge_missing_file\nПровайдер: Локальные файлы (local)\nТокен: не требуется\nАудиовыход: mpv (auto), громкость 80%\nКеш: 0.0 МБ из 2048.0 МБ (0 файлов)\n",
+        "stderr": "",
+        "friendly_error": false
+      },
+      "doctor_exit_code": 0,
+      "doctor_has_traceback": false,
+      "config_sha256_before": null,
+      "config_sha256_after": null,
+      "config_rewritten": false,
+      "volume_line": "Аудиовыход: mpv (auto), громкость 80%"
+    }
+  ],
+  "totals": {
+    "cases": 16,
+    "unhandled_tracebacks": 0,
+    "controlled_errors": 9,
+    "accepted": 5,
+    "expect_match": 16,
+    "damaged_config_overwritten": 0
+  }
+}

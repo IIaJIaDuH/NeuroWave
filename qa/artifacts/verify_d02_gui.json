@@ -1,0 +1,292 @@
+{
+  "sha": "067c7f90540ed4e40598435874d6ab8192821579",
+  "display": ":0",
+  "before": {
+    "mpv": [],
+    "sockets": []
+  },
+  "sink_switch": {
+    "before": "<SINK_HDMI>",
+    "target": "<SINK_HDMI>",
+    "during": "<SINK_HDMI>",
+    "restored": "<SINK_HDMI>",
+    "switch_exit_code": 0
+  },
+  "scenario_a": {
+    "scenario": "A: повреждённый config.json + app",
+    "window_opened": false,
+    "exit_code": 2,
+    "has_traceback": false,
+    "stderr": "Ошибка: Некорректное значение настройки «volume»: ожидалось целое число 0…130, получено 'громко'. Файл: <QA_HOMES>/verify_d02_gui_a/config/config.json\n",
+    "duration_s": 0.3,
+    "hung": false,
+    "config_unmodified": true,
+    "expectation": "контролируемое завершение (код 2) с понятной диагностикой, без зависшего окна, без traceback, файл конфигурации не тронут",
+    "ok": true
+  },
+  "scenario_c": {
+    "scenario": "C: исправленная конфигурация, воспроизведение в GUI",
+    "window_opened": true,
+    "config_unmodified": true,
+    "steps": {
+      "capture_start": {
+        "file": "verify_d02_gui_c_start.png",
+        "saved": true,
+        "exit_code": 0,
+        "output": "<REPO>/docs/qa/screenshots/verify_d02_gui_c_start.png 570x360"
+      },
+      "detect_wave": {
+        "row_y": 143,
+        "runs": 6,
+        "error": null
+      },
+      "click_wave": {
+        "exit_code": 0,
+        "output": "ok (окно в 50,82)"
+      },
+      "state_after_wave": {
+        "sockets": [
+          "neurowave-mpv-37166.sock"
+        ],
+        "mpv": [
+          "37168"
+        ],
+        "socket": "neurowave-mpv-37166.sock",
+        "filename": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
+        "idle-active": false,
+        "pause": false,
+        "time-pos": 3.296055,
+        "volume": 40.0,
+        "duration": 6.0,
+        "media-title": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav"
+      },
+      "capture_playing": {
+        "file": "verify_d02_gui_c_playing.png",
+        "saved": true,
+        "exit_code": 0,
+        "output": "<REPO>/docs/qa/screenshots/verify_d02_gui_c_playing.png 1513x360"
+      },
+      "detect_play_pause": {
+        "row_y": 143,
+        "runs": 6,
+        "error": null
+      },
+      "click_pause": {
+        "exit_code": 0,
+        "output": "ok (окно в 50,82)"
+      },
+      "state_after_pause": {
+        "sockets": [
+          "neurowave-mpv-37166.sock"
+        ],
+        "mpv": [
+          "37168"
+        ],
+        "socket": "neurowave-mpv-37166.sock",
+        "filename": "qa_tone_a440_128k.mp3",
+        "idle-active": false,
+        "pause": true,
+        "time-pos": 3.466709,
+        "volume": 40.0,
+        "duration": 30.0,
+        "media-title": "QA tone 440 Hz"
+      },
+      "capture_paused": {
+        "file": "verify_d02_gui_c_paused.png",
+        "saved": true,
+        "exit_code": 0,
+        "output": "<REPO>/docs/qa/screenshots/verify_d02_gui_c_paused.png 1513x360"
+      },
+      "click_play": {
+        "exit_code": 0,
+        "output": "ok (окно в 50,82)"
+      },
+      "state_after_resume": {
+        "sockets": [
+          "neurowave-mpv-37166.sock"
+        ],
+        "mpv": [
+          "37168"
+        ],
+        "socket": "neurowave-mpv-37166.sock",
+        "filename": "qa_tone_a440_128k.mp3",
+        "idle-active": false,
+        "pause": false,
+        "time-pos": 5.301384,
+        "volume": 40.0,
+        "duration": 30.0,
+        "media-title": "QA tone 440 Hz"
+      },
+      "detect_next": {
+        "row_y": 143,
+        "runs": 6,
+        "error": null
+      },
+      "click_next": {
+        "exit_code": 0,
+        "output": "ok (окно в 50,82)"
+      },
+      "state_after_next": {
+        "sockets": [
+          "neurowave-mpv-37166.sock"
+        ],
+        "mpv": [
+          "37168"
+        ],
+        "socket": "neurowave-mpv-37166.sock",
+        "filename": "qa_tone_b220_short.mp3",
+        "idle-active": false,
+        "pause": false,
+        "time-pos": 2.816057,
+        "volume": 40.0,
+        "duration": 8.0,
+        "media-title": "QA tone 220 Hz"
+      },
+      "track_changed": true,
+      "volume_track": {
+        "y": 175,
+        "x1": 21,
+        "x2": 1490,
+        "handle_x": 516
+      },
+      "drag_volume_right": {
+        "exit_code": 0,
+        "output": "ok (окно в 50,82)"
+      },
+      "state_after_volume_right": {
+        "sockets": [
+          "neurowave-mpv-37166.sock"
+        ],
+        "mpv": [
+          "37168"
+        ],
+        "socket": "neurowave-mpv-37166.sock",
+        "filename": "qa_tone_g349_44k.wav",
+        "idle-active": false,
+        "pause": false,
+        "time-pos": 1.333378,
+        "volume": 52.0,
+        "duration": 20.0,
+        "media-title": "QA tone 349 Hz"
+      },
+      "state_after_volume": {
+        "sockets": [
+          "neurowave-mpv-37166.sock"
+        ],
+        "mpv": [
+          "37168"
+        ],
+        "socket": "neurowave-mpv-37166.sock",
+        "filename": "qa_tone_g349_44k.wav",
+        "idle-active": false,
+        "pause": false,
+        "time-pos": 4.362711,
+        "volume": 52.0,
+        "duration": 20.0,
+        "media-title": "QA tone 349 Hz"
+      },
+      "volume_changed": true,
+      "capture_volume": {
+        "file": "verify_d02_gui_c_volume.png",
+        "saved": true,
+        "exit_code": 0,
+        "output": "<REPO>/docs/qa/screenshots/verify_d02_gui_c_volume.png 1513x360"
+      },
+      "detect_stop": {
+        "row_y": 143,
+        "runs": 6,
+        "error": null
+      },
+      "click_stop": {
+        "exit_code": 0,
+        "output": "ok (окно в 50,82)"
+      },
+      "state_after_stop": {
+        "sockets": [
+          "neurowave-mpv-37166.sock"
+        ],
+        "mpv": [
+          "37168"
+        ],
+        "socket": "neurowave-mpv-37166.sock",
+        "idle-active": true,
+        "pause": false,
+        "volume": 52.0
+      },
+      "capture_stopped": {
+        "file": "verify_d02_gui_c_stopped.png",
+        "saved": true,
+        "exit_code": 0,
+        "output": "<REPO>/docs/qa/screenshots/verify_d02_gui_c_stopped.png 1513x360"
+      },
+      "close_window": {
+        "exit_code": 0
+      }
+    },
+    "exit_code": 0,
+    "has_traceback": false,
+    "hung": false,
+    "stderr": "",
+    "config_unmodified_after": false,
+    "mpv_after": [],
+    "sockets_after": [],
+    "sink_during": "<SINK_HDMI>"
+  },
+  "scenario_d": {
+    "scenario": "D: последовательные запуски (повреждённый/исправленный)",
+    "runs": [
+      {
+        "iteration": 1,
+        "broken": {
+          "exit_code": 2,
+          "has_traceback": false,
+          "hung": false
+        },
+        "fixed": {
+          "exit_code": 0,
+          "has_traceback": false,
+          "hung": false,
+          "window_opened": true
+        },
+        "profile_files": 3
+      },
+      {
+        "iteration": 2,
+        "broken": {
+          "exit_code": 2,
+          "has_traceback": false,
+          "hung": false
+        },
+        "fixed": {
+          "exit_code": 0,
+          "has_traceback": false,
+          "hung": false,
+          "window_opened": true
+        },
+        "profile_files": 3
+      },
+      {
+        "iteration": 3,
+        "broken": {
+          "exit_code": 2,
+          "has_traceback": false,
+          "hung": false
+        },
+        "fixed": {
+          "exit_code": 0,
+          "has_traceback": false,
+          "hung": false,
+          "window_opened": true
+        },
+        "profile_files": 3
+      }
+    ],
+    "mpv_after": [],
+    "sockets_after": [],
+    "ok": true
+  },
+  "after": {
+    "mpv": [],
+    "sockets": []
+  }
+}
