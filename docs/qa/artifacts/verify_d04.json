@@ -2,13 +2,13 @@
   "scenario": "QA-VERIFY-02: приёмка исправления D-04",
   "sha": "07733e1e26b5c38b3c64161f109bab9af662c5af",
   "branch": "fix/qa-first-track-recovery-02",
-  "media": "<СТЕНД>/media-d04",
-  "monitor_source": "alsa_output.pci-0000_09_00.1.hdmi-stereo.monitor",
-  "default_sink_before": "bluez_output.59_19_70_A9_CF_F8.1",
-  "default_sink_during": "alsa_output.pci-0000_09_00.1.hdmi-stereo",
+  "media": "<QA_MEDIA>",
+  "monitor_source": "alsa_output.pci-<PCI>.hdmi-stereo.monitor",
+  "default_sink_before": "BT_DEVICE_A",
+  "default_sink_during": "alsa_output.pci-<PCI>.hdmi-stereo",
   "sink_states_during": [
-    "76\talsa_output.pci-0000_09_00.1.hdmi-stereo\tPipeWire\ts32le 2-канальный 4800\tRUNNING",
-    "5464\tbluez_output.59_19_70_A9_CF_F8.1\tPipeWire\ts16le 2-канальный 4800\tIDLE"
+    "76\talsa_output.pci-<PCI>.hdmi-stereo\tPipeWire\ts32le 2-канальный 4800\tRUNNING",
+    "5464\tBT_DEVICE_A\tPipeWire\ts16le 2-канальный 4800\tIDLE"
   ],
   "files": {
     "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav": "QA экран длинное название трека для проверки переполнения строки заголовка окна NeuroWave без переносов и обрезания символов.wav",
@@ -128,7 +128,7 @@
       {
         "client": "mpv",
         "sink_index": 76,
-        "sink": "alsa_output.pci-0000_09_00.1.hdmi-stereo",
+        "sink": "alsa_output.pci-<PCI>.hdmi-stereo",
         "state": null
       }
     ],
@@ -788,5 +788,5 @@
     "нет_регрессий_в_воспроизведении": true
   },
   "verdict": "PASS",
-  "default_sink_restored": "bluez_output.59_19_70_A9_CF_F8.1"
+  "default_sink_restored": "BT_DEVICE_A"
 }
