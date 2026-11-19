@@ -109,8 +109,21 @@ class MpvProbe:
 
 
 # --- независимая проверка цифрового сигнала -----------------------------
-HDMI_SINK = "alsa_output.pci-0000_09_00.1.hdmi-stereo"
-HDMI_SINK_INDEX = "76"
+def _discover_hdmi_sink() -> tuple[str, str]:
+    """Имя HDMI-sink'а и его индекс определяются на месте, без жёстких
+    имён устройства: в публикуемых материалах не должно быть ни PCI-адреса
+    слота, ни номера устройства конкретной машины."""
+    code, out, _ = q.run(["pactl", "list", "sinks", "short"])
+    if code != 0:
+        return "", ""
+    for line in out.splitlines():
+        parts = line.split("\t")
+        if len(parts) >= 2 and "hdmi" in parts[1].lower():
+            return parts[1], parts[0]
+    return "", ""
+
+
+HDMI_SINK, HDMI_SINK_INDEX = _discover_hdmi_sink()
 
 
 def mpv_streams() -> list[dict]:
