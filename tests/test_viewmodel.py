@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 
@@ -13,7 +14,7 @@ import pytest
 
 from neurowave.audio import NullBackend
 from neurowave.config import Settings
-from neurowave.dispatcher import CommandDispatcher
+from neurowave.dispatcher import Command, CommandDispatcher
 from neurowave.errors import PlayerError
 from neurowave.player import PlayerService
 from neurowave.ui.viewmodel import PlayerViewModel, UiState
@@ -374,3 +375,226 @@ def test_close_releases_error_subscription() -> None:
     assert dispatcher.removed == dispatcher.added
     assert dispatcher._error_listeners == []
     assert dispatcher._thread.is_alive() is False
+
+
+# --- D-05-R1: секреты в логах и жизненный цикл ошибки ------------------
+def _fake_command(command_id: int, name: str, seq: int, error=None) -> Command:
+    return Command(
+        id=command_id,
+        name=name,
+        action=lambda: None,
+        generation=0,
+        seq=seq,
+        error=error,
+    )
+
+
+def test_unknown_error_reaches_log_without_exception_text(vm, caplog) -> None:
+    """DEBUG-лог не должен публиковать текст неизвестного исключения."""
+    model, player, _ = vm
+    _fail_with(
+        player,
+        "set_output",
+        RuntimeError(
+            "OAuth failed: Authorization: Bearer TOKEN-SECRET-123, "
+            "access_token=ACCESS-SECRET-456 cookie: session=COOKIE-SECRET-789"
+        ),
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="neurowave.ui.viewmodel"):
+        model.set_output("pulse/dead")
+        assert model.dispatcher.wait_idle(3)
+
+    message = _error_events(model)[0].payload["message"]
+    assert message == "не удалось выбрать аудиовыход"
+
+    captured = caplog.text
+    for secret in (
+        "TOKEN-SECRET-123",
+        "ACCESS-SECRET-456",
+        "COOKIE-SECRET-789",
+        "OAuth failed",
+        "Traceback",
+    ):
+        assert secret not in captured
+    # Диагностическая ценность сохранена: тип, имя и идентификатор команды.
+    assert "RuntimeError" in captured
+    assert "output" in captured
+    assert "id=" in captured
+
+
+def test_known_error_redacts_credentials_in_ui_and_log(vm, caplog) -> None:
+    model, player, _ = vm
+    _fail_with(
+        player,
+        "set_output",
+        PlayerError(
+            "401: Authorization: Bearer abcdef123456, access_token=deadbeef, "
+            "password=hunter2, https://user:pa55@audio.example/dev"
+        ),
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="neurowave.ui.viewmodel"):
+        model.set_output("pulse/dead")
+        assert model.dispatcher.wait_idle(3)
+
+    message = _error_events(model)[0].payload["message"]
+    assert "не удалось выбрать аудиовыход" in message
+    for secret in ("abcdef123456", "deadbeef", "hunter2", "pa55"):
+        assert secret not in message
+        assert secret not in caplog.text
+    assert "***" in message
+
+
+def test_error_clears_only_after_next_command_succeeds(vm) -> None:
+    """Отправка команды — не успех: ошибка живёт до её завершения."""
+    model, player, _ = vm
+    player.play_tracks([make_track(1)])
+    original = player.toggle_pause
+    _fail_with(player, "toggle_pause", PlayerError("плеер занят"))
+    model.toggle()
+    assert model.dispatcher.wait_idle(3)
+    assert model.last_error is not None
+    assert _error_events(model)
+
+    gate = threading.Event()
+    started = threading.Event()
+
+    def slow_pause() -> None:
+        started.set()
+        gate.wait(5)
+
+    player.toggle_pause = slow_pause
+    model.toggle()
+    assert started.wait(2)
+
+    # Команда уже в работе, но ещё не завершилась: ошибка не снимается.
+    assert model.last_error is not None
+    assert model.drain() == []
+
+    gate.set()
+    assert model.dispatcher.wait_idle(3)
+    assert [event.name for event in model.drain()] == ["command_ok"]
+    assert model.last_error is None
+    player.toggle_pause = original
+
+
+def test_second_error_replaces_the_first_cause(vm) -> None:
+    model, player, _ = vm
+    _fail_with(player, "toggle_pause", PlayerError("плеер занят"))
+    _fail_with(player, "set_output", PlayerError("устройство недоступно"))
+
+    model.toggle()
+    model.set_output("pulse/dead")
+    assert model.dispatcher.wait_idle(3)
+
+    errors = _error_events(model)
+    assert [event.payload["command"] for event in errors] == ["toggle", "output"]
+    assert model.last_error is not None
+    assert "устройство недоступно" in model.last_error
+    assert "плеер занят" not in model.last_error
+
+
+def test_delayed_error_while_next_command_is_queued(vm) -> None:
+    """Порядок «ошибка A → успех B» даёт нормальный конечный статус."""
+    model, player, _ = vm
+    player.play_tracks([make_track(1)])
+    release = threading.Event()
+    started = threading.Event()
+
+    def failing_pause() -> None:
+        started.set()
+        release.wait(5)
+        raise PlayerError("плеер занят")
+
+    player.toggle_pause = failing_pause
+    model.toggle()  # A: упадёт после задержки
+    assert started.wait(2)
+    model.set_output("auto")  # B уже стоит в очереди
+    release.set()
+
+    assert model.dispatcher.wait_idle(3)
+    names = [
+        event.name
+        for event in model.drain()
+        if event.name in ("command_error", "command_ok")
+    ]
+    assert names == ["command_error", "command_ok"]
+    assert model.last_error is None
+
+
+def test_cancelled_command_reports_neither_error_nor_success(vm) -> None:
+    model, player, _ = vm
+    player.play_tracks([make_track(1), make_track(2)])
+    model.drain()  # события запуска воспроизведения здесь не проверяются
+    gate = threading.Event()
+    started = threading.Event()
+
+    def blocker() -> None:
+        started.set()
+        gate.wait(5)
+
+    running = model.dispatcher.submit("blocker", blocker)
+    assert started.wait(2)
+    model.next()
+    model.next()
+    gate.set()
+
+    assert running.done.wait(3)
+    assert model.dispatcher.wait_idle(3)
+    assert model.dispatcher.stats["cancelled"] >= 1
+    names = [event.name for event in model.drain()]
+    assert "command_error" not in names
+    assert "command_ok" not in names
+    assert model.last_error is None
+
+
+def test_stale_success_does_not_clear_newer_error(vm) -> None:
+    """Запоздавший успех старой команды не стирает свежую ошибку."""
+    model, _, _ = vm
+    model._on_command_error(
+        _fake_command(2, "output", seq=7, error=PlayerError("свежая ошибка"))
+    )
+    model._on_command_done(_fake_command(1, "toggle", seq=5))
+
+    assert model.last_error is not None
+    assert "свежая ошибка" in model.last_error
+    assert [event.name for event in model.drain()] == ["command_error"]
+
+
+def test_external_dispatcher_keeps_completion_and_error_callbacks() -> None:
+    legacy: list[str] = []
+    external: list[str] = []
+    dispatcher = CommandDispatcher(on_error=lambda command: legacy.append(command.name))
+    dispatcher.add_completion_listener(lambda command: external.append(command.name))
+    player = PlayerService(
+        adapter=FakeAdapter(), backend=NullBackend(), settings=Settings(), prefetch=False
+    )
+    model = PlayerViewModel(player, dispatcher=dispatcher)
+    try:
+        model.set_output("auto")
+        assert dispatcher.wait_idle(3)
+        assert external == ["output"]
+        assert legacy == []
+        assert model.last_error is None
+    finally:
+        model.close()
+
+
+def test_close_releases_completion_subscription_and_ignores_late_events() -> None:
+    dispatcher = CommandDispatcher()
+    player = PlayerService(
+        adapter=FakeAdapter(), backend=NullBackend(), settings=Settings(), prefetch=False
+    )
+    model = PlayerViewModel(player, dispatcher=dispatcher)
+
+    model.close()
+
+    assert dispatcher._completion_listeners == []
+    # Поздние вызовы после закрытия не должны ни падать, ни менять состояние.
+    model._on_command_error(
+        _fake_command(1, "output", seq=1, error=PlayerError("поздняя ошибка"))
+    )
+    model._on_command_done(_fake_command(2, "toggle", seq=2))
+    assert model.last_error is None
+    assert model.drain() == []

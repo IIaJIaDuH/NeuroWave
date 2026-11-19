@@ -184,3 +184,79 @@ def test_cancelled_command_is_not_reported_as_error(dispatcher) -> None:
     assert stale.cancelled is True
     assert seen == []
     assert dispatcher.stats["cancelled"] == 1
+
+
+# --- D-05-R1: уведомление о завершении успешных команд ------------------
+def test_completion_listener_sees_successes_in_execution_order(dispatcher) -> None:
+    seen: list[tuple[str, int]] = []
+    dispatcher.add_completion_listener(
+        lambda command: seen.append((command.name, command.seq))
+    )
+
+    assert dispatcher.run("first", lambda: "a") == "a"
+    assert dispatcher.run("second", lambda: "b") == "b"
+
+    assert [name for name, _ in seen] == ["first", "second"]
+    sequences = [seq for _, seq in seen]
+    assert sequences == sorted(sequences)
+    assert sequences[0] < sequences[-1]
+    assert dispatcher.run("third", lambda: "c") == "c"
+    assert seen[-1][1] > sequences[-1]
+
+
+def test_completion_listener_is_not_called_for_errors(dispatcher) -> None:
+    done: list[str] = []
+    failed: list[str] = []
+    dispatcher.add_completion_listener(lambda command: done.append(command.name))
+    dispatcher.add_error_listener(lambda command: failed.append(command.name))
+
+    with pytest.raises(RuntimeError):
+        dispatcher.run("broken", _raiser("сбой"))
+
+    assert done == []
+    assert failed == ["broken"]
+
+
+def test_cancelled_command_is_not_reported_as_completed(dispatcher) -> None:
+    done: list[str] = []
+    dispatcher.add_completion_listener(lambda command: done.append(command.name))
+    gate = threading.Event()
+    started = threading.Event()
+
+    def blocker() -> None:
+        started.set()
+        gate.wait(5)
+
+    running = dispatcher.submit("blocker", blocker)
+    assert started.wait(2)
+    stale = dispatcher.submit("stale", lambda: None, generation=dispatcher.generation)
+    dispatcher.bump_generation()
+    gate.set()
+
+    assert running.done.wait(3)
+    assert dispatcher.wait_idle(3)
+    assert stale.cancelled is True
+    assert done == ["blocker"]
+
+
+def test_broken_completion_listener_does_not_stop_worker(dispatcher) -> None:
+    seen: list[str] = []
+
+    def angry(command) -> None:
+        raise ValueError("подписчик сломан")
+
+    dispatcher.add_completion_listener(angry)
+    dispatcher.add_completion_listener(lambda command: seen.append(command.name))
+
+    assert dispatcher.run("ok", lambda: 1) == 1
+    assert seen == ["ok"]
+
+
+def test_removed_completion_listener_stops_receiving_events(dispatcher) -> None:
+    seen: list[str] = []
+    dispatcher.add_completion_listener(seen.append)
+    dispatcher.remove_completion_listener(seen.append)
+
+    assert dispatcher.run("quiet", lambda: None) is None
+    assert seen == []
+    dispatcher.remove_completion_listener(seen.append)  # повторное удаление безопасно

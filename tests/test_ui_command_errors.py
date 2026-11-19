@@ -8,7 +8,9 @@ D-05: исключение в рабочем потоке ``CommandDispatcher`` 
 
 from __future__ import annotations
 
+import logging
 import os
+import threading
 import time
 
 import pytest
@@ -244,3 +246,88 @@ def test_unknown_duration_and_error_are_shown_together(window) -> None:
     assert "Ошибка:" in _status(window)
     assert "0:15 / --:--" in texts
     assert _button(window, "⏸") is not None  # Play/Pause продолжает обновляться
+
+
+# --- D-05-R1: жизненный цикл ошибки и защита секретов ------------------
+def test_error_is_kept_until_next_command_really_finishes(window) -> None:
+    """Постановка команды B не снимает ошибку A до завершения B."""
+    window, player, _backend, model = window
+    player.play_tracks([make_track(1)])
+    original = player.toggle_pause
+    _fail_with(player, "toggle_pause", PlayerError("плеер занят"))
+    model.toggle()
+    assert model.dispatcher.wait_idle(3)
+    window._refresh()
+    assert "Ошибка:" in _status(window)
+    assert "плеер занят" in _status(window)
+
+    gate = threading.Event()
+    started = threading.Event()
+
+    def slow_pause() -> None:
+        started.set()
+        gate.wait(5)
+
+    player.toggle_pause = slow_pause
+    _button(window, "⏸").click()
+    assert started.wait(2)
+
+    # B ещё выполняется: ошибка A остаётся видимой, а не мигает.
+    window._refresh()
+    window._refresh()
+    assert "Ошибка:" in _status(window)
+    assert "плеер занят" in _status(window)
+    assert model.last_error is not None
+
+    gate.set()
+    assert model.dispatcher.wait_idle(3)
+    window._refresh()
+
+    assert "Ошибка" not in _status(window)
+    assert ERROR_COLOR.lower() not in window._status.styleSheet().lower()
+    assert model.last_error is None
+    player.toggle_pause = original
+
+
+def test_new_error_replaces_old_one_and_stays_after_background_event(window) -> None:
+    window, player, _backend, model = window
+    player.play_tracks([make_track(1)])
+    _fail_with(player, "toggle_pause", PlayerError("плеер занят"))
+    model.toggle()
+    assert model.dispatcher.wait_idle(3)
+    window._refresh()
+    assert "плеер занят" in _status(window)
+
+    _fail_with(player, "seek", PlayerError("mpv не отвечает"))
+    model.seek(30_000)
+    assert model.dispatcher.wait_idle(3)
+    player.play_tracks([make_track(2)])  # фоновое событие не стирает ошибку
+    window._refresh()
+
+    assert "перемотать" in _status(window)
+    assert "mpv не отвечает" in _status(window)
+    assert "плеер занят" not in _status(window)
+
+
+def test_unknown_command_error_hides_secrets_in_log_and_status(window, caplog) -> None:
+    window, player, _backend, model = window
+    player.play_tracks([make_track(1)])
+    _fail_with(
+        player,
+        "set_output",
+        RuntimeError(
+            "OAuth failed: Authorization: Bearer TOKEN-SECRET-777, "
+            "cookie: session=COOKIE-SECRET-888"
+        ),
+    )
+
+    with caplog.at_level(logging.DEBUG, logger="neurowave.ui.viewmodel"):
+        model.set_output("pulse/dead")
+        assert model.dispatcher.wait_idle(3)
+    window._refresh()
+
+    assert _status(window) == "Ошибка: не удалось выбрать аудиовыход"
+    for secret in ("TOKEN-SECRET-777", "COOKIE-SECRET-888", "OAuth failed", "Bearer"):
+        assert secret not in caplog.text
+        assert secret not in _status(window)
+    assert "RuntimeError" in caplog.text
