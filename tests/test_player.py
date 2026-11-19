@@ -57,10 +57,27 @@ def test_two_failures_stop_with_overlay(player, backend, adapter):
     assert player.state.overlay is Overlay.TRACK_UNAVAILABLE
 
 
-def test_unavailable_first_track_raises(player, adapter):
+def test_unavailable_first_track_skips_to_next(player, backend, adapter):
+    """Контракт изменён в QA-FIX-02 (D-04).
+
+    Раньше отказ первого трека выбрасывал `TrackUnavailable` и оставлял
+    плеер в `buffering`, хотя следующие треки рабочие. Теперь старт идёт
+    тем же механизмом восстановления, что и автопереход.
+    """
     adapter.fail_ids = {"1"}
+    track = player.start_wave()
+    assert track is not None and track.id == "2"
+    assert backend.loaded_url == "https://audio.test/2.mp3"
+    assert player.state.status is PlayerStatus.PLAYING
+
+
+def test_all_unavailable_tracks_raise_domain_error(player, adapter):
+    """Доменная ошибка остаётся, когда не запустилось ничего."""
+    adapter.fail_ids = {"1", "2", "3"}
     with pytest.raises(TrackUnavailable):
         player.start_wave()
+    assert player.state.status is PlayerStatus.STOPPED
+    assert player.state.overlay is Overlay.TRACK_UNAVAILABLE
 
 
 def test_pause_and_resume(player, backend):

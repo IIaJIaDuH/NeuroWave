@@ -110,6 +110,14 @@ class PlayerService:
 
     # --- запуск -------------------------------------------------------
     def start_wave(self) -> Track | None:
+        """Включить «Мою волну».
+
+        Недоступный трек не останавливает сессию, даже если он первый:
+        очередь идёт дальше тем же механизмом, что и автопереход (QA D-04).
+        ``TrackUnavailable`` остаётся для пустой волны и для случая, когда не
+        запустилось ничего — тогда состояние ``stopped``, overlay
+        ``track_unavailable``, а причина уходит в события.
+        """
         if self.state.status in (PlayerStatus.IDLE, PlayerStatus.STOPPED):
             self.state.transition(PlayerStatus.READY)
         tracks = self._router.wave_tracks() if self._router is not None else self.adapter.wave_tracks()
@@ -119,10 +127,17 @@ class PlayerService:
         self.queue.clear()
         self.queue.extend(tracks)
         self.queue.jump(0)
-        self._play_current()
-        return self.current_track
+        return self._start_session()
 
     def play_tracks(self, tracks: Iterable[Track], start: int = 0) -> Track | None:
+        """Поставить треки в очередь и начать с позиции ``start``.
+
+        Сбой разрешения потока не прерывает сессию на первом же треке:
+        очередь пропускает его так же, как при автопереходе (QA D-04).
+        Доменная ошибка остаётся только там, где продолжать нечем: пустой
+        список, некорректный индекс и исчерпанный лимит последовательных
+        отказов (состояние ``stopped`` с overlay ``track_unavailable``).
+        """
         items = [track for track in tracks if track.available]
         if not items:
             raise TrackUnavailable("Нет доступных треков для воспроизведения")
@@ -134,8 +149,7 @@ class PlayerService:
         self.queue.clear()
         self.queue.extend(items)
         self.queue.jump(start)
-        self._play_current()
-        return self.current_track
+        return self._start_session()
 
     def play_track(self, track: Track) -> Track | None:
         return self.play_tracks([track])
@@ -336,9 +350,45 @@ class PlayerService:
         self._emit(event, **payload)
 
     # --- внутреннее ---------------------------------------------------
+    def _start_session(self) -> Track | None:
+        """Запустить первый трек сессии, не останавливаясь на отказах.
+
+        Возвращает фактически играющий трек. Если не запустилось ничего,
+        поднимает доменную ошибку: состояние уже ``stopped``, overlay и
+        события ``error``/``failed`` объясняют причину.
+        """
+        with self._lock:
+            # Новая сессия: лимит последовательных отказов считается заново,
+            # иначе исчерпанный лимит прошлой сессии блокировал бы старт.
+            self._failures = 0
+            failure = self._play_current_or_skip()
+            if failure is not None:
+                # Тип ошибки сохраняется: отказ mpv не выдаётся за
+                # недоступность трека. Точная причина каждого шага уже ушла
+                # в события; здесь важнее, что сессия не началась.
+                raise type(failure)(
+                    "Не удалось запустить ни один трек"
+                ) from failure
+            return self.current_track
+
     def _play_current(self) -> None:
         with self._lock:
             self._start_current()
+
+    def _play_current_or_skip(self) -> NeuroWaveError | None:
+        """Запустить текущий трек, а при отказе продолжить очередь.
+
+        Единая точка восстановления для старта сессии, автоперехода и
+        ``next_track``: ``None`` — трек играет, иначе последняя доменная
+        ошибка. Рекурсия ограничена ``MAX_CONSECUTIVE_FAILURES``, поэтому
+        перебор очереди конечен даже при repeat/shuffle.
+        """
+        with self._lock:
+            try:
+                self._start_current()
+            except NeuroWaveError as exc:
+                return None if self._handle_failure(exc) else exc
+            return None
 
     def _start_current(self) -> None:
         track = self.queue.current
@@ -408,27 +458,26 @@ class PlayerService:
             return
 
     def _advance(self, track: Track) -> None:
-        try:
-            self._play_current()
-        except NeuroWaveError as exc:
-            self._handle_failure(exc)
+        self._play_current_or_skip()
 
-    def _handle_failure(self, exc: NeuroWaveError) -> None:
+    def _handle_failure(self, exc: NeuroWaveError) -> bool:
+        """Обработать отказ запуска: посчитать, показать и перейти дальше.
+
+        Возвращает ``True``, если очередь продолжилась и трек играет. Сюда
+        приходят и стартовые отказы, и автопереходы — отдельной ветки логики
+        для первого трека нет.
+        """
         self._failures += 1
         self._emit("error", error=str(exc))
         self.state.set_overlay(Overlay.TRACK_UNAVAILABLE, str(exc))
         if self._failures >= MAX_CONSECUTIVE_FAILURES:
             self._emit("failed", error=str(exc))
             self._finish()
-            return
-        track = self.queue.next(automatic=True)
-        if track is None:
+            return False
+        if self.queue.next(automatic=True) is None:
             self._finish()
-            return
-        try:
-            self._play_current()
-        except NeuroWaveError as nested:
-            self._handle_failure(nested)
+            return False
+        return self._play_current_or_skip() is None
 
     def _finish(self) -> None:
         self.backend.stop()
