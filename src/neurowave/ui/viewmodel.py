@@ -30,6 +30,7 @@ class UiState:
     subtitle: str = ""
     position_ms: int = 0
     duration_ms: int = 0
+    duration_known: bool = True
     volume: int = 80
     applied_volume: int = 80
     volume_limited: bool = False
@@ -45,7 +46,7 @@ class UiState:
 
     @property
     def progress(self) -> float:
-        if self.duration_ms <= 0:
+        if not self.duration_known or self.duration_ms <= 0:
             return 0.0
         return min(1.0, max(0.0, self.position_ms / self.duration_ms))
 
@@ -57,6 +58,7 @@ class UiState:
             "subtitle": self.subtitle,
             "position_ms": self.position_ms,
             "duration_ms": self.duration_ms,
+            "duration_known": self.duration_known,
             "volume": self.volume,
             "applied_volume": self.applied_volume,
             "volume_limited": self.volume_limited,
@@ -81,6 +83,21 @@ def _subtitle(track: Track | None) -> str:
         return ""
     parts = [" · ".join(track.artists) if track.artists else "", track.album or ""]
     return " — ".join(part for part in parts if part)
+
+
+def _duration(track: Track | None) -> tuple[int, bool]:
+    """Длительность для GUI: число и признак достоверности.
+
+    ``Track.duration_ms`` по доменному контракту бывает ``None``, но окно
+    делит и форматирует только числа. В снимке неизвестная длительность —
+    это ``0`` вместе с ``duration_known=False``: иначе ``None // 1000``
+    роняет каждое обновление интерфейса (D-06).
+    """
+    if track is None:
+        return 0, True  # пустая очередь: достоверный ноль
+    if track.duration_ms is None:
+        return 0, False
+    return max(0, int(track.duration_ms)), True
 
 
 class PlayerViewModel:
@@ -158,13 +175,15 @@ class PlayerViewModel:
         quality = player.current_quality
         settings = player.settings
         output_id = settings.audio_output or "auto"
+        duration_ms, duration_known = _duration(track)
         return UiState(
             status=status,
             is_playing=status == "playing",
             title=track.title if track else "NeuroWave",
             subtitle=_subtitle(track),
             position_ms=self.position_ms(),
-            duration_ms=track.duration_ms if track else 0,
+            duration_ms=duration_ms,
+            duration_known=duration_known,
             volume=settings.volume,
             applied_volume=settings.effective_volume(),
             volume_limited=settings.volume_limited(),
