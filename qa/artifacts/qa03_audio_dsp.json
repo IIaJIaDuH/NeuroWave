@@ -18,11 +18,11 @@
     "cards": [
       {
         "index": "73",
-        "name": "alsa_card.pci-0000_0b_00.4"
+        "name": "alsa_card.pci-<PCI>"
       },
       {
         "index": "74",
-        "name": "alsa_card.pci-0000_09_00.1"
+        "name": "alsa_card.pci-<PCI>"
       }
     ],
     "default_sink": "alsa_output.pci-<PCI>.hdmi-stereo",

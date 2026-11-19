@@ -38,8 +38,8 @@ STATIC_RULES: list[tuple[str, str]] = [
     (r"bluez_output\.[0-9A-Fa-f]{2}(?:_[0-9A-Fa-f]{2}){5}(?:\.\d+)?", "BT_DEVICE_A"),
     (r"bluez_output\.[0-9A-Za-z_]+", "BT_DEVICE_A"),
     # Физический HDMI: PCI-адрес слота не публикуется, смысл выхода сохраняется.
-    (r"alsa_output\.pci-[0-9A-Fa-f]{1,4}(?:_[0-9A-Fa-f]{1,4}){0,3}"
-     r"(?:\.[0-9A-Fa-f]+)*", "alsa_output.pci-<PCI>"),
+    (r"alsa_(output|card)\.pci-[0-9A-Fa-f]{1,4}(?:_[0-9A-Fa-f]{1,4}){0,3}"
+     r"(?:\.[0-9A-Fa-f]+)*", r"alsa_\1.pci-<PCI>"),
     # Имена звуковых карт в списке доступных устройств.
     (r"CARD=[A-Za-z0-9_]+", "CARD=<КАРТА>"),
     # Модели звуковых карт и кодеков в описаниях устройств.
